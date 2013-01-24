@@ -25,6 +25,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.evolveum.midpoint.prism.PrismContext;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RActivation;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RSynchronizationSituationDescription;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RFailedOperationTypeType;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RReferenceOwner;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RSynchronizationSituation;
+import com.evolveum.midpoint.repo.sql.data.common.type.RResourceRef;
 import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.repo.sql.query.QueryAttribute;
 import com.evolveum.midpoint.repo.sql.query.QueryEntity;
@@ -62,7 +69,7 @@ public class RResourceObjectShadow extends RObject {
     private RActivation activation;
     private ROperationResult result;
     @QueryAttribute
-    private RObjectReference resourceRef;
+    private RResourceRef resourceRef;
     private String objectChange;
     private Integer attemptNumber;
     @QueryAttribute
@@ -110,9 +117,10 @@ public class RResourceObjectShadow extends RObject {
         return result;
     }
 
+    @Where(clause = RObjectReference.REFERENCE_TYPE + "=" + RResourceRef.DISCRIMINATOR)
     @OneToOne(optional = true, mappedBy = "owner", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public RObjectReference getResourceRef() {
+    public RResourceRef getResourceRef() {
         return resourceRef;
     }
 
@@ -183,7 +191,7 @@ public class RResourceObjectShadow extends RObject {
         this.objectChange = objectChange;
     }
 
-    public void setResourceRef(RObjectReference resourceRef) {
+    public void setResourceRef(RResourceRef resourceRef) {
         this.resourceRef = resourceRef;
     }
 
@@ -343,7 +351,8 @@ public class RResourceObjectShadow extends RObject {
         
         repo.setSynchronizationSituationDescription(RUtil.listSyncSituationToSet(jaxb.getSynchronizationSituationDescription()));
         repo.setSynchronizationTimestamp(jaxb.getSynchronizationTimestamp());
-        repo.setResourceRef(RUtil.jaxbRefToRepo(jaxb.getResourceRef(), repo, prismContext));
+        repo.setResourceRef((RResourceRef)RUtil.jaxbRefToRepo(jaxb.getResourceRef(), prismContext, repo,
+                RReferenceOwner.RESOURCE_OBJECT_SHADOW_RESOURCE));
         repo.setAttemptNumber(jaxb.getAttemptNumber());
 //        if (jaxb.isDead() == null){
 //        	repo.setDead(false);

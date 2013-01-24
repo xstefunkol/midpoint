@@ -26,8 +26,11 @@ import org.hibernate.dialect.Oracle10gDialect;
 import java.sql.Types;
 
 /**
+ * todo remove this class if you can :)
+ *
  * @author lazyman
  */
+@Deprecated
 public class MidPointOracleDialect extends Oracle10gDialect {
 
     @Override

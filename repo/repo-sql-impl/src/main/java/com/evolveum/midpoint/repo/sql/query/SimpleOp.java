@@ -205,15 +205,15 @@ public class SimpleOp extends Op {
 		case REF:
 		case EQUAL:
 			if (pushNot) {
-				if (testedValue == null){
-					return (item.isMultiValue ? Restrictions.isNotEmpty(name):Restrictions.isNotNull(name));
+				if (testedValue == null) {
+					return (item.isMultiValue ? Restrictions.isNotEmpty(name) : Restrictions.isNotNull(name));
 				}
 				return Restrictions.ne(name, testedValue);
 			} else {
-				if (testedValue == null){
-					return (item.isMultiValue ? Restrictions.isEmpty(name):Restrictions.isNull(name));
+				if (testedValue == null) {
+					return (item.isMultiValue ? Restrictions.isEmpty(name) : Restrictions.isNull(name));
 				}
-				return (testedValue == null ? Restrictions.isEmpty(name):Restrictions.eq(name, testedValue));
+				return (testedValue == null ? Restrictions.isEmpty(name) : Restrictions.eq(name, testedValue));
 			}
 		case SUBSTRING:
 			if (pushNot) {
@@ -370,9 +370,9 @@ public class SimpleOp extends Op {
 				LOGGER.trace("Found alias '{}' for path.", new Object[] { item.alias });
                 item.item = "targetOid";
                 //XXX TODO HACK FOR accountRef set
-                if (attrDef.isMultiValue()) {
-                    item.item = "reference." + item.item;
-                }
+//                if (attrDef.isMultiValue()) {
+//                    item.item = "reference." + item.item;
+//                }
 
 			} else {
 				item.item = attrDef.getRealName();

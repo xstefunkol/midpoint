@@ -24,6 +24,8 @@ package com.evolveum.midpoint.repo.sql.data.common;
 import com.evolveum.midpoint.prism.Item;
 import com.evolveum.midpoint.prism.PrismContainerValue;
 import com.evolveum.midpoint.prism.PrismContext;
+import com.evolveum.midpoint.repo.sql.data.common.any.*;
+import com.evolveum.midpoint.repo.sql.data.common.id.RAnyContainerId;
 import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ExtensionType;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ResourceObjectShadowAttributesType;
@@ -34,7 +36,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -60,6 +61,17 @@ public class RAnyContainer implements Serializable {
     private Set<RDateValue> dates;
     private Set<RClobValue> clobs;
     private Set<RReferenceValue> references;
+
+    private Set<RAnyClob> anyClobs;
+
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    public Set<RAnyClob> getAnyClobs() {
+        if (anyClobs == null) {
+            anyClobs = new HashSet<RAnyClob>();
+        }
+        return anyClobs;
+    }
 
     @ForeignKey(name = "none")
     @MapsId("owner")
@@ -143,6 +155,10 @@ public class RAnyContainer implements Serializable {
         return references;
     }
 
+    public void setAnyClobs(Set<RAnyClob> anyClobs) {
+        this.anyClobs = anyClobs;
+    }
+
     public void setReferences(Set<RReferenceValue> references) {
         this.references = references;
     }
@@ -187,6 +203,7 @@ public class RAnyContainer implements Serializable {
         RAnyContainer that = (RAnyContainer) o;
 
         if (clobs != null ? !clobs.equals(that.clobs) : that.clobs != null) return false;
+        if (anyClobs != null ? !anyClobs.equals(that.anyClobs) : that.anyClobs != null) return false;
         if (dates != null ? !dates.equals(that.dates) : that.dates != null) return false;
         if (longs != null ? !longs.equals(that.longs) : that.longs != null) return false;
         if (strings != null ? !strings.equals(that.strings) : that.strings != null) return false;

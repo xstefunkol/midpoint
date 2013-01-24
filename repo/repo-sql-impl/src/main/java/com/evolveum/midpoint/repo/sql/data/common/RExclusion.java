@@ -22,6 +22,10 @@
 package com.evolveum.midpoint.repo.sql.data.common;
 
 import com.evolveum.midpoint.prism.PrismContext;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RExclusionPolicyType;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RReferenceOwner;
+import com.evolveum.midpoint.repo.sql.data.common.type.RParentOrgRef;
+import com.evolveum.midpoint.repo.sql.data.common.type.RTargetRef;
 import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ExclusionType;
@@ -30,6 +34,7 @@ import org.apache.commons.lang.Validate;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
@@ -46,7 +51,7 @@ public class RExclusion extends RContainer implements ROwnable {
     private Long ownerId;
     //exclusion
     private String description;
-    private RObjectReference targetRef;
+    private RTargetRef targetRef;
     private RExclusionPolicyType policy;
 
     @ForeignKey(name = "fk_exclusion_owner")
@@ -87,9 +92,10 @@ public class RExclusion extends RContainer implements ROwnable {
         return policy;
     }
 
+    @Where(clause = RObjectReference.REFERENCE_TYPE + "=" + RTargetRef.DISCRIMINATOR)
     @OneToOne(optional = true, mappedBy = "owner", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public RObjectReference getTargetRef() {
+    public RTargetRef getTargetRef() {
         return targetRef;
     }
 
@@ -101,7 +107,7 @@ public class RExclusion extends RContainer implements ROwnable {
         this.policy = policy;
     }
 
-    public void setTargetRef(RObjectReference targetRef) {
+    public void setTargetRef(RTargetRef targetRef) {
         this.targetRef = targetRef;
     }
 
@@ -172,7 +178,8 @@ public class RExclusion extends RContainer implements ROwnable {
 
         repo.setDescription(jaxb.getDescription());
         repo.setPolicy(RExclusionPolicyType.toRepoType(jaxb.getPolicy()));
-        repo.setTargetRef(RUtil.jaxbRefToRepo(jaxb.getTargetRef(), repo, prismContext));
+        //todo fix this class cast
+        repo.setTargetRef((RTargetRef)RUtil.jaxbRefToRepo(jaxb.getTargetRef(), prismContext, repo, RReferenceOwner.EXCLUSION_TARGET));
     }
 
     public ExclusionType toJAXB(PrismContext prismContext) throws DtoTranslationException {

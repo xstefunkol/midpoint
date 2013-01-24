@@ -28,15 +28,15 @@ import com.evolveum.midpoint.prism.delta.PropertyDelta;
 import com.evolveum.midpoint.prism.delta.ReferenceDelta;
 import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.query.LessFilter;
-import com.evolveum.midpoint.prism.query.ObjectFilter;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
 import com.evolveum.midpoint.repo.sql.data.common.*;
+import com.evolveum.midpoint.repo.sql.data.common.any.*;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
+import com.evolveum.midpoint.repo.sql.data.common.id.RContainerId;
 import com.evolveum.midpoint.schema.DeltaConvertor;
-import com.evolveum.midpoint.schema.constants.SchemaConstants;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.util.SynchronizationSituationUtil;
-import com.evolveum.midpoint.util.QNameUtil;
 import com.evolveum.midpoint.util.exception.ObjectNotFoundException;
 import com.evolveum.midpoint.util.exception.SystemException;
 import com.evolveum.midpoint.util.logging.Trace;
@@ -502,36 +502,30 @@ public class ModifyTest extends BaseSQLRepoTest {
         File accountFile = new File(TEST_DIR, "account-synchronization-situation.xml");
         PrismObject<AccountShadowType> account = prismContext.getPrismDomProcessor().parseObject(accountFile);
         repositoryService.addObject(account, result);
-     
-//        List<PropertyDelta> syncSituationDeltas = new ArrayList<PropertyDelta>();
-        List<PropertyDelta<?>> syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(account, SynchronizationSituationType.LINKED, null);
-        PropertyDelta<SynchronizationSituationType> syncSituationDelta = SynchronizationSituationUtil.createSynchronizationSituationDelta(account, SynchronizationSituationType.LINKED);
+
+        List<PropertyDelta<?>> syncSituationDeltas = SynchronizationSituationUtil.
+                createSynchronizationSituationDescriptionDelta(account, SynchronizationSituationType.LINKED, null);
+        PropertyDelta<SynchronizationSituationType> syncSituationDelta = SynchronizationSituationUtil.
+                createSynchronizationSituationDelta(account, SynchronizationSituationType.LINKED);
         syncSituationDeltas.add(syncSituationDelta);
-        
-        
-//        syncSituationDeltas.addAll(mod);
         
         repositoryService.modifyObject(AccountShadowType.class, account.getOid(), syncSituationDeltas, result);
         
-        PrismObject<AccountShadowType> afterFirtModify = repositoryService.getObject(AccountShadowType.class, account.getOid(), result);
-        AssertJUnit.assertNotNull(afterFirtModify);
-        AccountShadowType afterFirstModifyType = afterFirtModify.asObjectable();
+        PrismObject<AccountShadowType> afterFirstModify = repositoryService.getObject(AccountShadowType.class, account.getOid(), result);
+        AssertJUnit.assertNotNull(afterFirstModify);
+        AccountShadowType afterFirstModifyType = afterFirstModify.asObjectable();
         AssertJUnit.assertEquals(1, afterFirstModifyType.getSynchronizationSituationDescription().size());
         SynchronizationSituationDescriptionType description = afterFirstModifyType.getSynchronizationSituationDescription().get(0);
         AssertJUnit.assertEquals(SynchronizationSituationType.LINKED, description.getSituation());
-//        AssertJUnit.assertNull(description.getChannel());
+
         
-        
-//        syncSituationDeltas = new ArrayList<PropertyDelta>();
-       
-        
-        syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(afterFirtModify, null, null);
-        syncSituationDelta = SynchronizationSituationUtil.createSynchronizationSituationDelta(afterFirtModify, null);
+        syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(afterFirstModify, null, null);
+        syncSituationDelta = SynchronizationSituationUtil.createSynchronizationSituationDelta(afterFirstModify, null);
         syncSituationDeltas.add(syncSituationDelta);
-//        syncSituationDeltas.addAll(mod);
         
         XMLGregorianCalendar timestamp = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
-        PropertyDelta syncTimestap = PropertyDelta.createModificationReplaceProperty(AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP, afterFirtModify.getDefinition(), timestamp);
+        PropertyDelta syncTimestap = PropertyDelta.createModificationReplaceProperty(
+                AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP, afterFirstModify.getDefinition(), timestamp);
         syncSituationDeltas.add(syncTimestap);
         
         repositoryService.modifyObject(AccountShadowType.class, account.getOid(), syncSituationDeltas, result);
@@ -542,9 +536,9 @@ public class ModifyTest extends BaseSQLRepoTest {
         AssertJUnit.assertEquals(1, afterSecondModifyType.getSynchronizationSituationDescription().size());
         description = afterSecondModifyType.getSynchronizationSituationDescription().get(0);
         AssertJUnit.assertEquals(null, description.getSituation());
-        
-//        PrismPropertyValue timestamp = new PrismPropertyValue(XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis())); 
-        LessFilter filter = LessFilter.createLessFilter(null, afterSecondModify.findItem(AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP).getDefinition(), timestamp, true);
+
+        LessFilter filter = LessFilter.createLessFilter(null, afterSecondModify.findItem(
+                AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP).getDefinition(), timestamp, true);
         ObjectQuery query = ObjectQuery.createObjectQuery(filter);
         
         List<PrismObject<AccountShadowType>> shadows = repositoryService.searchObjects(AccountShadowType.class, query, result);
@@ -552,9 +546,5 @@ public class ModifyTest extends BaseSQLRepoTest {
         AssertJUnit.assertEquals(1, shadows.size());
         
         System.out.println("shadow: " + shadows.get(0).dump() );
-//        AssertJUnit.assertNull(description.getChannel());
-//        AssertJUnit.assertEquals(QNameUtil.qNameToUri(SchemaConstants.CHANGE_CHANNEL_SYNC), description.getChannel());
     }
-    
-
 }

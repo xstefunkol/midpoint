@@ -24,6 +24,7 @@ package com.evolveum.midpoint.repo.sql.data.common;
 import com.evolveum.midpoint.prism.*;
 import com.evolveum.midpoint.prism.dom.PrismDomProcessor;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
+import com.evolveum.midpoint.repo.sql.data.common.any.*;
 import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.repo.sql.type.XMLGregorianCalendarType;
 import com.evolveum.midpoint.repo.sql.util.RUtil;
@@ -308,7 +309,7 @@ public class RAnyConverter {
         switch (value.getValueType()) {
             case REFERENCE:
                 PrismReferenceValue referenceValue = new PrismReferenceValue();
-                referenceValue.setOid((String)value.getValue());
+                referenceValue.setOid((String) value.getValue());
                 //todo fix filter, description and other fields
                 item.add(referenceValue);
                 break;
@@ -406,29 +407,28 @@ public class RAnyConverter {
         }
     }
 
-    
+
     public static <T extends ObjectType> String getAnySetType(ItemDefinition definition) throws
-    SchemaException {
-QName typeName = definition.getTypeName();
+            SchemaException {
+        QName typeName = definition.getTypeName();
 
-ValueType valueType = getValueType(typeName);
-switch (valueType) {
-    case DATE:
-        return "dates";
-    case LONG:
-        return "longs";
-    case STRING:
-    default:
-        boolean indexed = definition == null ? isIndexable(typeName) : isIndexable(definition);
-        if (indexed) {
-            return "strings";
-        } else {
-            return "clobs";
+        ValueType valueType = getValueType(typeName);
+        switch (valueType) {
+            case DATE:
+                return "dates";
+            case LONG:
+                return "longs";
+            case STRING:
+            default:
+                if (isIndexable(definition)) {
+                    return "strings";
+                } else {
+                    return "clobs";
+                }
         }
-}
-}
+    }
 
-    
+
     /**
      * This method provides transformation of {@link Element} value to its object form, e.g. <value>1</value> to
      * {@link Integer} number 1. It's based on element definition from schema registry or xsi:type attribute
@@ -497,7 +497,7 @@ switch (valueType) {
         }
 
         if (object instanceof Date) {
-            object = new Timestamp(((Date)object).getTime());
+            object = new Timestamp(((Date) object).getTime());
         }
 
         return object;

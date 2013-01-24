@@ -51,12 +51,12 @@ import com.evolveum.midpoint.prism.polystring.PolyString;
 import com.evolveum.midpoint.prism.query.ObjectPaging;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.repo.api.RepositoryService;
-import com.evolveum.midpoint.repo.sql.data.common.RContainerId;
+import com.evolveum.midpoint.repo.sql.data.common.id.RContainerId;
 import com.evolveum.midpoint.repo.sql.data.common.RObject;
 import com.evolveum.midpoint.repo.sql.data.common.ROrgClosure;
 import com.evolveum.midpoint.repo.sql.data.common.RResourceObjectShadow;
 import com.evolveum.midpoint.repo.sql.data.common.RTask;
-import com.evolveum.midpoint.repo.sql.data.common.RTaskExclusivityStatusType;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RTaskExclusivityStatusType;
 import com.evolveum.midpoint.repo.sql.data.common.RUser;
 import com.evolveum.midpoint.repo.sql.query.Definition;
 import com.evolveum.midpoint.repo.sql.query.EntityDefinition;
@@ -334,6 +334,8 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 
 			LOGGER.trace("Saved object '{}' with oid '{}'", new Object[] {
 					object.getCompileTimeClass().getSimpleName(), oid });
+
+            object.setOid(oid);
 		} catch (PessimisticLockException ex) {
 			rollbackTransaction(session);
 			throw ex;
@@ -405,6 +407,8 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         // query.
         List<ROrgClosure> results = query.list();
         for (ROrgClosure o : results) {
+            LOGGER.info("adding {}\t{}\t{}", new Object[]{o.getAncestor().getOid(),
+                    o.getDescendant().getOid(), o.getDepth() + 1});                        //todo remove
             session.save(new ROrgClosure(o.getAncestor(), newDescendant, o.getDepth() + 1));
         }
     }
@@ -796,54 +800,56 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			Collection<? extends ItemDelta> modifications) throws SchemaException, DtoTranslationException {
 
 		for (ItemDelta delta : modifications) {
-			if (delta.getName().equals(OrgType.F_PARENT_ORG_REF)) {
-				// if modifiction is one of the modify or delete, delete old
-				// record in org closure table and in the next step fill the
-				// closure table with the new records
-				if (delta.isReplace() || delta.isDelete()) {
-					for (Object orgRefDValue : delta.getValuesToDelete()) {
-						if (!(orgRefDValue instanceof PrismReferenceValue)) {
-							throw new SchemaException(
-									"Couldn't modify organization structure hierarchy (adding new records). Expected instance of prism reference value but got "
-											+ orgRefDValue);
-						}
+			if (!delta.getName().equals(OrgType.F_PARENT_ORG_REF)) {
+                continue;
+            }
+            // if modification is one of the modify or delete, delete old
+            // record in org closure table and in the next step fill the
+            // closure table with the new records
+            if (delta.isReplace() || delta.isDelete()) {
+                for (Object orgRefDValue : delta.getValuesToDelete()) {
+                    if (!(orgRefDValue instanceof PrismReferenceValue)) {
+                        throw new SchemaException(
+                                "Couldn't modify organization structure hierarchy (adding new records). Expected instance of prism reference value but got "
+                                        + orgRefDValue);
+                    }
 
-						PrismReferenceValue value = (PrismReferenceValue) orgRefDValue;
-						RObject rObjectToModify = createDataObjectFromJAXB(orgType);
-						if (orgType.getClass().isAssignableFrom(OrgType.class)){
-						
-						List<RObject> objectsToRecompute = deleteTransitiveHierarchy(rObjectToModify, session);
-						refillHierarchy(rObjectToModify, objectsToRecompute, session);
-						} else{
-							deleteHierarchy(rObjectToModify, session);
-							if (orgType.getParentOrgRef()!= null && !orgType.getParentOrgRef().isEmpty()){
-								for (ObjectReferenceType orgRef : orgType.getParentOrgRef()){
-									fillTransitiveHierarchy(rObjectToModify, orgRef.getOid(), session);
-								}
-							}
-						}
-					}
-					// List<RObject> objectsToRecompute =
-					// deleteFromHierarchy(createDataObjectFromJAXB(orgType),
-					// session);
-					// recompute(objectsToRecompute, session);
-					// fillHierarchy(orgType, session);
-				} else {
-					// fill closure table with new transitive relations
-					for (Object orgRefDValue : delta.getValuesToAdd()) {
-						if (!(orgRefDValue instanceof PrismReferenceValue)) {
-							throw new SchemaException(
-									"Couldn't modify organization structure hierarchy (adding new records). Expected instance of prism reference value but got "
-											+ orgRefDValue);
-						}
+                    PrismReferenceValue value = (PrismReferenceValue) orgRefDValue;
+                    RObject rObjectToModify = createDataObjectFromJAXB(orgType);
+                    if (orgType.getClass().isAssignableFrom(OrgType.class)){
 
-						PrismReferenceValue value = (PrismReferenceValue) orgRefDValue;
+                    List<RObject> objectsToRecompute = deleteTransitiveHierarchy(rObjectToModify, session);
+                    refillHierarchy(rObjectToModify, objectsToRecompute, session);
+                    } else{
+                        deleteHierarchy(rObjectToModify, session);
+                        if (orgType.getParentOrgRef()!= null && !orgType.getParentOrgRef().isEmpty()){
+                            for (ObjectReferenceType orgRef : orgType.getParentOrgRef()){
+                                fillTransitiveHierarchy(rObjectToModify, orgRef.getOid(), session);
+                            }
+                        }
+                    }
+                }
+                // List<RObject> objectsToRecompute =
+                // deleteFromHierarchy(createDataObjectFromJAXB(orgType),
+                // session);
+                // recompute(objectsToRecompute, session);
+                // fillHierarchy(orgType, session);
+            } else {
+                // fill closure table with new transitive relations
+                for (Object orgRefDValue : delta.getValuesToAdd()) {
+                    if (!(orgRefDValue instanceof PrismReferenceValue)) {
+                        throw new SchemaException(
+                                "Couldn't modify organization structure hierarchy (adding new records). Expected instance of prism reference value but got "
+                                        + orgRefDValue);
+                    }
 
-						RObject rDescendant = createDataObjectFromJAXB(orgType);
-						fillTransitiveHierarchy(rDescendant, value.getOid(), session);
-					}
-				}
-			}
+                    PrismReferenceValue value = (PrismReferenceValue) orgRefDValue;
+
+                    RObject rDescendant = createDataObjectFromJAXB(orgType);
+                    LOGGER.trace("filling transitive hierarchy for descendant {}, ref {}", new Object[]{rDescendant.getOid(), value.getOid()});//todo remove
+                    fillTransitiveHierarchy(rDescendant, value.getOid(), session);
+                }
+            }
 		}
 	}
 

@@ -26,8 +26,12 @@ import com.evolveum.midpoint.prism.dom.PrismDomProcessor;
 import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.schema.SchemaRegistry;
 import com.evolveum.midpoint.prism.xml.PrismJaxbProcessor;
-import com.evolveum.midpoint.repo.sql.data.common.*;
-import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
+import com.evolveum.midpoint.repo.sql.data.common.RContainer;
+import com.evolveum.midpoint.repo.sql.data.common.RObjectReference;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.REmbeddedReference;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RSynchronizationSituationDescription;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RReferenceOwner;
 import com.evolveum.midpoint.util.DOMUtil;
 import com.evolveum.midpoint.util.exception.SchemaException;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ObjectReferenceType;
@@ -35,7 +39,6 @@ import com.evolveum.midpoint.xml.ns._public.common.common_2a.SynchronizationSitu
 import com.evolveum.prism.xml.ns._public.types_2.PolyStringType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.hibernate.type.TextType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -53,10 +56,13 @@ import java.util.*;
 public final class RUtil {
 
     /**
-     * This constant is used for mapping type for {@link javax.persistence.Lob} fields
+     * This constant is used for mapping type for {@link javax.persistence.Lob} fields.
      */
-    public static final String LOB_STRING_TYPE = "org.hibernate.type.TextType";
+    public static final String LOB_STRING_TYPE = "org.hibernate.type.MaterializedClobType";//"org.hibernate.type.TextType";
 
+    /**
+     * This namespace is used for wrapping xml parts of objects during save to database.
+     */
     public static final String NS_SQL_REPO = "http://midpoint.evolveum.com/xml/ns/fake/sqlRepository-1.xsd";
     public static final String SQL_REPO_OBJECTS = "sqlRepoObjects";
     public static final String SQL_REPO_OBJECT = "sqlRepoObject";
@@ -81,7 +87,7 @@ public final class RUtil {
     }
 
     public static <T> T toJAXB(Class<?> parentClass, ItemPath path, String value,
-            Class<T> clazz, PrismContext prismContext) throws SchemaException, JAXBException {
+                               Class<T> clazz, PrismContext prismContext) throws SchemaException, JAXBException {
         if (StringUtils.isEmpty(value)) {
             return null;
         }
@@ -156,7 +162,7 @@ public final class RUtil {
         Object valueForMarshall = value;
         PrismJaxbProcessor jaxbProcessor = prismContext.getPrismJaxbProcessor();
         if (value instanceof List) {
-            List valueList = (List)value;
+            List valueList = (List) value;
             if (valueList.isEmpty()) {
                 return null;
             }
@@ -213,21 +219,7 @@ public final class RUtil {
         }
         return list;
     }
-    
-    public static List<ObjectReferenceType> safeSetReferencesToList(Set<REmbeddedReference> set, PrismContext prismContext) {
-        if (set == null || set.isEmpty()) {
-            return new ArrayList<ObjectReferenceType>();
-        }
 
-        List<ObjectReferenceType> list = new ArrayList<ObjectReferenceType>();
-        for (REmbeddedReference str : set) {
-        	ObjectReferenceType ort = new ObjectReferenceType();
-        	REmbeddedReference.copyToJAXB(str, ort, prismContext);
-            list.add(ort);
-        }
-        return list;
-    }
-    
     public static Set<RSynchronizationSituationDescription> listSyncSituationToSet(List<SynchronizationSituationDescriptionType> list) {
         if (list == null || list.isEmpty()) {
             return null;
@@ -263,16 +255,63 @@ public final class RUtil {
         return list;
     }
 
-    public static RObjectReference jaxbRefToRepo(ObjectReferenceType ref, RContainer owner,
-            PrismContext prismContext) {
-        if (ref == null) {
+    @Deprecated
+    public static List<ObjectReferenceType> safeSetReferencesToList123(Set<REmbeddedReference> set, PrismContext prismContext) {
+        if (set == null || set.isEmpty()) {
+            return new ArrayList<ObjectReferenceType>();
+        }
+
+        List<ObjectReferenceType> list = new ArrayList<ObjectReferenceType>();
+        for (REmbeddedReference str : set) {
+            ObjectReferenceType ort = new ObjectReferenceType();
+            REmbeddedReference.copyToJAXB(str, ort, prismContext);
+            list.add(ort);
+        }
+        return list;
+    }
+
+    public static List<ObjectReferenceType> safeSetReferencesToList(Set<RObjectReference> set, PrismContext prismContext) {
+        if (set == null || set.isEmpty()) {
+            return new ArrayList<ObjectReferenceType>();
+        }
+
+        List<ObjectReferenceType> list = new ArrayList<ObjectReferenceType>();
+        for (RObjectReference str : set) {
+            ObjectReferenceType ort = new ObjectReferenceType();
+            RObjectReference.copyToJAXB(str, ort, prismContext);
+            list.add(ort);
+        }
+        return list;
+    }
+
+    public static Set<RObjectReference> safeListReferenceToSet(List<ObjectReferenceType> list, PrismContext prismContext,
+                                                               RContainer owner, RReferenceOwner refOwner) {
+        Set<RObjectReference> set = new HashSet<RObjectReference>();
+        if (list == null || list.isEmpty()) {
+            return set;
+        }
+
+        for (ObjectReferenceType ref : list) {
+            RObjectReference rRef = RUtil.jaxbRefToRepo(ref, prismContext, owner, refOwner);
+            if (rRef != null) {
+                set.add(rRef);
+            }
+        }
+        return set;
+    }
+
+    public static RObjectReference jaxbRefToRepo(ObjectReferenceType reference, PrismContext prismContext,
+                                                 RContainer owner, RReferenceOwner refOwner) {
+        if (reference == null) {
             return null;
         }
         Validate.notNull(owner, "Owner of reference must not be null.");
+        Validate.notNull(refOwner, "Reference owner of reference must not be null.");
+        Validate.notEmpty(reference.getOid(), "Target oid reference must not be null.");
 
-        RObjectReference repoRef = new RObjectReference();
+        RObjectReference repoRef = RReferenceOwner.createObjectReference(refOwner);
         repoRef.setOwner(owner);
-        RObjectReference.copyFromJAXB(ref, repoRef, prismContext);
+        RObjectReference.copyFromJAXB(reference, repoRef, prismContext);
 
         return repoRef;
     }

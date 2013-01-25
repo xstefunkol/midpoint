@@ -30,7 +30,10 @@ import com.evolveum.midpoint.prism.query.EqualsFilter;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.prism.query.OrgFilter;
 import com.evolveum.midpoint.prism.query.RefFilter;
-import com.evolveum.midpoint.repo.sql.data.common.*;
+import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
+import com.evolveum.midpoint.repo.sql.data.common.RObjectReference;
+import com.evolveum.midpoint.repo.sql.data.common.ROrgClosure;
+import com.evolveum.midpoint.repo.sql.data.common.RUser;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
 import com.evolveum.midpoint.repo.sql.data.common.id.RContainerId;
 import com.evolveum.midpoint.repo.sql.data.common.type.RParentOrgRef;
@@ -198,7 +201,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
         List<ROrgClosure> results = criteria.list();
 
         LOGGER.info("before modify");
-        for (ROrgClosure c: results) {
+        for (ROrgClosure c : results) {
             LOGGER.info("{}\t{}\t{}", new Object[]{c.getAncestor().getOid(), c.getDescendant().getOid(), c.getDepth()});
         }
         AssertJUnit.assertEquals(3, results.size());
@@ -213,7 +216,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
 
         results = criteria.list();
         LOGGER.info("after modify");
-        for (ROrgClosure c: results) {
+        for (ROrgClosure c : results) {
             LOGGER.info("{}\t{}\t{}", new Object[]{c.getAncestor().getOid(), c.getDescendant().getOid(), c.getDepth()});
         }
         AssertJUnit.assertEquals(5, results.size());
@@ -487,7 +490,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
             session.getTransaction().commit();
             session.close();
 
-            user = getUser(id.getOid(), 3);
+            user = getUser(id.getOid(), 3, user);
             //todo asserts
 
             user = new RUser();
@@ -499,32 +502,13 @@ public class OrgStructTest extends BaseSQLRepoTest {
             refs.add(createRef(user, "1", "namespace", "localpart"));
             user.setParentOrgRef(refs);
 
-//        session = factory.openSession();
-//        session.beginTransaction();
-//        SQLQuery query = session.createSQLQuery("delete from m_object_org_ref where object_id=? and object_oid=? and description=? and filter=? and localPart=? and namespace=? and targetOid=? and type=?");
-//        query.setParameter(0, 0L);
-//        query.setParameter(1, id.getOid());
-//        query.setParameter(2, null, TextType.INSTANCE);
-//        query.setParameter(3, null, TextType.INSTANCE);
-//        query.setParameter(4, null, StringType.INSTANCE);
-//        query.setParameter(5, null, StringType.INSTANCE);
-//        query.setParameter(6, "6");
-//        query.setParameter(7, 16);
-//
-//        int count = query.executeUpdate();
-//        System.out.println(">>>>>>>>>>>>>>>>>> " + count);
-//
-//        session.getTransaction().commit();
-//        session.close();
-
-
             session = factory.openSession();
             session.beginTransaction();
             session.merge(user);
             session.getTransaction().commit();
             session.close();
 
-            user = getUser(id.getOid(), 2);
+            user = getUser(id.getOid(), 2, user);
             //todo asserts
         } catch (Exception ex) {
             LOGGER.error("Exception occurred.", ex);
@@ -532,7 +516,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
         }
     }
 
-    private RUser getUser(String oid, int count) {
+    private RUser getUser(String oid, int count, RUser other) {
         Session session = factory.openSession();
         session.beginTransaction();
         RUser user = (RUser) session.get(RUser.class, new RContainerId(0L, oid));
@@ -553,12 +537,6 @@ public class OrgStructTest extends BaseSQLRepoTest {
             ref.setRelationLocalPart(localpart);
             ref.setRelationNamespace(namespace);
         }
-
-//        if (ref.getRelation() == null) {
-//            ref.setRelation(new RQName(new QName("a", "b")));
-//        }
-//        ref.setDescription("description");
-//        ref.setFilter("filter");
 
         return ref;
     }

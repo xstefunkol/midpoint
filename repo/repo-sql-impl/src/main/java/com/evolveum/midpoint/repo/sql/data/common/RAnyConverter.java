@@ -25,15 +25,14 @@ import com.evolveum.midpoint.prism.*;
 import com.evolveum.midpoint.prism.dom.PrismDomProcessor;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
 import com.evolveum.midpoint.repo.sql.data.common.any.*;
-import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.repo.sql.type.XMLGregorianCalendarType;
+import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.util.DOMUtil;
 import com.evolveum.midpoint.util.exception.SchemaException;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ObjectType;
-
 import org.apache.commons.lang.Validate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -75,15 +74,15 @@ public class RAnyConverter {
         this.prismContext = prismContext;
     }
 
-    Set<RValue> convertToRValue(Item item) throws DtoTranslationException {
+    Set<RValueInterface> convertToRValue(Item item) throws DtoTranslationException {
         Validate.notNull(item, "Object for converting must not be null.");
         Validate.notNull(item.getDefinition(), "Item '" + item.getName() + "' without definition can't be saved.");
 
-        Set<RValue> rValues = new HashSet<RValue>();
+        Set<RValueInterface> rValues = new HashSet<RValueInterface>();
         try {
             ItemDefinition definition = item.getDefinition();
 
-            RValue rValue = null;
+            RValueInterface rValue = null;
             List<PrismValue> values = item.getValues();
             for (PrismValue value : values) {
                 if (value instanceof PrismContainerValue) {
@@ -173,13 +172,13 @@ public class RAnyConverter {
         return RValueType.getTypeFromItemClass(((Item) itemable).getClass());
     }
 
-    private RClobValue createClobValue(PrismValue prismValue) throws SchemaException {
+    private RAnyClob createClobValue(PrismValue prismValue) throws SchemaException {
         PrismDomProcessor domProcessor = prismContext.getPrismDomProcessor();
         Element root = createElement(RUtil.CUSTOM_OBJECT);
         domProcessor.serializeValueToDom(prismValue, root);
         String value = DOMUtil.serializeDOMToString(root);
 
-        return new RClobValue(value);
+        return new RAnyClob(value);
     }
 
     private <T> T extractValue(PrismPropertyValue value, Class<T> returnType) throws SchemaException {
@@ -212,7 +211,7 @@ public class RAnyConverter {
         return type;
     }
 
-    void convertFromRValue(RValue value, PrismContainerValue any) throws DtoTranslationException {
+    void convertFromRValue(RValueInterface value, PrismContainerValue any) throws DtoTranslationException {
         Validate.notNull(value, "Value for converting must not be null.");
         Validate.notNull(any, "Parent prism container value must not be null.");
 
@@ -254,7 +253,7 @@ public class RAnyConverter {
         }
     }
 
-    private ItemDefinition createDefinitionForItem(RValue value) {
+    private ItemDefinition createDefinitionForItem(RValueInterface value) {
         ItemDefinition def;
         switch (value.getValueType()) {
             case PROPERTY:
@@ -286,7 +285,7 @@ public class RAnyConverter {
         return DOMUtil.createElement(document, name);
     }
 
-    private void addClobValueToItem(RClobValue value, Item item) throws SchemaException {
+    private void addClobValueToItem(RAnyClob value, Item item) throws SchemaException {
         PrismDomProcessor domProcessor = prismContext.getPrismDomProcessor();
         Element root = DOMUtil.parseDocument(value.getValue()).getDocumentElement();
 
@@ -295,9 +294,9 @@ public class RAnyConverter {
         item.addAll(PrismValue.resetParentCollection(parsedItem.getValues()));
     }
 
-    private void addValueToItem(RValue value, Item item) throws SchemaException {
-        if (value instanceof RClobValue) {
-            addClobValueToItem((RClobValue) value, item);
+    private void addValueToItem(RValueInterface value, Item item) throws SchemaException {
+        if (value instanceof RAnyClob) {
+            addClobValueToItem((RAnyClob) value, item);
             return;
         }
 
@@ -328,14 +327,14 @@ public class RAnyConverter {
 
     /**
      * Method restores aggregated object type to its real type, e.g. number 123.1 is type of double, but was
-     * saved as string. This method takes RValue instance and creates 123.1 double from string based on
+     * saved as string. This method takes RValueInterface instance and creates 123.1 double from string based on
      * provided definition.
      *
      * @param rValue
      * @return
      * @throws SchemaException
      */
-    private Object createRealValue(RValue rValue) throws SchemaException {
+    private Object createRealValue(RValueInterface rValue) throws SchemaException {
         if (rValue instanceof RReferenceValue) {
             //this is special case, reference doesn't have value, it only has a few properties (oid, filter, etc.)
             return null;

@@ -21,6 +21,8 @@
 
 package com.evolveum.midpoint.repo.sql.data.common.id;
 
+import com.evolveum.midpoint.repo.sql.type.QNameType;
+
 import java.io.Serializable;
 
 /**
@@ -63,7 +65,7 @@ public class RObjectReferenceId implements Serializable {
 
     public String getRelationLocalPart() {
         if (relationLocalPart == null) {
-            relationLocalPart = "";
+            relationLocalPart = QNameType.EMPTY_QNAME_COLUMN_VALUE;
         }
         return relationLocalPart;
     }
@@ -74,7 +76,7 @@ public class RObjectReferenceId implements Serializable {
 
     public String getRelationNamespace() {
         if (relationNamespace == null) {
-            relationNamespace = "";
+            relationNamespace = QNameType.EMPTY_QNAME_COLUMN_VALUE;
         }
         return relationNamespace;
     }
@@ -93,10 +95,10 @@ public class RObjectReferenceId implements Serializable {
         if (ownerId != null ? !ownerId.equals(that.ownerId) : that.ownerId != null) return false;
         if (ownerOid != null ? !ownerOid.equals(that.ownerOid) : that.ownerOid != null) return false;
         if (targetOid != null ? !targetOid.equals(that.targetOid) : that.targetOid != null) return false;
-        if (relationNamespace != null ? !relationNamespace.equals(that.relationNamespace) :
-                that.relationNamespace != null) return false;
-        if (relationLocalPart != null ? !relationLocalPart.equals(that.relationLocalPart) :
-                that.relationLocalPart != null) return false;
+        if (getRelationNamespace() != null ? !getRelationNamespace().equals(that.getRelationNamespace()) :
+                that.getRelationNamespace() != null) return false;
+        if (getRelationLocalPart() != null ? !getRelationLocalPart().equals(that.getRelationLocalPart()) :
+                that.getRelationLocalPart() != null) return false;
 
         return true;
     }
@@ -107,8 +109,8 @@ public class RObjectReferenceId implements Serializable {
         int result = ownerOid != null ? ownerOid.hashCode() : 0;
         result = 31 * result + (ownerId != null ? ownerId.hashCode() : 0);
         result = 31 * result + (targetOid != null ? targetOid.hashCode() : 0);
-        result = 31 * result + (relationNamespace != null ? relationNamespace.hashCode() : 0);
-        result = 31 * result + (relationLocalPart != null ? relationLocalPart.hashCode() : 0);
+        result = 31 * result + (getRelationNamespace() != null ? getRelationNamespace().hashCode() : 0);
+        result = 31 * result + (getRelationLocalPart() != null ? getRelationLocalPart().hashCode() : 0);
 
         return result;
     }

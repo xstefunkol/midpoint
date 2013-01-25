@@ -22,8 +22,8 @@ import java.io.Serializable;
  */
 @Entity
 @IdClass(RAnyClobId.class)
-@Table(name = "m_any_clob2")
-public class RAnyClob implements Serializable {
+@Table(name = "m_any_clob")
+public class RAnyClob implements RValueInterface, Serializable {
 
     //owner entity
     private RAnyContainer anyContainer;
@@ -38,20 +38,27 @@ public class RAnyClob implements Serializable {
     private String value;
     private String checksum;
 
-    @ForeignKey(name = "fk_any_container")
+    public RAnyClob() {
+    }
+
+    public RAnyClob(String value) {
+        setValue(value);
+    }
+
+    @ForeignKey(name = "fk_any_clob")
     @MapsId("owner")
     @ManyToOne(fetch = FetchType.LAZY)
     @PrimaryKeyJoinColumns({
-            @PrimaryKeyJoinColumn(name = "owner_oid", referencedColumnName = "ownerOid"),
-            @PrimaryKeyJoinColumn(name = "owner_id", referencedColumnName = "ownerId"),
-            @PrimaryKeyJoinColumn(name = "owner_type", referencedColumnName = "ownerType")
+            @PrimaryKeyJoinColumn(name = "anyContainer_owner_oid", referencedColumnName = "ownerOid"),
+            @PrimaryKeyJoinColumn(name = "anyContainer_owner_id", referencedColumnName = "ownerId"),
+            @PrimaryKeyJoinColumn(name = "anyContainer_ownertype", referencedColumnName = "ownerType")
     })
     public RAnyContainer getAnyContainer() {
         return anyContainer;
     }
 
     @Id
-    @Column(name = "owner_oid", length = 36)
+    @Column(name = "anyContainer_owner_oid", length = 36)
     public String getOwnerOid() {
         if (ownerOid == null && anyContainer != null) {
             ownerOid = anyContainer.getOwnerOid();
@@ -60,7 +67,7 @@ public class RAnyClob implements Serializable {
     }
 
     @Id
-    @Column(name = "owner_id")
+    @Column(name = "anyContainer_owner_id")
     public Long getOwnerId() {
         if (ownerId == null && anyContainer != null) {
             ownerId = anyContainer.getOwnerId();
@@ -69,12 +76,23 @@ public class RAnyClob implements Serializable {
     }
 
     @Id
-    @Column(name = "owner_type")
+    @Column(name = "anyContainer_ownertype")
     public RContainerType getOwnerType() {
         if (ownerType == null && anyContainer != null) {
             ownerType = anyContainer.getOwnerType();
         }
         return ownerType;
+    }
+
+    /**
+     * This method is used for content comparing when querying database (we don't want to compare clob values).
+     *
+     * @return md5 hash of {@link com.evolveum.midpoint.repo.sql.data.common.any.RAnyClob#getValue()}
+     */
+    @Id
+    @Column(length = 32, name = "checksum")
+    public String getChecksum() {
+        return checksum;
     }
 
     @Columns(columns = {
@@ -111,17 +129,6 @@ public class RAnyClob implements Serializable {
     @Column(name = "clobValue")
     public String getValue() {
         return value;
-    }
-
-    /**
-     * This method is used for content comparing when querying database (we don't want to compare clob values).
-     *
-     * @return md5 hash of {@link com.evolveum.midpoint.repo.sql.data.common.any.RClobValue#getValue()}
-     */
-    @Id
-    @Column(length = 32)
-    public String getChecksum() {
-        return checksum;
     }
 
     public void setChecksum(String checksum) {

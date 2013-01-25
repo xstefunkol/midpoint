@@ -215,8 +215,8 @@ public class RObjectReference implements ObjectReference {
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (filter != null ? filter.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (relationNamespace != null ? relationNamespace.hashCode() : 0);
-        result = 31 * result + (relationLocalPart != null ? relationLocalPart.hashCode() : 0);
+        result = 31 * result + (getRelationNamespace() != null ? getRelationNamespace().hashCode() : 0);
+        result = 31 * result + (getRelationLocalPart() != null ? getRelationLocalPart().hashCode() : 0);
 
         return result;
     }

@@ -383,6 +383,7 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void simpleModifyExtensionDateTest() throws Exception {
+        LOGGER.info("===[simpleModifyExtensionDateTest]===");
         final Timestamp DATE = new Timestamp(new Date().getTime());
         RUser user = createUser(123L, DATE);
 
@@ -477,11 +478,12 @@ public class ModifyTest extends BaseSQLRepoTest {
         s2.setValue("pltka");
         s2.setValueType(RValueType.PROPERTY);
 
-        Set<RClobValue> clobs = new HashSet<RClobValue>();
+        Set<RAnyClob> clobs = new HashSet<RAnyClob>();
         any.setClobs(clobs);
 
-        RClobValue c1 = new RClobValue();
+        RAnyClob c1 = new RAnyClob();
         clobs.add(c1);
+        c1.setAnyContainer(any);
         c1.setDynamic(false);
         c1.setName(new QName(namespace, "someContainer"));
         c1.setType(new QName("http://www.w3.org/2001/XMLSchema", "string"));

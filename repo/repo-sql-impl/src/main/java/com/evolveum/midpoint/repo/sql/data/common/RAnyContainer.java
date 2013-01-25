@@ -29,7 +29,6 @@ import com.evolveum.midpoint.repo.sql.data.common.id.RAnyContainerId;
 import com.evolveum.midpoint.repo.sql.util.DtoTranslationException;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ExtensionType;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ResourceObjectShadowAttributesType;
-
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -59,18 +58,17 @@ public class RAnyContainer implements Serializable {
     private Set<RStringValue> strings;
     private Set<RLongValue> longs;
     private Set<RDateValue> dates;
-    private Set<RClobValue> clobs;
     private Set<RReferenceValue> references;
 
-    private Set<RAnyClob> anyClobs;
+    private Set<RAnyClob> clobs;
 
     @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RAnyClob> getAnyClobs() {
-        if (anyClobs == null) {
-            anyClobs = new HashSet<RAnyClob>();
+    public Set<RAnyClob> getClobs() {
+        if (clobs == null) {
+            clobs = new HashSet<RAnyClob>();
         }
-        return anyClobs;
+        return clobs;
     }
 
     @ForeignKey(name = "none")
@@ -129,15 +127,6 @@ public class RAnyContainer implements Serializable {
     }
 
     @ElementCollection
-    @ForeignKey(name = "fk_any_clob")
-    @CollectionTable(name = "m_any_clob", joinColumns =
-            {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RClobValue> getClobs() {
-        return clobs;
-    }
-
-    @ElementCollection
     @ForeignKey(name = "fk_any_date")
     @CollectionTable(name = "m_any_date", joinColumns =
             {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
@@ -155,8 +144,8 @@ public class RAnyContainer implements Serializable {
         return references;
     }
 
-    public void setAnyClobs(Set<RAnyClob> anyClobs) {
-        this.anyClobs = anyClobs;
+    public void setClobs(Set<RAnyClob> clobs) {
+        this.clobs = clobs;
     }
 
     public void setReferences(Set<RReferenceValue> references) {
@@ -165,10 +154,6 @@ public class RAnyContainer implements Serializable {
 
     public void setOwnerType(RContainerType ownerType) {
         this.ownerType = ownerType;
-    }
-
-    public void setClobs(Set<RClobValue> clobs) {
-        this.clobs = clobs;
     }
 
     public void setDates(Set<RDateValue> dates) {
@@ -203,7 +188,6 @@ public class RAnyContainer implements Serializable {
         RAnyContainer that = (RAnyContainer) o;
 
         if (clobs != null ? !clobs.equals(that.clobs) : that.clobs != null) return false;
-        if (anyClobs != null ? !anyClobs.equals(that.anyClobs) : that.anyClobs != null) return false;
         if (dates != null ? !dates.equals(that.dates) : that.dates != null) return false;
         if (longs != null ? !longs.equals(that.longs) : that.longs != null) return false;
         if (strings != null ? !strings.equals(that.strings) : that.strings != null) return false;
@@ -225,7 +209,7 @@ public class RAnyContainer implements Serializable {
     }
 
     public static void copyToJAXB(RAnyContainer repo, ResourceObjectShadowAttributesType jaxb,
-            PrismContext prismContext) throws
+                                  PrismContext prismContext) throws
             DtoTranslationException {
         Validate.notNull(repo, "Repo object must not be null.");
         Validate.notNull(jaxb, "JAXB object must not be null.");
@@ -242,7 +226,7 @@ public class RAnyContainer implements Serializable {
     }
 
     private static void copyToJAXB(RAnyContainer repo, PrismContainerValue containerValue,
-            PrismContext prismContext) throws
+                                   PrismContext prismContext) throws
             DtoTranslationException {
         RAnyConverter converter = new RAnyConverter(prismContext);
 
@@ -253,19 +237,19 @@ public class RAnyContainer implements Serializable {
         convertValues(converter, containerValue, repo.getReferences());
     }
 
-    private static <T extends RValue> void convertValues(RAnyConverter converter, PrismContainerValue containerValue,
-                                                         Set<T> values) throws DtoTranslationException {
+    private static <T extends RValueInterface> void convertValues(RAnyConverter converter, PrismContainerValue containerValue,
+                                                                  Set<T> values) throws DtoTranslationException {
         if (values == null) {
             return;
         }
 
-        for (RValue value : values) {
+        for (RValueInterface value : values) {
             converter.convertFromRValue(value, containerValue);
         }
     }
 
     public static void copyFromJAXB(ResourceObjectShadowAttributesType jaxb, RAnyContainer repo,
-            PrismContext prismContext) throws
+                                    PrismContext prismContext) throws
             DtoTranslationException {
         Validate.notNull(repo, "Repo object must not be null.");
         Validate.notNull(jaxb, "JAXB object must not be null.");
@@ -282,11 +266,11 @@ public class RAnyContainer implements Serializable {
     }
 
     private static void copyFromJAXB(PrismContainerValue containerValue, RAnyContainer repo,
-            PrismContext prismContext) throws
+                                     PrismContext prismContext) throws
             DtoTranslationException {
         RAnyConverter converter = new RAnyConverter(prismContext);
 
-        Set<RValue> values = new HashSet<RValue>();
+        Set<RValueInterface> values = new HashSet<RValueInterface>();
         try {
             List<Item<?>> items = containerValue.getItems();
             for (Item item : items) {
@@ -296,12 +280,14 @@ public class RAnyContainer implements Serializable {
             throw new DtoTranslationException(ex.getMessage(), ex);
         }
 
-        for (RValue value : values) {
-            if (value instanceof RClobValue) {
+        for (RValueInterface value : values) {
+            if (value instanceof RAnyClob) {
                 if (repo.getClobs() == null) {
-                    repo.setClobs(new HashSet<RClobValue>());
+                    repo.setClobs(new HashSet<RAnyClob>());
                 }
-                repo.getClobs().add((RClobValue) value);
+                RAnyClob clob = (RAnyClob) value;
+                clob.setAnyContainer(repo);
+                repo.getClobs().add(clob);
             } else if (value instanceof RDateValue) {
                 if (repo.getDates() == null) {
                     repo.setDates(new HashSet<RDateValue>());

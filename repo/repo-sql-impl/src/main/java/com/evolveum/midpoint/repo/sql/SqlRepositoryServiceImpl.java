@@ -350,6 +350,8 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			throw ex;
 		} catch (ConstraintViolationException ex) {
 			rollbackTransaction(session, ex, result, true);
+
+            LOGGER.debug("Constraint violation occurred (will be rethrown as ObjectAlreadyExistsException).", ex);
 			// we don't know if it's only name uniqueness violation, or something else,
 			// therefore we're throwing it always as ObjectAlreadyExistsException revert
 			// to the original oid and prevent of unexpected behaviour (e.g. by import with overwrite option)

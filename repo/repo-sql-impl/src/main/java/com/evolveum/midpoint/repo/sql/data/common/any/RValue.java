@@ -33,7 +33,7 @@ import java.io.Serializable;
  * @author lazyman
  */
 @MappedSuperclass
-public abstract class RValue<T> {
+public abstract class RValue<T> implements RValueInterface<T> {
 
     private boolean dynamic;
     private QName name;

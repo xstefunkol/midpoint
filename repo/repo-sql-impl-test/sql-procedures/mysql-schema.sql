@@ -17,16 +17,18 @@ CREATE TABLE m_any (
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_clob (
-  owner_id       BIGINT      NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INTEGER     NOT NULL,
-  clobValue      LONGTEXT,
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INTEGER
+  checksum               VARCHAR(32) NOT NULL,
+  anyContainer_owner_id  BIGINT      NOT NULL,
+  anyContainer_owner_oid VARCHAR(36) NOT NULL,
+  anyContainer_ownertype INTEGER     NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  clobValue              LONGTEXT,
+  valueType              INTEGER,
+  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
 )
   ENGINE = InnoDB;
 
@@ -371,11 +373,11 @@ CREATE TABLE m_role (
   ENGINE = InnoDB;
 
 CREATE TABLE m_sync_situation_description (
-  shadow_id  BIGINT      NOT NULL,
-  shadow_oid VARCHAR(36) NOT NULL,
-  chanel     VARCHAR(255),
-  situation  INTEGER,
-  timestamp  DATETIME
+  shadow_id      BIGINT      NOT NULL,
+  shadow_oid     VARCHAR(36) NOT NULL,
+  chanel         VARCHAR(255),
+  situation      INTEGER,
+  timestampValue DATETIME
 )
   ENGINE = InnoDB;
 
@@ -494,6 +496,14 @@ CREATE TABLE m_user_employee_type (
 )
   ENGINE = InnoDB;
 
+CREATE TABLE m_user_organization (
+  user_id  BIGINT      NOT NULL,
+  user_oid VARCHAR(36) NOT NULL,
+  norm     VARCHAR(255),
+  orig     VARCHAR(255)
+)
+  ENGINE = InnoDB;
+
 CREATE TABLE m_user_organizational_unit (
   user_id  BIGINT      NOT NULL,
   user_oid VARCHAR(36) NOT NULL,
@@ -521,9 +531,9 @@ FOREIGN KEY (id, oid)
 REFERENCES m_resource_shadow (id, oid);
 
 ALTER TABLE m_any_clob
-ADD INDEX fk_any_clob (owner_id, owner_oid, ownerType),
+ADD INDEX fk_any_clob (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType),
 ADD CONSTRAINT fk_any_clob
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any (owner_id, owner_oid, ownerType);
 
 CREATE INDEX iDate ON m_any_date (dateValue);
@@ -690,6 +700,8 @@ ADD CONSTRAINT fk_resource_object_shadow
 FOREIGN KEY (id, oid)
 REFERENCES m_object (id, oid);
 
+CREATE INDEX iRequestable ON m_role (requestable);
+
 ALTER TABLE m_role
 ADD INDEX fk_role (id, oid),
 ADD CONSTRAINT fk_role
@@ -743,6 +755,12 @@ REFERENCES m_object (id, oid);
 ALTER TABLE m_user_employee_type
 ADD INDEX fk_user_employee_type (user_id, user_oid),
 ADD CONSTRAINT fk_user_employee_type
+FOREIGN KEY (user_id, user_oid)
+REFERENCES m_user (id, oid);
+
+ALTER TABLE m_user_organization
+ADD INDEX fk_user_organization (user_id, user_oid),
+ADD CONSTRAINT fk_user_organization
 FOREIGN KEY (user_id, user_oid)
 REFERENCES m_user (id, oid);
 

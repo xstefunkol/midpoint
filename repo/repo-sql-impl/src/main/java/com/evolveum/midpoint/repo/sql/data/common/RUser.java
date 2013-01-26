@@ -106,6 +106,18 @@ public class RUser extends RObject {
     @QueryAttribute(name = "accountRef", multiValue = true, reference = true)
     private Set<RObjectReference> accountRefs;
     private Set<RAssignment> assignments;
+    private Set<RPolyString> organization;
+
+    @ElementCollection
+    @ForeignKey(name = "fk_user_org")
+    @CollectionTable(name = "m_user_org", joinColumns = {
+            @JoinColumn(name = "user_oid", referencedColumnName = "oid"),
+            @JoinColumn(name = "user_id", referencedColumnName = "id")
+    })
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    public Set<RPolyString> getOrganization() {
+        return organization;
+    }
 
     @Where(clause = RObjectReference.REFERENCE_TYPE + "=" + RAccountRef.DISCRIMINATOR)
     @OneToMany(mappedBy = "owner", orphanRemoval = true)
@@ -247,6 +259,10 @@ public class RUser extends RObject {
         this.locale = locale;
     }
 
+    public void setOrganization(Set<RPolyString> organization) {
+        this.organization = organization;
+    }
+
     public void setNickName(RPolyString nickName) {
         this.nickName = nickName;
     }
@@ -370,6 +386,7 @@ public class RUser extends RObject {
                 rUser.preferredLanguage != null) return false;
         if (timezone != null ? !timezone.equals(rUser.timezone) : rUser.timezone != null) return false;
         if (costCenter != null ? !costCenter.equals(rUser.costCenter) : rUser.costCenter != null) return false;
+        if (organization != null ? !organization.equals(rUser.organization) : rUser.organization != null) return false;
 
         return true;
     }
@@ -435,6 +452,7 @@ public class RUser extends RObject {
         //sets
         repo.setEmployeeType(RUtil.listToSet(jaxb.getEmployeeType()));
         repo.setOrganizationalUnit(RUtil.listPolyToSet(jaxb.getOrganizationalUnit()));
+        repo.setOrganization(RUtil.listPolyToSet(jaxb.getOrganization()));
 
         repo.getAccountRefs().addAll(RUtil.safeListReferenceToSet(jaxb.getAccountRef(), prismContext, repo, RReferenceOwner.USER_ACCOUNT));
 
@@ -490,6 +508,11 @@ public class RUser extends RObject {
         List units = RUtil.safeSetPolyToList(repo.getOrganizationalUnit());
         if (!units.isEmpty()) {
             jaxb.getOrganizationalUnit().addAll(units);
+        }
+
+        units = RUtil.safeSetPolyToList(repo.getOrganization());
+        if (!units.isEmpty()) {
+            jaxb.getOrganization().addAll(units);
         }
 
         List accRefs = RUtil.safeSetReferencesToList(repo.getAccountRefs(), prismContext);

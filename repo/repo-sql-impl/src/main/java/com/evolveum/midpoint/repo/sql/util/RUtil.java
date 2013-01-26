@@ -26,19 +26,25 @@ import com.evolveum.midpoint.prism.dom.PrismDomProcessor;
 import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.schema.SchemaRegistry;
 import com.evolveum.midpoint.prism.xml.PrismJaxbProcessor;
-import com.evolveum.midpoint.repo.sql.data.common.RContainer;
-import com.evolveum.midpoint.repo.sql.data.common.RObjectReference;
+import com.evolveum.midpoint.repo.sql.data.common.*;
+import com.evolveum.midpoint.repo.sql.data.common.any.RAnyClob;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.REmbeddedReference;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RSynchronizationSituationDescription;
 import com.evolveum.midpoint.repo.sql.data.common.enums.RReferenceOwner;
 import com.evolveum.midpoint.util.DOMUtil;
 import com.evolveum.midpoint.util.exception.SchemaException;
+import com.evolveum.midpoint.util.exception.SystemException;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.ObjectReferenceType;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.SynchronizationSituationDescriptionType;
 import com.evolveum.prism.xml.ns._public.types_2.PolyStringType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.hibernate.SessionFactory;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -48,6 +54,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -344,5 +351,47 @@ public final class RUtil {
         }
 
         return id.toString();
+    }
+
+    /**
+     * This method is used to override "hasIdentifierMapper" in EntityMetamodels of entities which have
+     * composite id and class defined for it. It's workeround for bug as found in forum
+     * https://forum.hibernate.org/viewtopic.php?t=978915&highlight=
+     *
+     * @param sessionFactory
+     */
+    public static void fixCompositeIDHandling(SessionFactory sessionFactory) {
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyContainer.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyClob.class);
+
+        fixCompositeIdentifierInMetaModel(sessionFactory, RObjectReference.class);
+        for (RReferenceOwner owner : RReferenceOwner.values()) {
+            fixCompositeIdentifierInMetaModel(sessionFactory, owner.getClazz());
+        }
+
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAssignment.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RExclusion.class);
+        for (RContainerType type : ClassMapper.getKnownTypes()) {
+            fixCompositeIdentifierInMetaModel(sessionFactory, type.getClazz());
+        }
+    }
+
+    private static void fixCompositeIdentifierInMetaModel(SessionFactory sessionFactory, Class clazz) {
+        ClassMetadata classMetadata = sessionFactory.getClassMetadata(clazz);
+        if (classMetadata instanceof AbstractEntityPersister) {
+            AbstractEntityPersister persister = (AbstractEntityPersister) classMetadata;
+            EntityMetamodel model = persister.getEntityMetamodel();
+            IdentifierProperty identifier = model.getIdentifierProperty();
+
+            try {
+                Field field = IdentifierProperty.class.getDeclaredField("hasIdentifierMapper");
+                field.setAccessible(true);
+                field.set(identifier, true);
+                field.setAccessible(false);
+            } catch (Exception ex) {
+                throw new SystemException("Attempt to fix entity meta model with hack failed, reason: "
+                        + ex.getMessage(), ex);
+            }
+        }
     }
 }

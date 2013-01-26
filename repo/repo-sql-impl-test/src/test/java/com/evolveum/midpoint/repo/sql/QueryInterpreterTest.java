@@ -320,7 +320,7 @@ public class QueryInterpreterTest extends BaseSQLRepoTest {
     }
 
     private Session open() {
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         return session;
     }

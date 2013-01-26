@@ -150,7 +150,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
         ELAINE_OID = elaine.getOid();
 
         LOGGER.info("==>after add<==");
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
         LOGGER.info("==============CLOSURE TABLE==========");
@@ -192,7 +192,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
                 ObjectModificationType.class);
         ObjectDelta delta = DeltaConvertor.createObjectDelta(modification, OrgType.class, prismContext);
 
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         String descendantOid = "00000000-8888-6666-0000-100000000005";
         Criteria criteria = session.createCriteria(ROrgClosure.class).createCriteria("descendant", "desc")
@@ -275,7 +275,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
 
         repositoryService.modifyObject(OrgType.class, MODIFY_DELETE_REF_OID, delta.getModifications(), opResult);
 
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         LOGGER.info("==>after modify - delete<==");
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -301,7 +301,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
 
         repositoryService.modifyObject(UserType.class, ELAINE_OID, delta.getModifications(), opResult);
 
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         LOGGER.info("==>after modify - add user to org<==");
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -322,8 +322,8 @@ public class OrgStructTest extends BaseSQLRepoTest {
         String orgOidToDelete = "00000000-8888-6666-0000-100000000002";
         OperationResult opResult = new OperationResult("===[ deleteOrgStruct ]===");
         repositoryService.deleteObject(OrgType.class, orgOidToDelete, opResult);
-
-        Session session = factory.openSession();
+                                       
+        Session session = getFactory().openSession();
         session.beginTransaction();
         LOGGER.info("==>after delete<==");
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -342,7 +342,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
     public void test006searchOrgStructUserUnbounded() throws Exception {
         LOGGER.info("===[ SEARCH QUERY ]===");
         OperationResult parentResult = new OperationResult("search objects - org struct");
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
 
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -375,7 +375,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
     public void test007searchOrgStructOrgDepth() throws Exception {
         LOGGER.info("===[ SEARCH QUERY ]===");
         OperationResult parentResult = new OperationResult("search objects - org struct");
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
 
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -405,7 +405,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
     public void test007searchRootOrg() throws Exception {
         LOGGER.info("===[ SEARCH ROOT QUERY ]===");
         OperationResult parentResult = new OperationResult("search root org struct");
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
 
         List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
@@ -450,7 +450,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
         ObjectDelta delta = ObjectDelta.createModificationDeleteReference(UserType.class, ELAINE_OID, UserType.F_PARENT_ORG_REF, prismContext, prv);
         repositoryService.modifyObject(UserType.class, ELAINE_OID, delta.getModifications(), opResult);
 
-//		Session session = factory.openSession();
+//		Session session = getFactory().openSession();
 //		LOGGER.info("==>after modify - add user to org<==");
 //		List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
 //		AssertJUnit.assertEquals(56, results.size());
@@ -484,7 +484,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
             refs.add(createRef(user, "6", null, null));
             user.setParentOrgRef(refs);
 
-            Session session = factory.openSession();
+            Session session = getFactory().openSession();
             session.beginTransaction();
             RContainerId id = (RContainerId) session.save(user);
             session.getTransaction().commit();
@@ -502,7 +502,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
             refs.add(createRef(user, "1", "namespace", "localpart"));
             user.setParentOrgRef(refs);
 
-            session = factory.openSession();
+            session = getFactory().openSession();
             session.beginTransaction();
             session.merge(user);
             session.getTransaction().commit();
@@ -517,7 +517,7 @@ public class OrgStructTest extends BaseSQLRepoTest {
     }
 
     private RUser getUser(String oid, int count, RUser other) {
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.beginTransaction();
         RUser user = (RUser) session.get(RUser.class, new RContainerId(0L, oid));
         AssertJUnit.assertEquals(count, user.getParentOrgRef().size());

@@ -196,7 +196,7 @@ public class ModifyTest extends BaseSQLRepoTest {
         System.out.println("====[ test032ModifyTaskObjectRef ]====");
         LOGGER.info("=== [ test032ModifyTaskObjectRef ] ===");
 
-        ClassMetadata metadata = factory.getClassMetadata(RTask.class);
+        ClassMetadata metadata = getFactory().getClassMetadata(RTask.class);
 
         OperationResult result = new OperationResult("MODIFY");
         File taskFile = new File(TEST_DIR, "task.xml");
@@ -266,7 +266,7 @@ public class ModifyTest extends BaseSQLRepoTest {
     }
 
     private void checkReference(String taskOid) {
-//        Session session = factory.openSession();
+//        Session session = getFactory().openSession();
 //        try {
 //            Criteria criteria = session.createCriteria(RObjectReferenceTaskObject.class);
 //            criteria.add(Restrictions.eq("ownerId", 0L));
@@ -390,14 +390,14 @@ public class ModifyTest extends BaseSQLRepoTest {
         Session session = null;
         try {
             LOGGER.info(">>>SAVE");
-            session = factory.openSession();
+            session = getFactory().openSession();
             session.beginTransaction();
             RContainerId id = (RContainerId) session.save(user);
             session.getTransaction().commit();
             session.close();
 
             LOGGER.info(">>>MERGE");
-            session = factory.openSession();
+            session = getFactory().openSession();
             session.beginTransaction();
             user = createUser(456L, DATE);
             user.setId(0L);
@@ -407,7 +407,7 @@ public class ModifyTest extends BaseSQLRepoTest {
             session.close();
 
             LOGGER.info(">>>GET");
-            session = factory.openSession();
+            session = getFactory().openSession();
             session.beginTransaction();
             user = (RUser) session.createQuery("from RUser as u where u.oid = :oid").setParameter("oid", id.getOid()).uniqueResult();
 

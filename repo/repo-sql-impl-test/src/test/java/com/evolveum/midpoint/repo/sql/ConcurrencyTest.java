@@ -59,7 +59,7 @@ public class ConcurrencyTest extends BaseSQLRepoTest {
 
     @Test
     public void concurrency001() throws Exception {
-        Session session = factory.openSession();
+        Session session = getFactory().openSession();
         session.doWork(new Work() {
             @Override
             public void execute(Connection connection) throws SQLException {

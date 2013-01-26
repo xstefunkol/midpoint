@@ -25,6 +25,7 @@ import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.repo.sql.data.common.*;
 import com.evolveum.midpoint.repo.sql.data.common.any.RAnyClob;
 import com.evolveum.midpoint.repo.sql.util.ClassMapper;
+import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.util.exception.SystemException;
 import com.evolveum.midpoint.util.logging.Trace;
@@ -78,40 +79,9 @@ public class SqlBaseService {
     }
 
     public void setSessionFactory(SessionFactory sessionFactory) {
-        // !!! HACK !!! https://forum.hibernate.org/viewtopic.php?t=978915&highlight=
-        // problem with composite keys and object merging
-        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyContainer.class);
-        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyClob.class);
-
-        fixCompositeIdentifierInMetaModel(sessionFactory, RObjectReference.class);
-
-        fixCompositeIdentifierInMetaModel(sessionFactory, RAssignment.class);
-        fixCompositeIdentifierInMetaModel(sessionFactory, RExclusion.class);
-        for (RContainerType type : ClassMapper.getKnownTypes()) {
-            fixCompositeIdentifierInMetaModel(sessionFactory, type.getClazz());
-        }
-        // END HACK
+        RUtil.fixCompositeIDHandling(sessionFactory);
 
         this.sessionFactory = sessionFactory;
-    }
-
-    private void fixCompositeIdentifierInMetaModel(SessionFactory sessionFactory, Class clazz) {
-        ClassMetadata classMetadata = sessionFactory.getClassMetadata(clazz);
-        if (classMetadata instanceof AbstractEntityPersister) {
-            AbstractEntityPersister persister = (AbstractEntityPersister) classMetadata;
-            EntityMetamodel model = persister.getEntityMetamodel();
-            IdentifierProperty identifier = model.getIdentifierProperty();
-
-            try {
-                Field field = IdentifierProperty.class.getDeclaredField("hasIdentifierMapper");
-                field.setAccessible(true);
-                field.set(identifier, true);
-                field.setAccessible(false);
-            } catch (Exception ex) {
-                throw new SystemException("Attempt to fix entity meta model with hack failed, reason: "
-                        + ex.getMessage(), ex);
-            }
-        }
     }
 
     protected int logOperationAttempt(String oid, String operation, int attempt, RuntimeException ex,

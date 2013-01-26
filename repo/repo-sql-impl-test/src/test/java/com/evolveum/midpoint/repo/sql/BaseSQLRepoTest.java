@@ -23,6 +23,7 @@ package com.evolveum.midpoint.repo.sql;
 
 import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.repo.api.RepositoryService;
+import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import org.hibernate.SessionFactory;
@@ -42,12 +43,22 @@ public class BaseSQLRepoTest extends AbstractTestNGSpringContextTests {
 
     public static final File FOLDER_BASIC = new File("./src/test/resources/basic");
 
-    @Autowired(required = true)
+    @Autowired
     protected RepositoryService repositoryService;
-    @Autowired(required = true)
+    @Autowired
     protected PrismContext prismContext;
     @Autowired
-    protected SessionFactory factory;
+    private SessionFactory factory;
+
+    public SessionFactory getFactory() {
+        return factory;
+    }
+
+    public void setFactory(SessionFactory factory) {
+        RUtil.fixCompositeIDHandling(factory);
+
+        this.factory = factory;
+    }
 
     @BeforeClass
     public void beforeClass() {

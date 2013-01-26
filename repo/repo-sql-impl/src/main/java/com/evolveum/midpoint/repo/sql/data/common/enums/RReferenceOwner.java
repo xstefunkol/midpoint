@@ -37,47 +37,59 @@ public enum RReferenceOwner {
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RParentOrgRef}
      */
-    OBJECT_PARENT_ORG(RParentOrgRef.DISCRIMINATOR),
+    OBJECT_PARENT_ORG(RParentOrgRef.class, RParentOrgRef.DISCRIMINATOR),
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RAccountRef}
      */
-    USER_ACCOUNT(RAccountRef.DISCRIMINATOR),
+    USER_ACCOUNT(RAccountRef.class, RAccountRef.DISCRIMINATOR),
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RResourceApproverRef}
      */
-    RESOURCE_BUSINESS_CONFIGURATON_APPROVER(RResourceApproverRef.DISCRIMINATOR),
+    RESOURCE_BUSINESS_CONFIGURATON_APPROVER(RResourceApproverRef.class, RResourceApproverRef.DISCRIMINATOR),
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RTargetRef}
      */
-    EXCLUSION_TARGET(RTargetRef.DISCRIMINATOR),             //todo maybe can be embedded
+    EXCLUSION_TARGET(RTargetRef.class, RTargetRef.DISCRIMINATOR),             //todo maybe can be embedded
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RConnectorHostRef}
      */
-    CONNECTOR_CONNECTOR_HOST(RConnectorHostRef.DISCRIMINATOR),       //todo maybe can be embedded
+    CONNECTOR_CONNECTOR_HOST(RConnectorHostRef.class, RConnectorHostRef.DISCRIMINATOR),       //todo maybe can be embedded
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RResourceRef}
      */
-    RESOURCE_OBJECT_SHADOW_RESOURCE(RResourceRef.DISCRIMINATOR),    //todo maybe can be embedded
+    RESOURCE_OBJECT_SHADOW_RESOURCE(RResourceRef.class, RResourceRef.DISCRIMINATOR),    //todo maybe can be embedded
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RRoleApproverRef}
      */
-    ROLE_APPROVER(RRoleApproverRef.DISCRIMINATOR),
+    ROLE_APPROVER(RRoleApproverRef.class, RRoleApproverRef.DISCRIMINATOR),
     /**
      * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.ROrgRootRef}
      */
-    SYSTEM_CONFIGURATION_ORG_ROOT(ROrgRootRef.DISCRIMINATOR);
+    SYSTEM_CONFIGURATION_ORG_ROOT(ROrgRootRef.class, ROrgRootRef.DISCRIMINATOR);
 
     private String discriminator;
+    private Class<? extends RObjectReference> clazz;
 
-    private RReferenceOwner(String discriminator) {
+    private RReferenceOwner(Class<? extends RObjectReference> clazz, String discriminator) {
         this.discriminator = discriminator;
+        this.clazz = clazz;
+    }
+
+    /**
+     * This is used for {@link org.hibernate.SessionFactory} fix in
+     * {@link com.evolveum.midpoint.repo.sql.util.RUtil#fixCompositeIDHandling(org.hibernate.SessionFactory)}
+     *
+     * @return class based on reference type
+     */
+    public Class<? extends RObjectReference> getClazz() {
+        return clazz;
     }
 
     public String getDiscriminator() {

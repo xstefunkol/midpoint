@@ -15,16 +15,18 @@ CREATE TABLE m_any (
 );
 
 CREATE TABLE m_any_clob (
-  owner_id       INT8        NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INT4        NOT NULL,
-  clobValue      TEXT,
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INT4
+  checksum               VARCHAR(32) NOT NULL,
+  anyContainer_owner_id  INT8        NOT NULL,
+  anyContainer_owner_oid VARCHAR(36) NOT NULL,
+  anyContainer_ownertype INT4        NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  clobValue              TEXT,
+  valueType              INT4,
+  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
 );
 
 CREATE TABLE m_any_date (
@@ -344,11 +346,11 @@ CREATE TABLE m_role (
 );
 
 CREATE TABLE m_sync_situation_description (
-  shadow_id  INT8        NOT NULL,
-  shadow_oid VARCHAR(36) NOT NULL,
-  chanel     VARCHAR(255),
-  situation  INT4,
-  timestamp  TIMESTAMP
+  shadow_id      INT8        NOT NULL,
+  shadow_oid     VARCHAR(36) NOT NULL,
+  chanel         VARCHAR(255),
+  situation      INT4,
+  timestampValue TIMESTAMP
 );
 
 CREATE TABLE m_system_configuration (
@@ -462,6 +464,13 @@ CREATE TABLE m_user_employee_type (
   employeeType VARCHAR(255)
 );
 
+CREATE TABLE m_user_organization (
+  user_id  INT8        NOT NULL,
+  user_oid VARCHAR(36) NOT NULL,
+  norm     VARCHAR(255),
+  orig     VARCHAR(255)
+);
+
 CREATE TABLE m_user_organizational_unit (
   user_id  INT8        NOT NULL,
   user_oid VARCHAR(36) NOT NULL,
@@ -487,7 +496,7 @@ REFERENCES m_resource_shadow;
 
 ALTER TABLE m_any_clob
 ADD CONSTRAINT fk_any_clob
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 
 CREATE INDEX iDate ON m_any_date (dateValue);
@@ -630,6 +639,8 @@ ADD CONSTRAINT fk_resource_object_shadow
 FOREIGN KEY (id, oid)
 REFERENCES m_object;
 
+CREATE INDEX iRequestable ON m_role (requestable);
+
 ALTER TABLE m_role
 ADD CONSTRAINT fk_role
 FOREIGN KEY (id, oid)
@@ -677,6 +688,11 @@ REFERENCES m_object;
 
 ALTER TABLE m_user_employee_type
 ADD CONSTRAINT fk_user_employee_type
+FOREIGN KEY (user_id, user_oid)
+REFERENCES m_user;
+
+ALTER TABLE m_user_organization
+ADD CONSTRAINT fk_user_organization
 FOREIGN KEY (user_id, user_oid)
 REFERENCES m_user;
 

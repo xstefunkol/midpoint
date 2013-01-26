@@ -109,8 +109,8 @@ public class RUser extends RObject {
     private Set<RPolyString> organization;
 
     @ElementCollection
-    @ForeignKey(name = "fk_user_org")
-    @CollectionTable(name = "m_user_org", joinColumns = {
+    @ForeignKey(name = "fk_user_organization")
+    @CollectionTable(name = "m_user_organization", joinColumns = {
             @JoinColumn(name = "user_oid", referencedColumnName = "oid"),
             @JoinColumn(name = "user_id", referencedColumnName = "id")
     })

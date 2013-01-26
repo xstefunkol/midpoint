@@ -23,6 +23,7 @@ package com.evolveum.midpoint.repo.sql;
 
 import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.repo.sql.data.common.*;
+import com.evolveum.midpoint.repo.sql.data.common.any.RAnyClob;
 import com.evolveum.midpoint.repo.sql.util.ClassMapper;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.util.exception.SystemException;
@@ -79,21 +80,22 @@ public class SqlBaseService {
     public void setSessionFactory(SessionFactory sessionFactory) {
         // !!! HACK !!! https://forum.hibernate.org/viewtopic.php?t=978915&highlight=
         // problem with composite keys and object merging
-        fixCompositeIdentifierInMetaModel(RAnyContainer.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyContainer.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyClob.class);
 
-        fixCompositeIdentifierInMetaModel(RObjectReference.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RObjectReference.class);
 
-        fixCompositeIdentifierInMetaModel(RAssignment.class);
-        fixCompositeIdentifierInMetaModel(RExclusion.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAssignment.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RExclusion.class);
         for (RContainerType type : ClassMapper.getKnownTypes()) {
-            fixCompositeIdentifierInMetaModel(type.getClazz());
+            fixCompositeIdentifierInMetaModel(sessionFactory, type.getClazz());
         }
         // END HACK
 
         this.sessionFactory = sessionFactory;
     }
 
-    private void fixCompositeIdentifierInMetaModel(Class clazz) {
+    private void fixCompositeIdentifierInMetaModel(SessionFactory sessionFactory, Class clazz) {
         ClassMetadata classMetadata = sessionFactory.getClassMetadata(clazz);
         if (classMetadata instanceof AbstractEntityPersister) {
             AbstractEntityPersister persister = (AbstractEntityPersister) classMetadata;

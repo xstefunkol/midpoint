@@ -18,7 +18,7 @@ public class RSynchronizationSituationDescription implements Serializable {
 
     @QueryAttribute(enumerated = true)
     private RSynchronizationSituation situation;
-    private XMLGregorianCalendar timestamp;
+    private XMLGregorianCalendar timestampValue;
     private String chanel;
 
     @Enumerated(EnumType.ORDINAL)
@@ -32,12 +32,12 @@ public class RSynchronizationSituationDescription implements Serializable {
     }
 
     @Column(nullable = true)
-    public XMLGregorianCalendar getTimestamp() {
-        return timestamp;
+    public XMLGregorianCalendar getTimestampValue() {
+        return timestampValue;
     }
 
-    public void setTimestamp(XMLGregorianCalendar timestamp) {
-        this.timestamp = timestamp;
+    public void setTimestampValue(XMLGregorianCalendar timestampValue) {
+        this.timestampValue = timestampValue;
     }
 
     public String getChanel() {
@@ -62,7 +62,7 @@ public class RSynchronizationSituationDescription implements Serializable {
 
         if (situation != null ? !situation.equals(that.situation) : that.situation != null)
             return false;
-        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null)
+        if (timestampValue != null ? !timestampValue.equals(that.timestampValue) : that.timestampValue != null)
             return false;
         if (getChanel() != null ? !getChanel().equals(that.getChanel()) : that.getChanel() != null)
             return false;
@@ -73,7 +73,7 @@ public class RSynchronizationSituationDescription implements Serializable {
     @Override
     public int hashCode() {
         int result = situation != null ? situation.hashCode() : 0;
-        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+        result = 31 * result + (timestampValue != null ? timestampValue.hashCode() : 0);
         result = 31 * result + (getChanel() != null ? getChanel().hashCode() : 0);
         return result;
     }
@@ -90,7 +90,7 @@ public class RSynchronizationSituationDescription implements Serializable {
 
         RSynchronizationSituationDescription repo = new RSynchronizationSituationDescription();
         repo.setChanel(jaxb.getChannel());
-        repo.setTimestamp(jaxb.getTimestamp());
+        repo.setTimestampValue(jaxb.getTimestamp());
         repo.setSituation(RSynchronizationSituation.toRepoType(jaxb.getSituation()));
 
         return repo;
@@ -103,7 +103,7 @@ public class RSynchronizationSituationDescription implements Serializable {
 
         SynchronizationSituationDescriptionType jaxb = new SynchronizationSituationDescriptionType();
         jaxb.setChannel(repo.getChanel());
-        jaxb.setTimestamp(repo.getTimestamp());
+        jaxb.setTimestamp(repo.getTimestampValue());
         if (repo.getSituation() != null) {
             jaxb.setSituation(repo.getSituation().getSyncType());
         }

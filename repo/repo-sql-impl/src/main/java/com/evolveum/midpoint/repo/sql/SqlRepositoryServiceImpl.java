@@ -28,11 +28,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
-import org.hibernate.PessimisticLockException;
-import org.hibernate.Query;
-import org.hibernate.Session;
+import org.hibernate.*;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -93,10 +89,15 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 	private static final Trace LOGGER = TraceManager.getTrace(SqlRepositoryServiceImpl.class);
 	private static final int MAX_CONSTRAINT_NAME_LENGTH = 40;
 
-	private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid)
+	private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid, boolean lock)
 			throws ObjectNotFoundException, SchemaException, DtoTranslationException {
 		Criteria query = session.createCriteria(ClassMapper.getHQLTypeClass(type));
-		query.add(Restrictions.eq("oid", oid));
+
+        if (lock) {
+            query.setLockMode(LockMode.PESSIMISTIC_WRITE);
+        }
+
+        query.add(Restrictions.eq("oid", oid));
 		query.add(Restrictions.eq("id", 0L));
 
 		RObject object = (RObject) query.uniqueResult();
@@ -145,7 +146,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		try {
 			session = beginTransaction();
 
-			objectType = getObject(session, type, oid);
+			objectType = getObject(session, type, oid, false);
 
 			session.getTransaction().commit();
 		} catch (PessimisticLockException ex) {
@@ -735,7 +736,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			session = beginTransaction();
 
 			// get user
-			PrismObject<T> prismObject = getObject(session, type, oid);
+			PrismObject<T> prismObject = getObject(session, type, oid, false);
 			// apply diff
 			if (LOGGER.isTraceEnabled()) {
 				LOGGER.trace("OBJECT before:\n{}", new Object[] { prismObject.dump() });

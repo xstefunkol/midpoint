@@ -45,4 +45,33 @@ public class RAnyClobId implements Serializable {
     public void setChecksum(String checksum) {
         this.checksum = checksum;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RAnyClobId that = (RAnyClobId) o;
+
+        if (checksum != null ? !checksum.equals(that.checksum) : that.checksum != null) return false;
+        if (ownerId != null ? !ownerId.equals(that.ownerId) : that.ownerId != null) return false;
+        if (ownerOid != null ? !ownerOid.equals(that.ownerOid) : that.ownerOid != null) return false;
+        if (ownerType != that.ownerType) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = ownerOid != null ? ownerOid.hashCode() : 0;
+        result = 31 * result + (ownerId != null ? ownerId.hashCode() : 0);
+        result = 31 * result + (ownerType != null ? ownerType.hashCode() : 0);
+        result = 31 * result + (checksum != null ? checksum.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "RAnyClobId[" + ownerOid + "," + ownerId + "," + ownerType + "," + checksum + "]";
+    }
 }

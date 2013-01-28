@@ -1,13 +1,18 @@
 package com.evolveum.midpoint.repo.sql.data.common.any;
 
+import com.evolveum.midpoint.repo.sql.data.common.RAnyContainer;
+
 import javax.xml.namespace.QName;
+import java.io.Serializable;
 
 /**
  * todo rename this interface after refactor to RValue, original RValue class should be renamed to RBaseValue
  *
  * @author lazyman
  */
-public interface RValueInterface<T> {
+public interface RValueInterface<T> extends Serializable {
+
+    void setAnyContainer(RAnyContainer anyContainer);
 
     QName getName();
 

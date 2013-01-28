@@ -30,7 +30,10 @@ import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.query.LessFilter;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
-import com.evolveum.midpoint.repo.sql.data.common.*;
+import com.evolveum.midpoint.repo.sql.data.common.RAnyContainer;
+import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
+import com.evolveum.midpoint.repo.sql.data.common.RTask;
+import com.evolveum.midpoint.repo.sql.data.common.RUser;
 import com.evolveum.midpoint.repo.sql.data.common.any.*;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
 import com.evolveum.midpoint.repo.sql.data.common.id.RContainerId;
@@ -435,12 +438,13 @@ public class ModifyTest extends BaseSQLRepoTest {
         any.setOwner(user);
         user.setExtension(any);
 
-        Set<RDateValue> dates = new HashSet<RDateValue>();
+        Set<RAnyDate> dates = new HashSet<RAnyDate>();
         any.setDates(dates);
 
         final String namespace = "http://example.com/p";
 
-        RDateValue date = new RDateValue();
+        RAnyDate date = new RAnyDate();
+        date.setAnyContainer(any);
         date.setDynamic(false);
         date.setName(new QName(namespace, "funeralDate"));
         date.setType(new QName("http://www.w3.org/2001/XMLSchema", "dateTime"));
@@ -448,10 +452,11 @@ public class ModifyTest extends BaseSQLRepoTest {
         dates.add(date);
         date.setValueType(RValueType.PROPERTY);
 
-        Set<RLongValue> longs = new HashSet<RLongValue>();
+        Set<RAnyLong> longs = new HashSet<RAnyLong>();
         any.setLongs(longs);
 
-        RLongValue l = new RLongValue();
+        RAnyLong l = new RAnyLong();
+        l.setAnyContainer(any);
         longs.add(l);
         l.setDynamic(false);
         l.setName(new QName(namespace, "loot"));
@@ -459,10 +464,11 @@ public class ModifyTest extends BaseSQLRepoTest {
         l.setValue(lootValue);
         l.setValueType(RValueType.PROPERTY);
 
-        Set<RStringValue> strings = new HashSet<RStringValue>();
+        Set<RAnyString> strings = new HashSet<RAnyString>();
         any.setStrings(strings);
 
-        RStringValue s1 = new RStringValue();
+        RAnyString s1 = new RAnyString();
+        s1.setAnyContainer(any);
         strings.add(s1);
         s1.setDynamic(false);
         s1.setName(new QName(namespace, "weapon"));
@@ -470,7 +476,8 @@ public class ModifyTest extends BaseSQLRepoTest {
         s1.setValue("gun");
         s1.setValueType(RValueType.PROPERTY);
 
-        RStringValue s2 = new RStringValue();
+        RAnyString s2 = new RAnyString();
+        s2.setAnyContainer(any);
         strings.add(s2);
         s2.setDynamic(false);
         s2.setName(new QName(namespace, "shipName"));
@@ -492,7 +499,7 @@ public class ModifyTest extends BaseSQLRepoTest {
 
         return user;
     }
-    
+
     @Test
     public void testModifyAccountSynchronizationSituation() throws Exception {
         System.out.println("====[ testModifyAccountSynchronizationSituation ]====");
@@ -510,9 +517,9 @@ public class ModifyTest extends BaseSQLRepoTest {
         PropertyDelta<SynchronizationSituationType> syncSituationDelta = SynchronizationSituationUtil.
                 createSynchronizationSituationDelta(account, SynchronizationSituationType.LINKED);
         syncSituationDeltas.add(syncSituationDelta);
-        
+
         repositoryService.modifyObject(AccountShadowType.class, account.getOid(), syncSituationDeltas, result);
-        
+
         PrismObject<AccountShadowType> afterFirstModify = repositoryService.getObject(AccountShadowType.class, account.getOid(), result);
         AssertJUnit.assertNotNull(afterFirstModify);
         AccountShadowType afterFirstModifyType = afterFirstModify.asObjectable();
@@ -520,18 +527,18 @@ public class ModifyTest extends BaseSQLRepoTest {
         SynchronizationSituationDescriptionType description = afterFirstModifyType.getSynchronizationSituationDescription().get(0);
         AssertJUnit.assertEquals(SynchronizationSituationType.LINKED, description.getSituation());
 
-        
+
         syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(afterFirstModify, null, null);
         syncSituationDelta = SynchronizationSituationUtil.createSynchronizationSituationDelta(afterFirstModify, null);
         syncSituationDeltas.add(syncSituationDelta);
-        
+
         XMLGregorianCalendar timestamp = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
         PropertyDelta syncTimestap = PropertyDelta.createModificationReplaceProperty(
                 AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP, afterFirstModify.getDefinition(), timestamp);
         syncSituationDeltas.add(syncTimestap);
-        
+
         repositoryService.modifyObject(AccountShadowType.class, account.getOid(), syncSituationDeltas, result);
-        
+
         PrismObject<AccountShadowType> afterSecondModify = repositoryService.getObject(AccountShadowType.class, account.getOid(), result);
         AssertJUnit.assertNotNull(afterSecondModify);
         AccountShadowType afterSecondModifyType = afterSecondModify.asObjectable();
@@ -542,11 +549,11 @@ public class ModifyTest extends BaseSQLRepoTest {
         LessFilter filter = LessFilter.createLessFilter(null, afterSecondModify.findItem(
                 AccountShadowType.F_SYNCHRONIZATION_TIMESTAMP).getDefinition(), timestamp, true);
         ObjectQuery query = ObjectQuery.createObjectQuery(filter);
-        
+
         List<PrismObject<AccountShadowType>> shadows = repositoryService.searchObjects(AccountShadowType.class, query, result);
         AssertJUnit.assertNotNull(shadows);
         AssertJUnit.assertEquals(1, shadows.size());
-        
-        System.out.println("shadow: " + shadows.get(0).dump() );
+
+        System.out.println("shadow: " + shadows.get(0).dump());
     }
 }

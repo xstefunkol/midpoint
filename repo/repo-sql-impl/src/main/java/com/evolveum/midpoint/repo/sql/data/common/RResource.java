@@ -279,15 +279,14 @@ public class RResource extends RObject {
                     repo.getScripts(), ProvisioningScriptsType.class, prismContext));
 
             if (!isResourceBusinessConfigurationEmpty(repo)) {
-                //todo implement properly
                 ResourceBusinessConfigurationType business = new ResourceBusinessConfigurationType();
                 jaxb.setBusiness(business);
                 if (repo.getAdministrativeState() != null) {
                     business.setAdministrativeState(repo.getAdministrativeState().getAdministrativeState());
                 }
-                List approverRefs = RUtil.safeSetReferencesToList(repo.getApproverRef(), prismContext);
-                if (!approverRefs.isEmpty()) {
-                    business.getApproverRef().addAll(approverRefs);
+                List<ObjectReferenceType> approvers = RUtil.safeSetReferencesToList(repo.getApproverRef(), prismContext);
+                if (!approvers.isEmpty()) {
+                    business.getApproverRef().addAll(approvers);
                 }
             }
             if (repo.getOperationalState() != null) {

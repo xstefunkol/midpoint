@@ -91,19 +91,19 @@ public class RAnyConverter {
                     PrismPropertyValue propertyValue = (PrismPropertyValue) value;
                     switch (getValueType(definition.getTypeName())) {
                         case LONG:
-                            RLongValue longValue = new RLongValue();
+                            RAnyLong longValue = new RAnyLong();
                             longValue.setValue(extractValue(propertyValue, Long.class));
                             rValue = longValue;
                             break;
                         case DATE:
-                            RDateValue dateValue = new RDateValue();
+                            RAnyDate dateValue = new RAnyDate();
                             dateValue.setValue(extractValue(propertyValue, Timestamp.class));
                             rValue = dateValue;
                             break;
                         case STRING:
                         default:
                             if (isIndexable(definition)) {
-                                RStringValue strValue = new RStringValue();
+                                RAnyString strValue = new RAnyString();
                                 strValue.setValue(extractValue(propertyValue, String.class));
                                 rValue = strValue;
                             } else {
@@ -112,7 +112,7 @@ public class RAnyConverter {
                     }
                 } else if (value instanceof PrismReferenceValue) {
                     PrismReferenceValue referenceValue = (PrismReferenceValue) value;
-                    RReferenceValue refValue = new RReferenceValue();
+                    RAnyReference refValue = new RAnyReference();
                     refValue.setValue(referenceValue.getOid());
                     //todo extend RReferenceValue and add filter, description and other fields...
                     rValue = refValue;
@@ -301,7 +301,7 @@ public class RAnyConverter {
         }
 
         Object realValue = createRealValue(value);
-        if (!(value instanceof RReferenceValue) && realValue == null) {
+        if (!(value instanceof RAnyReference) && realValue == null) {
             throw new SchemaException("Real value must not be null. Some error occurred when adding value "
                     + value + " to item " + item);
         }
@@ -335,17 +335,17 @@ public class RAnyConverter {
      * @throws SchemaException
      */
     private Object createRealValue(RValueInterface rValue) throws SchemaException {
-        if (rValue instanceof RReferenceValue) {
+        if (rValue instanceof RAnyReference) {
             //this is special case, reference doesn't have value, it only has a few properties (oid, filter, etc.)
             return null;
         }
 
         Object value = rValue.getValue();
-        if (rValue instanceof RDateValue) {
+        if (rValue instanceof RAnyDate) {
             if (value instanceof Date) {
                 return XMLGregorianCalendarType.asXMLGregorianCalendar((Date) value);
             }
-        } else if (rValue instanceof RLongValue) {
+        } else if (rValue instanceof RAnyLong) {
             if (DOMUtil.XSD_LONG.equals(rValue.getType())) {
                 return value;
             } else if (DOMUtil.XSD_INT.equals(rValue.getType())) {
@@ -353,7 +353,7 @@ public class RAnyConverter {
             } else if (DOMUtil.XSD_SHORT.equals(rValue.getType())) {
                 return ((Long) value).shortValue();
             }
-        } else if (rValue instanceof RStringValue) {
+        } else if (rValue instanceof RAnyString) {
             if (DOMUtil.XSD_STRING.equals(rValue.getType())) {
                 return value;
             } else if (DOMUtil.XSD_DOUBLE.equals(rValue.getType())) {

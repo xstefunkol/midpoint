@@ -55,21 +55,11 @@ public class RAnyContainer implements Serializable {
     private Long ownerId;
     private RContainerType ownerType;
 
-    private Set<RStringValue> strings;
-    private Set<RLongValue> longs;
-    private Set<RDateValue> dates;
-    private Set<RReferenceValue> references;
-
+    private Set<RAnyString> strings;
+    private Set<RAnyLong> longs;
+    private Set<RAnyDate> dates;
+    private Set<RAnyReference> references;
     private Set<RAnyClob> clobs;
-
-    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RAnyClob> getClobs() {
-        if (clobs == null) {
-            clobs = new HashSet<RAnyClob>();
-        }
-        return clobs;
-    }
 
     @ForeignKey(name = "none")
     @MapsId("owner")
@@ -108,39 +98,48 @@ public class RAnyContainer implements Serializable {
         return ownerType;
     }
 
-    @ElementCollection
-    @ForeignKey(name = "fk_any_long")
-    @CollectionTable(name = "m_any_long", joinColumns =
-            {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RLongValue> getLongs() {
+    public Set<RAnyClob> getClobs() {
+        if (clobs == null) {
+            clobs = new HashSet<RAnyClob>();
+        }
+        return clobs;
+    }
+
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    public Set<RAnyLong> getLongs() {
+        if (longs == null) {
+            longs = new HashSet<RAnyLong>();
+        }
         return longs;
     }
 
-    @ElementCollection
-    @ForeignKey(name = "fk_any_string")
-    @CollectionTable(name = "m_any_string", joinColumns =
-            {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RStringValue> getStrings() {
+    public Set<RAnyString> getStrings() {
+        if (strings == null) {
+            strings = new HashSet<RAnyString>();
+        }
         return strings;
     }
 
-    @ElementCollection
-    @ForeignKey(name = "fk_any_date")
-    @CollectionTable(name = "m_any_date", joinColumns =
-            {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RDateValue> getDates() {
+    public Set<RAnyDate> getDates() {
+        if (dates == null) {
+            dates = new HashSet<RAnyDate>();
+        }
         return dates;
     }
 
-    @ElementCollection
-    @ForeignKey(name = "fk_any_reference")
-    @CollectionTable(name = "m_any_reference", joinColumns =
-            {@JoinColumn(name = "owner_id"), @JoinColumn(name = "owner_oid"), @JoinColumn(name = "ownerType")})
+    @OneToMany(mappedBy = "anyContainer", orphanRemoval = true)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    public Set<RReferenceValue> getReferences() {
+    public Set<RAnyReference> getReferences() {
+        if (references == null) {
+            references = new HashSet<RAnyReference>();
+        }
         return references;
     }
 
@@ -148,7 +147,7 @@ public class RAnyContainer implements Serializable {
         this.clobs = clobs;
     }
 
-    public void setReferences(Set<RReferenceValue> references) {
+    public void setReferences(Set<RAnyReference> references) {
         this.references = references;
     }
 
@@ -156,11 +155,11 @@ public class RAnyContainer implements Serializable {
         this.ownerType = ownerType;
     }
 
-    public void setDates(Set<RDateValue> dates) {
+    public void setDates(Set<RAnyDate> dates) {
         this.dates = dates;
     }
 
-    public void setLongs(Set<RLongValue> longs) {
+    public void setLongs(Set<RAnyLong> longs) {
         this.longs = longs;
     }
 
@@ -172,7 +171,7 @@ public class RAnyContainer implements Serializable {
         this.ownerOid = ownerOid;
     }
 
-    public void setStrings(Set<RStringValue> strings) {
+    public void setStrings(Set<RAnyString> strings) {
         this.strings = strings;
     }
 
@@ -281,33 +280,18 @@ public class RAnyContainer implements Serializable {
         }
 
         for (RValueInterface value : values) {
+            value.setAnyContainer(repo);
+
             if (value instanceof RAnyClob) {
-                if (repo.getClobs() == null) {
-                    repo.setClobs(new HashSet<RAnyClob>());
-                }
-                RAnyClob clob = (RAnyClob) value;
-                clob.setAnyContainer(repo);
-                repo.getClobs().add(clob);
-            } else if (value instanceof RDateValue) {
-                if (repo.getDates() == null) {
-                    repo.setDates(new HashSet<RDateValue>());
-                }
-                repo.getDates().add((RDateValue) value);
-            } else if (value instanceof RLongValue) {
-                if (repo.getLongs() == null) {
-                    repo.setLongs(new HashSet<RLongValue>());
-                }
-                repo.getLongs().add((RLongValue) value);
-            } else if (value instanceof RReferenceValue) {
-                if (repo.getReferences() == null) {
-                    repo.setReferences(new HashSet<RReferenceValue>());
-                }
-                repo.getReferences().add((RReferenceValue) value);
-            } else if (value instanceof RStringValue) {
-                if (repo.getStrings() == null) {
-                    repo.setStrings(new HashSet<RStringValue>());
-                }
-                repo.getStrings().add((RStringValue) value);
+                repo.getClobs().add((RAnyClob) value);
+            } else if (value instanceof RAnyDate) {
+                repo.getDates().add((RAnyDate) value);
+            } else if (value instanceof RAnyLong) {
+                repo.getLongs().add((RAnyLong) value);
+            } else if (value instanceof RAnyReference) {
+                repo.getReferences().add((RAnyReference) value);
+            } else if (value instanceof RAnyString) {
+                repo.getStrings().add((RAnyString) value);
             }
         }
     }

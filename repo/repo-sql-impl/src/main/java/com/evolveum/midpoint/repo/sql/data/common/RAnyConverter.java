@@ -74,15 +74,15 @@ public class RAnyConverter {
         this.prismContext = prismContext;
     }
 
-    Set<RValueInterface> convertToRValue(Item item) throws DtoTranslationException {
+    Set<RAnyValue> convertToRValue(Item item) throws DtoTranslationException {
         Validate.notNull(item, "Object for converting must not be null.");
         Validate.notNull(item.getDefinition(), "Item '" + item.getName() + "' without definition can't be saved.");
 
-        Set<RValueInterface> rValues = new HashSet<RValueInterface>();
+        Set<RAnyValue> rValues = new HashSet<RAnyValue>();
         try {
             ItemDefinition definition = item.getDefinition();
 
-            RValueInterface rValue = null;
+            RAnyValue rValue = null;
             List<PrismValue> values = item.getValues();
             for (PrismValue value : values) {
                 if (value instanceof PrismContainerValue) {
@@ -211,7 +211,7 @@ public class RAnyConverter {
         return type;
     }
 
-    void convertFromRValue(RValueInterface value, PrismContainerValue any) throws DtoTranslationException {
+    void convertFromRValue(RAnyValue value, PrismContainerValue any) throws DtoTranslationException {
         Validate.notNull(value, "Value for converting must not be null.");
         Validate.notNull(any, "Parent prism container value must not be null.");
 
@@ -253,7 +253,7 @@ public class RAnyConverter {
         }
     }
 
-    private ItemDefinition createDefinitionForItem(RValueInterface value) {
+    private ItemDefinition createDefinitionForItem(RAnyValue value) {
         ItemDefinition def;
         switch (value.getValueType()) {
             case PROPERTY:
@@ -294,7 +294,7 @@ public class RAnyConverter {
         item.addAll(PrismValue.resetParentCollection(parsedItem.getValues()));
     }
 
-    private void addValueToItem(RValueInterface value, Item item) throws SchemaException {
+    private void addValueToItem(RAnyValue value, Item item) throws SchemaException {
         if (value instanceof RAnyClob) {
             addClobValueToItem((RAnyClob) value, item);
             return;
@@ -327,14 +327,14 @@ public class RAnyConverter {
 
     /**
      * Method restores aggregated object type to its real type, e.g. number 123.1 is type of double, but was
-     * saved as string. This method takes RValueInterface instance and creates 123.1 double from string based on
+     * saved as string. This method takes RAnyValue instance and creates 123.1 double from string based on
      * provided definition.
      *
      * @param rValue
      * @return
      * @throws SchemaException
      */
-    private Object createRealValue(RValueInterface rValue) throws SchemaException {
+    private Object createRealValue(RAnyValue rValue) throws SchemaException {
         if (rValue instanceof RAnyReference) {
             //this is special case, reference doesn't have value, it only has a few properties (oid, filter, etc.)
             return null;

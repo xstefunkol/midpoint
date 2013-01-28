@@ -236,13 +236,13 @@ public class RAnyContainer implements Serializable {
         convertValues(converter, containerValue, repo.getReferences());
     }
 
-    private static <T extends RValueInterface> void convertValues(RAnyConverter converter, PrismContainerValue containerValue,
+    private static <T extends RAnyValue> void convertValues(RAnyConverter converter, PrismContainerValue containerValue,
                                                                   Set<T> values) throws DtoTranslationException {
         if (values == null) {
             return;
         }
 
-        for (RValueInterface value : values) {
+        for (RAnyValue value : values) {
             converter.convertFromRValue(value, containerValue);
         }
     }
@@ -269,7 +269,7 @@ public class RAnyContainer implements Serializable {
             DtoTranslationException {
         RAnyConverter converter = new RAnyConverter(prismContext);
 
-        Set<RValueInterface> values = new HashSet<RValueInterface>();
+        Set<RAnyValue> values = new HashSet<RAnyValue>();
         try {
             List<Item<?>> items = containerValue.getItems();
             for (Item item : items) {
@@ -279,7 +279,7 @@ public class RAnyContainer implements Serializable {
             throw new DtoTranslationException(ex.getMessage(), ex);
         }
 
-        for (RValueInterface value : values) {
+        for (RAnyValue value : values) {
             value.setAnyContainer(repo);
 
             if (value instanceof RAnyClob) {

@@ -62,7 +62,7 @@ public class RAnyReference implements RAnyValue {
         this.value = value;
     }
 
-    @ForeignKey(name = "fk_any_clob")
+    @ForeignKey(name = "fk_any_reference")
     @MapsId("owner")
     @ManyToOne(fetch = FetchType.LAZY)
     @PrimaryKeyJoinColumns({

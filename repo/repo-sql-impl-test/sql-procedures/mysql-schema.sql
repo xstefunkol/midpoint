@@ -33,58 +33,62 @@ CREATE TABLE m_any_clob (
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_date (
-  owner_id       BIGINT      NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INTEGER     NOT NULL,
-  dateValue      DATETIME,
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INTEGER
+  anyContainer_owner_id  BIGINT      NOT NULL,
+  anyContainer_owner_oid VARCHAR(36) NOT NULL,
+  anyContainer_ownertype INTEGER     NOT NULL,
+  dateValue              DATETIME    NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  valueType              INTEGER,
+  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, dateValue)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_long (
-  owner_id       BIGINT      NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INTEGER     NOT NULL,
-  longValue      BIGINT,
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INTEGER
+  anyContainer_owner_id  BIGINT      NOT NULL,
+  anyContainer_owner_oid VARCHAR(36) NOT NULL,
+  anyContainer_ownertype INTEGER     NOT NULL,
+  longValue              BIGINT      NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  valueType              INTEGER,
+  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, longValue)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_reference (
-  owner_id       BIGINT      NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INTEGER     NOT NULL,
-  oidValue       VARCHAR(255),
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INTEGER
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INTEGER      NOT NULL,
+  targetoid              VARCHAR(255) NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  valueType              INTEGER,
+  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, targetoid)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_string (
-  owner_id       BIGINT      NOT NULL,
-  owner_oid      VARCHAR(36) NOT NULL,
-  ownerType      INTEGER     NOT NULL,
-  stringValue    VARCHAR(255),
-  dynamicDef     BOOLEAN,
-  name_namespace VARCHAR(255),
-  name_localPart VARCHAR(255),
-  type_namespace VARCHAR(255),
-  type_localPart VARCHAR(255),
-  valueType      INTEGER
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INTEGER      NOT NULL,
+  stringValue            VARCHAR(255) NOT NULL,
+  dynamicDef             BOOLEAN,
+  name_namespace         VARCHAR(255),
+  name_localPart         VARCHAR(255),
+  type_namespace         VARCHAR(255),
+  type_localPart         VARCHAR(255),
+  valueType              INTEGER,
+  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, stringValue)
 )
   ENGINE = InnoDB;
 
@@ -539,33 +543,33 @@ REFERENCES m_any (owner_id, owner_oid, ownerType);
 CREATE INDEX iDate ON m_any_date (dateValue);
 
 ALTER TABLE m_any_date
-ADD INDEX fk_any_date (owner_id, owner_oid, ownerType),
+ADD INDEX fk_any_date (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType),
 ADD CONSTRAINT fk_any_date
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any (owner_id, owner_oid, ownerType);
 
 CREATE INDEX iLong ON m_any_long (longValue);
 
 ALTER TABLE m_any_long
-ADD INDEX fk_any_long (owner_id, owner_oid, ownerType),
+ADD INDEX fk_any_long (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType),
 ADD CONSTRAINT fk_any_long
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any (owner_id, owner_oid, ownerType);
 
-CREATE INDEX iOid ON m_any_reference (oidValue);
+CREATE INDEX iTargetOid ON m_any_reference (targetoid);
 
 ALTER TABLE m_any_reference
-ADD INDEX fk_any_reference (owner_id, owner_oid, ownerType),
+ADD INDEX fk_any_reference (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType),
 ADD CONSTRAINT fk_any_reference
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any (owner_id, owner_oid, ownerType);
 
 CREATE INDEX iString ON m_any_string (stringValue);
 
 ALTER TABLE m_any_string
-ADD INDEX fk_any_string (owner_id, owner_oid, ownerType),
+ADD INDEX fk_any_string (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType),
 ADD CONSTRAINT fk_any_string
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any (owner_id, owner_oid, ownerType);
 
 CREATE INDEX iAssignmentEnabled ON m_assignment (enabled);

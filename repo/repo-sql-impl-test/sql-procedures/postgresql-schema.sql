@@ -520,7 +520,7 @@ REFERENCES m_any;
 CREATE INDEX iTargetOid ON m_any_reference (targetoid);
 
 ALTER TABLE m_any_reference
-ADD CONSTRAINT fk_any_clob
+ADD CONSTRAINT fk_any_reference
 FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 

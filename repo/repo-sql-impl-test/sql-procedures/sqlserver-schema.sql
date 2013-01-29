@@ -66,7 +66,12 @@ CREATE TABLE m_any_reference (
   type_namespace         VARCHAR(255) NOT NULL,
   type_localPart         VARCHAR(255) NOT NULL,
   targetoid              VARCHAR(255) NOT NULL,
+  description            VARCHAR(MAX),
   dynamicDef             BIT,
+  filter                 VARCHAR(MAX),
+  relation_namespace     VARCHAR(255),
+  relation_localPart     VARCHAR(255),
+  targetType             INT,
   valueType              INT,
   PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, targetoid)
 );
@@ -131,16 +136,22 @@ CREATE TABLE m_audit_event (
 );
 
 CREATE TABLE m_connector (
-  connectorBundle  VARCHAR(255),
-  connectorType    VARCHAR(255),
-  connectorVersion VARCHAR(255),
-  framework        VARCHAR(255),
-  name_norm        VARCHAR(255),
-  name_orig        VARCHAR(255),
-  namespace        VARCHAR(255),
-  xmlSchema        VARCHAR(MAX),
-  id               BIGINT      NOT NULL,
-  oid              VARCHAR(36) NOT NULL,
+  connectorBundle              VARCHAR(255),
+  connectorHostRef_description VARCHAR(MAX),
+  connectorHostRef_filter      VARCHAR(MAX),
+  c16_relationLocalPart        VARCHAR(255),
+  c16_relationNamespace        VARCHAR(255),
+  connectorHostRef_targetOid   VARCHAR(36),
+  connectorHostRef_type        INT,
+  connectorType                VARCHAR(255),
+  connectorVersion             VARCHAR(255),
+  framework                    VARCHAR(255),
+  name_norm                    VARCHAR(255),
+  name_orig                    VARCHAR(255),
+  namespace                    VARCHAR(255),
+  xmlSchema                    VARCHAR(MAX),
+  id                           BIGINT      NOT NULL,
+  oid                          VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -171,12 +182,18 @@ CREATE TABLE m_container (
 );
 
 CREATE TABLE m_exclusion (
-  description VARCHAR(MAX),
-  owner_id    BIGINT      NOT NULL,
-  owner_oid   VARCHAR(36) NOT NULL,
-  policy      INT,
-  id          BIGINT      NOT NULL,
-  oid         VARCHAR(36) NOT NULL,
+  description                 VARCHAR(MAX),
+  owner_id                    BIGINT      NOT NULL,
+  owner_oid                   VARCHAR(36) NOT NULL,
+  policy                      INT,
+  targetRef_description       VARCHAR(MAX),
+  targetRef_filter            VARCHAR(MAX),
+  targetRef_relationLocalPart VARCHAR(255),
+  targetRef_relationNamespace VARCHAR(255),
+  targetRef_targetOid         VARCHAR(36),
+  targetRef_type              INT,
+  id                          BIGINT      NOT NULL,
+  oid                         VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -312,25 +329,31 @@ CREATE TABLE m_resource (
 );
 
 CREATE TABLE m_resource_shadow (
-  enabled                  BIT,
-  validFrom                DATETIME2,
-  validTo                  DATETIME2,
-  attemptNumber            INT,
-  dead                     BIT,
-  failedOperationType      INT,
-  intent                   VARCHAR(255),
-  name_norm                VARCHAR(255),
-  name_orig                VARCHAR(255),
-  objectChange             VARCHAR(MAX),
-  class_namespace          VARCHAR(255),
-  class_localPart          VARCHAR(255),
-  synchronizationSituation INT,
-  synchronizationTimestamp DATETIME2,
-  id                       BIGINT      NOT NULL,
-  oid                      VARCHAR(36) NOT NULL,
-  attrId                   BIGINT,
-  attrOid                  VARCHAR(36),
-  attrType                 INT,
+  enabled                       BIT,
+  validFrom                     DATETIME2,
+  validTo                       DATETIME2,
+  attemptNumber                 INT,
+  dead                          BIT,
+  failedOperationType           INT,
+  intent                        VARCHAR(255),
+  name_norm                     VARCHAR(255),
+  name_orig                     VARCHAR(255),
+  objectChange                  VARCHAR(MAX),
+  class_namespace               VARCHAR(255),
+  class_localPart               VARCHAR(255),
+  resourceRef_description       VARCHAR(MAX),
+  resourceRef_filter            VARCHAR(MAX),
+  resourceRef_relationLocalPart VARCHAR(255),
+  resourceRef_relationNamespace VARCHAR(255),
+  resourceRef_targetOid         VARCHAR(36),
+  resourceRef_type              INT,
+  synchronizationSituation      INT,
+  synchronizationTimestamp      DATETIME2,
+  id                            BIGINT      NOT NULL,
+  oid                           VARCHAR(36) NOT NULL,
+  attrId                        BIGINT,
+  attrOid                       VARCHAR(36),
+  attrType                      INT,
   PRIMARY KEY (id, oid)
 );
 

@@ -17,78 +17,83 @@ CREATE TABLE m_any (
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_clob (
-  checksum               VARCHAR(32) NOT NULL,
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INTEGER     NOT NULL,
+  checksum               VARCHAR(32)  NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INTEGER      NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   clobValue              LONGTEXT,
   valueType              INTEGER,
-  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
+  PRIMARY KEY (checksum, name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_date (
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INTEGER     NOT NULL,
-  dateValue              DATETIME    NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INTEGER      NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  dateValue              DATETIME     NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INTEGER,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, dateValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, dateValue)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_long (
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INTEGER     NOT NULL,
-  longValue              BIGINT      NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INTEGER      NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  longValue              BIGINT       NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INTEGER,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, longValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, longValue)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_reference (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  BIGINT       NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INTEGER      NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   targetoid              VARCHAR(255) NOT NULL,
+  description            LONGTEXT,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
+  filter                 LONGTEXT,
+  relation_namespace     VARCHAR(255),
+  relation_localPart     VARCHAR(255),
+  targetType             INTEGER,
   valueType              INTEGER,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, targetoid)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, targetoid)
 )
   ENGINE = InnoDB;
 
 CREATE TABLE m_any_string (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  BIGINT       NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INTEGER      NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   stringValue            VARCHAR(255) NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INTEGER,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, stringValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, stringValue)
 )
   ENGINE = InnoDB;
 
@@ -141,16 +146,22 @@ CREATE TABLE m_audit_event (
   ENGINE = InnoDB;
 
 CREATE TABLE m_connector (
-  connectorBundle  VARCHAR(255),
-  connectorType    VARCHAR(255),
-  connectorVersion VARCHAR(255),
-  framework        VARCHAR(255),
-  name_norm        VARCHAR(255),
-  name_orig        VARCHAR(255),
-  namespace        VARCHAR(255),
-  xmlSchema        LONGTEXT,
-  id               BIGINT      NOT NULL,
-  oid              VARCHAR(36) NOT NULL,
+  connectorBundle              VARCHAR(255),
+  connectorHostRef_description LONGTEXT,
+  connectorHostRef_filter      LONGTEXT,
+  c16_relationLocalPart        VARCHAR(255),
+  c16_relationNamespace        VARCHAR(255),
+  connectorHostRef_targetOid   VARCHAR(36),
+  connectorHostRef_type        INTEGER,
+  connectorType                VARCHAR(255),
+  connectorVersion             VARCHAR(255),
+  framework                    VARCHAR(255),
+  name_norm                    VARCHAR(255),
+  name_orig                    VARCHAR(255),
+  namespace                    VARCHAR(255),
+  xmlSchema                    LONGTEXT,
+  id                           BIGINT      NOT NULL,
+  oid                          VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 )
   ENGINE = InnoDB;
@@ -185,12 +196,18 @@ CREATE TABLE m_container (
   ENGINE = InnoDB;
 
 CREATE TABLE m_exclusion (
-  description LONGTEXT,
-  owner_id    BIGINT      NOT NULL,
-  owner_oid   VARCHAR(36) NOT NULL,
-  policy      INTEGER,
-  id          BIGINT      NOT NULL,
-  oid         VARCHAR(36) NOT NULL,
+  description                 LONGTEXT,
+  owner_id                    BIGINT      NOT NULL,
+  owner_oid                   VARCHAR(36) NOT NULL,
+  policy                      INTEGER,
+  targetRef_description       LONGTEXT,
+  targetRef_filter            LONGTEXT,
+  targetRef_relationLocalPart VARCHAR(255),
+  targetRef_relationNamespace VARCHAR(255),
+  targetRef_targetOid         VARCHAR(36),
+  targetRef_type              INTEGER,
+  id                          BIGINT      NOT NULL,
+  oid                         VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 )
   ENGINE = InnoDB;
@@ -337,25 +354,31 @@ CREATE TABLE m_resource (
   ENGINE = InnoDB;
 
 CREATE TABLE m_resource_shadow (
-  enabled                  BOOLEAN,
-  validFrom                DATETIME,
-  validTo                  DATETIME,
-  attemptNumber            INTEGER,
-  dead                     BOOLEAN,
-  failedOperationType      INTEGER,
-  intent                   VARCHAR(255),
-  name_norm                VARCHAR(255),
-  name_orig                VARCHAR(255),
-  objectChange             LONGTEXT,
-  class_namespace          VARCHAR(255),
-  class_localPart          VARCHAR(255),
-  synchronizationSituation INTEGER,
-  synchronizationTimestamp DATETIME,
-  id                       BIGINT      NOT NULL,
-  oid                      VARCHAR(36) NOT NULL,
-  attrId                   BIGINT,
-  attrOid                  VARCHAR(36),
-  attrType                 INTEGER,
+  enabled                       BOOLEAN,
+  validFrom                     DATETIME,
+  validTo                       DATETIME,
+  attemptNumber                 INTEGER,
+  dead                          BOOLEAN,
+  failedOperationType           INTEGER,
+  intent                        VARCHAR(255),
+  name_norm                     VARCHAR(255),
+  name_orig                     VARCHAR(255),
+  objectChange                  LONGTEXT,
+  class_namespace               VARCHAR(255),
+  class_localPart               VARCHAR(255),
+  resourceRef_description       LONGTEXT,
+  resourceRef_filter            LONGTEXT,
+  resourceRef_relationLocalPart VARCHAR(255),
+  resourceRef_relationNamespace VARCHAR(255),
+  resourceRef_targetOid         VARCHAR(36),
+  resourceRef_type              INTEGER,
+  synchronizationSituation      INTEGER,
+  synchronizationTimestamp      DATETIME,
+  id                            BIGINT      NOT NULL,
+  oid                           VARCHAR(36) NOT NULL,
+  attrId                        BIGINT,
+  attrOid                       VARCHAR(36),
+  attrType                      INTEGER,
   PRIMARY KEY (id, oid)
 )
   ENGINE = InnoDB;

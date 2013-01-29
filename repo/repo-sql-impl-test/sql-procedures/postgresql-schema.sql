@@ -15,74 +15,79 @@ CREATE TABLE m_any (
 );
 
 CREATE TABLE m_any_clob (
-  checksum               VARCHAR(32) NOT NULL,
-  anyContainer_owner_id  INT8        NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT4        NOT NULL,
+  checksum               VARCHAR(32)  NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  INT8         NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT4         NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   clobValue              TEXT,
   valueType              INT4,
-  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
+  PRIMARY KEY (checksum, name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart)
 );
 
 CREATE TABLE m_any_date (
-  anyContainer_owner_id  INT8        NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT4        NOT NULL,
-  dateValue              TIMESTAMP   NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  INT8         NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT4         NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  dateValue              TIMESTAMP    NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT4,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, dateValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, dateValue)
 );
 
 CREATE TABLE m_any_long (
-  anyContainer_owner_id  INT8        NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT4        NOT NULL,
-  longValue              INT8        NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  INT8         NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT4         NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  longValue              INT8         NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT4,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, longValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, longValue)
 );
 
 CREATE TABLE m_any_reference (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  INT8         NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INT4         NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   targetoid              VARCHAR(255) NOT NULL,
+  description            TEXT,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
+  filter                 TEXT,
+  relation_namespace     VARCHAR(255),
+  relation_localPart     VARCHAR(255),
+  targetType             INT4,
   valueType              INT4,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, targetoid)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, targetoid)
 );
 
 CREATE TABLE m_any_string (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  INT8         NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INT4         NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   stringValue            VARCHAR(255) NOT NULL,
   dynamicDef             BOOLEAN,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT4,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, stringValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, stringValue)
 );
 
 CREATE TABLE m_assignment (
@@ -131,16 +136,22 @@ CREATE TABLE m_audit_event (
 );
 
 CREATE TABLE m_connector (
-  connectorBundle  VARCHAR(255),
-  connectorType    VARCHAR(255),
-  connectorVersion VARCHAR(255),
-  framework        VARCHAR(255),
-  name_norm        VARCHAR(255),
-  name_orig        VARCHAR(255),
-  namespace        VARCHAR(255),
-  xmlSchema        TEXT,
-  id               INT8        NOT NULL,
-  oid              VARCHAR(36) NOT NULL,
+  connectorBundle              VARCHAR(255),
+  connectorHostRef_description TEXT,
+  connectorHostRef_filter      TEXT,
+  c16_relationLocalPart        VARCHAR(255),
+  c16_relationNamespace        VARCHAR(255),
+  connectorHostRef_targetOid   VARCHAR(36),
+  connectorHostRef_type        INT4,
+  connectorType                VARCHAR(255),
+  connectorVersion             VARCHAR(255),
+  framework                    VARCHAR(255),
+  name_norm                    VARCHAR(255),
+  name_orig                    VARCHAR(255),
+  namespace                    VARCHAR(255),
+  xmlSchema                    TEXT,
+  id                           INT8        NOT NULL,
+  oid                          VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -171,12 +182,18 @@ CREATE TABLE m_container (
 );
 
 CREATE TABLE m_exclusion (
-  description TEXT,
-  owner_id    INT8        NOT NULL,
-  owner_oid   VARCHAR(36) NOT NULL,
-  policy      INT4,
-  id          INT8        NOT NULL,
-  oid         VARCHAR(36) NOT NULL,
+  description                 TEXT,
+  owner_id                    INT8        NOT NULL,
+  owner_oid                   VARCHAR(36) NOT NULL,
+  policy                      INT4,
+  targetRef_description       TEXT,
+  targetRef_filter            TEXT,
+  targetRef_relationLocalPart VARCHAR(255),
+  targetRef_relationNamespace VARCHAR(255),
+  targetRef_targetOid         VARCHAR(36),
+  targetRef_type              INT4,
+  id                          INT8        NOT NULL,
+  oid                         VARCHAR(36) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -312,25 +329,31 @@ CREATE TABLE m_resource (
 );
 
 CREATE TABLE m_resource_shadow (
-  enabled                  BOOLEAN,
-  validFrom                TIMESTAMP,
-  validTo                  TIMESTAMP,
-  attemptNumber            INT4,
-  dead                     BOOLEAN,
-  failedOperationType      INT4,
-  intent                   VARCHAR(255),
-  name_norm                VARCHAR(255),
-  name_orig                VARCHAR(255),
-  objectChange             TEXT,
-  class_namespace          VARCHAR(255),
-  class_localPart          VARCHAR(255),
-  synchronizationSituation INT4,
-  synchronizationTimestamp TIMESTAMP,
-  id                       INT8        NOT NULL,
-  oid                      VARCHAR(36) NOT NULL,
-  attrId                   INT8,
-  attrOid                  VARCHAR(36),
-  attrType                 INT4,
+  enabled                       BOOLEAN,
+  validFrom                     TIMESTAMP,
+  validTo                       TIMESTAMP,
+  attemptNumber                 INT4,
+  dead                          BOOLEAN,
+  failedOperationType           INT4,
+  intent                        VARCHAR(255),
+  name_norm                     VARCHAR(255),
+  name_orig                     VARCHAR(255),
+  objectChange                  TEXT,
+  class_namespace               VARCHAR(255),
+  class_localPart               VARCHAR(255),
+  resourceRef_description       TEXT,
+  resourceRef_filter            TEXT,
+  resourceRef_relationLocalPart VARCHAR(255),
+  resourceRef_relationNamespace VARCHAR(255),
+  resourceRef_targetOid         VARCHAR(36),
+  resourceRef_type              INT4,
+  synchronizationSituation      INT4,
+  synchronizationTimestamp      TIMESTAMP,
+  id                            INT8        NOT NULL,
+  oid                           VARCHAR(36) NOT NULL,
+  attrId                        INT8,
+  attrOid                       VARCHAR(36),
+  attrType                      INT4,
   PRIMARY KEY (id, oid)
 );
 

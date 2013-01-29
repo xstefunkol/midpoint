@@ -50,21 +50,6 @@ public enum RReferenceOwner {
     RESOURCE_BUSINESS_CONFIGURATON_APPROVER(RResourceApproverRef.class, RResourceApproverRef.DISCRIMINATOR),
     /**
      * this constant also have to be changed in
-     * {@link com.evolveum.midpoint.repo.sql.data.common.type.RTargetRef}
-     */
-    EXCLUSION_TARGET(RTargetRef.class, RTargetRef.DISCRIMINATOR),             //todo maybe can be embedded
-    /**
-     * this constant also have to be changed in
-     * {@link com.evolveum.midpoint.repo.sql.data.common.type.RConnectorHostRef}
-     */
-    CONNECTOR_CONNECTOR_HOST(RConnectorHostRef.class, RConnectorHostRef.DISCRIMINATOR),       //todo maybe can be embedded
-    /**
-     * this constant also have to be changed in
-     * {@link com.evolveum.midpoint.repo.sql.data.common.type.RResourceRef}
-     */
-    RESOURCE_OBJECT_SHADOW_RESOURCE(RResourceRef.class, RResourceRef.DISCRIMINATOR),    //todo maybe can be embedded
-    /**
-     * this constant also have to be changed in
      * {@link com.evolveum.midpoint.repo.sql.data.common.type.RRoleApproverRef}
      */
     ROLE_APPROVER(RRoleApproverRef.class, RRoleApproverRef.DISCRIMINATOR),
@@ -102,18 +87,12 @@ public enum RReferenceOwner {
         switch (owner) {
             case OBJECT_PARENT_ORG:
                 return new RParentOrgRef();
-            case RESOURCE_OBJECT_SHADOW_RESOURCE:
-                return new RResourceRef();
             case ROLE_APPROVER:
                 return new RRoleApproverRef();
             case SYSTEM_CONFIGURATION_ORG_ROOT:
                 return new ROrgRootRef();
             case USER_ACCOUNT:
                 return new RAccountRef();
-            case CONNECTOR_CONNECTOR_HOST:
-                return new RConnectorHostRef();
-            case EXCLUSION_TARGET:
-                return new RTargetRef();
             case RESOURCE_BUSINESS_CONFIGURATON_APPROVER:
                 return new RResourceApproverRef();
             default:

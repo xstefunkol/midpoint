@@ -112,10 +112,7 @@ public class RAnyConverter {
                     }
                 } else if (value instanceof PrismReferenceValue) {
                     PrismReferenceValue referenceValue = (PrismReferenceValue) value;
-                    RAnyReference refValue = new RAnyReference();
-                    refValue.setValue(referenceValue.getOid());
-                    //todo extend RReferenceValue and add filter, description and other fields...
-                    rValue = refValue;
+                    rValue = RAnyReference.createReference(referenceValue);
                 }
 
                 rValue.setName(definition.getName());
@@ -307,9 +304,7 @@ public class RAnyConverter {
         }
         switch (value.getValueType()) {
             case REFERENCE:
-                PrismReferenceValue referenceValue = new PrismReferenceValue();
-                referenceValue.setOid((String) value.getValue());
-                //todo fix filter, description and other fields
+                PrismReferenceValue referenceValue = RAnyReference.createReference((RAnyReference) value);
                 item.add(referenceValue);
                 break;
             case PROPERTY:

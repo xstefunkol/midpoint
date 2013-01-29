@@ -659,6 +659,8 @@ REFERENCES m_object;
 
 CREATE INDEX iResourceObjectShadowEnabled ON m_resource_shadow (enabled);
 
+CREATE INDEX iShadowResourceRef ON m_resource_shadow (resourceRef_targetOid);
+
 CREATE INDEX iResourceShadowName ON m_resource_shadow (name_norm);
 
 ALTER TABLE m_resource_shadow

@@ -356,24 +356,23 @@ public class SimpleOp extends Op {
 			}
 			
 			if (attrDef.isReference()) {
-				ItemPath propPath = path;
-				String realName = attrDef.getJpaName();
-				if (propPath == null || propPath.isEmpty()) {
-					// used in references from main criteria
-					propPath = new ItemPath(new QName(RUtil.NS_SQL_REPO, realName));
-				}
+                String realName = attrDef.getJpaName();
+                ItemPath propPath = path;
+                if (attrDef.isMultiValue()) {
+                    if (propPath == null || propPath.isEmpty()) {
+                        // used in references from main criteria
+                        propPath = new ItemPath(new QName(RUtil.NS_SQL_REPO, realName));
+                    }
+                    addNewCriteriaToContext(propPath, realName);
 
-                addNewCriteriaToContext(propPath, realName);
-				
-				item.isReference = true;
-				item.alias = getInterpreter().getAlias(propPath);
-				LOGGER.trace("Found alias '{}' for path.", new Object[] { item.alias });
-                item.item = "targetOid";
-                //XXX TODO HACK FOR accountRef set
-//                if (attrDef.isMultiValue()) {
-//                    item.item = "reference." + item.item;
-//                }
-
+                    item.item = "targetOid";
+                } else {
+                    propPath = null;
+                    item.item = realName + ".targetOid";
+                }
+                item.isReference = true;
+                item.alias = getInterpreter().getAlias(propPath);
+                LOGGER.trace("Found alias '{}' for path.", new Object[] { item.alias });
 			} else {
 				item.item = attrDef.getRealName();
 				if (attrDef.isPolyString()) {

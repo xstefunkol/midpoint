@@ -24,6 +24,7 @@ package com.evolveum.midpoint.repo.sql.data.common.embedded;
 import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.repo.sql.data.common.ObjectReference;
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
+import com.evolveum.midpoint.repo.sql.query.QueryAttribute;
 import com.evolveum.midpoint.repo.sql.util.ClassMapper;
 import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.util.DOMUtil;
@@ -54,6 +55,7 @@ public class REmbeddedReference implements ObjectReference {
     private String relationNamespace = "";
     private String relationLocalPart = "";
 
+    @Column(length = 100)
     @Override
     public String getRelationLocalPart() {
         return relationLocalPart;

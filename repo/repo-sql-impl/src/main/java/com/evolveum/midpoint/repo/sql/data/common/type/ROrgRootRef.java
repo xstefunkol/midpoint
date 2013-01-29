@@ -33,5 +33,5 @@ import javax.persistence.Entity;
 @DiscriminatorValue(ROrgRootRef.DISCRIMINATOR)
 public class ROrgRootRef extends RObjectReference {
 
-    public static final String DISCRIMINATOR = "7";
+    public static final String DISCRIMINATOR = "4";
 }

@@ -115,7 +115,7 @@ public class RObjectReference implements ObjectReference {
     }
 
     @Id
-    @Column(name = "relLocalPart")
+    @Column(name = "relLocalPart", length = 100)
     @Override
     public String getRelationLocalPart() {
         if (relationLocalPart == null) {

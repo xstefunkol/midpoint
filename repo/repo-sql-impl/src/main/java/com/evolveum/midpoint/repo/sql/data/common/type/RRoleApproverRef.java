@@ -33,5 +33,5 @@ import javax.persistence.Entity;
 @DiscriminatorValue(RRoleApproverRef.DISCRIMINATOR)
 public class RRoleApproverRef extends RObjectReference {
 
-    public static final String DISCRIMINATOR = "6";
+    public static final String DISCRIMINATOR = "3";
 }

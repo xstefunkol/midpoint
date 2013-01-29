@@ -104,7 +104,7 @@ public class RAnyLong implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
-            @Column(name = "name_localPart")
+            @Column(name = "name_localPart", length = 100)
     })
     public QName getName() {
         return name;
@@ -113,7 +113,7 @@ public class RAnyLong implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
-            @Column(name = "type_localPart")
+            @Column(name = "type_localPart", length = 100)
     })
     public QName getType() {
         return type;

@@ -27,7 +27,7 @@ import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.schema.SchemaRegistry;
 import com.evolveum.midpoint.prism.xml.PrismJaxbProcessor;
 import com.evolveum.midpoint.repo.sql.data.common.*;
-import com.evolveum.midpoint.repo.sql.data.common.any.RAnyClob;
+import com.evolveum.midpoint.repo.sql.data.common.any.*;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.REmbeddedReference;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RSynchronizationSituationDescription;
@@ -363,6 +363,10 @@ public final class RUtil {
     public static void fixCompositeIDHandling(SessionFactory sessionFactory) {
         fixCompositeIdentifierInMetaModel(sessionFactory, RAnyContainer.class);
         fixCompositeIdentifierInMetaModel(sessionFactory, RAnyClob.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyDate.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyString.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyReference.class);
+        fixCompositeIdentifierInMetaModel(sessionFactory, RAnyLong.class);
 
         fixCompositeIdentifierInMetaModel(sessionFactory, RObjectReference.class);
         for (RReferenceOwner owner : RReferenceOwner.values()) {

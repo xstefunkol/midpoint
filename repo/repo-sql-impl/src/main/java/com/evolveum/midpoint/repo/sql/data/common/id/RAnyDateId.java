@@ -23,6 +23,7 @@ package com.evolveum.midpoint.repo.sql.data.common.id;
 
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
 
+import javax.xml.namespace.QName;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
@@ -35,6 +36,8 @@ public class RAnyDateId implements Serializable {
     private Long ownerId;
     private RContainerType ownerType;
     private Timestamp value;
+    private QName name;
+    private QName type;
 
     public String getOwnerOid() {
         return ownerOid;
@@ -68,6 +71,22 @@ public class RAnyDateId implements Serializable {
         this.value = value;
     }
 
+    public QName getName() {
+        return name;
+    }
+
+    public void setName(QName name) {
+        this.name = name;
+    }
+
+    public QName getType() {
+        return type;
+    }
+
+    public void setType(QName type) {
+        this.type = type;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,10 +94,12 @@ public class RAnyDateId implements Serializable {
 
         RAnyDateId that = (RAnyDateId) o;
 
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
         if (ownerId != null ? !ownerId.equals(that.ownerId) : that.ownerId != null) return false;
         if (ownerOid != null ? !ownerOid.equals(that.ownerOid) : that.ownerOid != null) return false;
         if (ownerType != that.ownerType) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (value != null ? !value.equals(that.value) : that.value != null) return false;
 
         return true;
     }
@@ -89,6 +110,8 @@ public class RAnyDateId implements Serializable {
         result = 31 * result + (ownerId != null ? ownerId.hashCode() : 0);
         result = 31 * result + (ownerType != null ? ownerType.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
         return result;
     }
 

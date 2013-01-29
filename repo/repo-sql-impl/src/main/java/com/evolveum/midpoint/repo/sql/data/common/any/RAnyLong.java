@@ -101,6 +101,7 @@ public class RAnyLong implements RAnyValue {
         return ownerType;
     }
 
+    @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
             @Column(name = "name_localPart")
@@ -109,6 +110,7 @@ public class RAnyLong implements RAnyValue {
         return name;
     }
 
+    @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
             @Column(name = "type_localPart")

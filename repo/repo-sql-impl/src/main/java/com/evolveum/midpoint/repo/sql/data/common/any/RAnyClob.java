@@ -115,6 +115,7 @@ public class RAnyClob implements RAnyValue {
         return checksum;
     }
 
+    @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
             @Column(name = "name_localPart")
@@ -123,6 +124,7 @@ public class RAnyClob implements RAnyValue {
         return name;
     }
 
+    @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
             @Column(name = "type_localPart")

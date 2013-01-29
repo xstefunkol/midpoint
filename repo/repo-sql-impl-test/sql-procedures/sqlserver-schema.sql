@@ -15,74 +15,74 @@ CREATE TABLE m_any (
 );
 
 CREATE TABLE m_any_clob (
-  checksum               VARCHAR(32) NOT NULL,
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT         NOT NULL,
+  checksum               VARCHAR(32)  NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT          NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   dynamicDef             BIT,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   clobValue              VARCHAR(MAX),
   valueType              INT,
-  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
+  PRIMARY KEY (checksum, name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart)
 );
 
 CREATE TABLE m_any_date (
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT         NOT NULL,
-  dateValue              DATETIME2   NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT          NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  dateValue              DATETIME2    NOT NULL,
   dynamicDef             BIT,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, dateValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, dateValue)
 );
 
 CREATE TABLE m_any_long (
-  anyContainer_owner_id  BIGINT      NOT NULL,
-  anyContainer_owner_oid VARCHAR(36) NOT NULL,
-  anyContainer_ownertype INT         NOT NULL,
-  longValue              BIGINT      NOT NULL,
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
+  anyContainer_owner_id  BIGINT       NOT NULL,
+  anyContainer_owner_oid VARCHAR(36)  NOT NULL,
+  anyContainer_ownertype INT          NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
+  longValue              BIGINT       NOT NULL,
   dynamicDef             BIT,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, longValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, longValue)
 );
 
 CREATE TABLE m_any_reference (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  BIGINT       NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INT          NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   targetoid              VARCHAR(255) NOT NULL,
   dynamicDef             BIT,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, targetoid)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, targetoid)
 );
 
 CREATE TABLE m_any_string (
+  name_namespace         VARCHAR(255) NOT NULL,
+  name_localPart         VARCHAR(255) NOT NULL,
   anyContainer_owner_id  BIGINT       NOT NULL,
   anyContainer_owner_oid VARCHAR(36)  NOT NULL,
   anyContainer_ownertype INT          NOT NULL,
+  type_namespace         VARCHAR(255) NOT NULL,
+  type_localPart         VARCHAR(255) NOT NULL,
   stringValue            VARCHAR(255) NOT NULL,
   dynamicDef             BIT,
-  name_namespace         VARCHAR(255),
-  name_localPart         VARCHAR(255),
-  type_namespace         VARCHAR(255),
-  type_localPart         VARCHAR(255),
   valueType              INT,
-  PRIMARY KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, stringValue)
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, stringValue)
 );
 
 CREATE TABLE m_assignment (

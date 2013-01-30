@@ -15,70 +15,79 @@ CREATE TABLE m_any (
 );
 
 CREATE TABLE m_any_clob (
-  checksum               VARCHAR2(32 CHAR) NOT NULL,
-  anyContainer_owner_id  NUMBER(19, 0)     NOT NULL,
-  anyContainer_owner_oid VARCHAR2(36 CHAR) NOT NULL,
-  anyContainer_ownertype NUMBER(10, 0)     NOT NULL,
+  checksum               VARCHAR2(32 CHAR)  NOT NULL,
+  name_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  name_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  anyContainer_owner_id  NUMBER(19, 0)      NOT NULL,
+  anyContainer_owner_oid VARCHAR2(36 CHAR)  NOT NULL,
+  anyContainer_ownertype NUMBER(10, 0)      NOT NULL,
+  type_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  type_localPart         VARCHAR2(100 CHAR) NOT NULL,
   dynamicDef             NUMBER(1, 0),
-  name_namespace         VARCHAR2(255 CHAR),
-  name_localPart         VARCHAR2(255 CHAR),
-  type_namespace         VARCHAR2(255 CHAR),
-  type_localPart         VARCHAR2(255 CHAR),
   clobValue              CLOB,
   valueType              NUMBER(10, 0),
-  PRIMARY KEY (checksum, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype)
+  PRIMARY KEY (checksum, name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart)
 );
 
 CREATE TABLE m_any_date (
-  owner_id       NUMBER(19, 0)     NOT NULL,
-  owner_oid      VARCHAR2(36 CHAR) NOT NULL,
-  ownerType      NUMBER(10, 0)     NOT NULL,
-  dateValue      TIMESTAMP,
-  dynamicDef     NUMBER(1, 0),
-  name_namespace VARCHAR2(255 CHAR),
-  name_localPart VARCHAR2(255 CHAR),
-  type_namespace VARCHAR2(255 CHAR),
-  type_localPart VARCHAR2(255 CHAR),
-  valueType      NUMBER(10, 0)
+  name_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  name_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  anyContainer_owner_id  NUMBER(19, 0)      NOT NULL,
+  anyContainer_owner_oid VARCHAR2(36 CHAR)  NOT NULL,
+  anyContainer_ownertype NUMBER(10, 0)      NOT NULL,
+  type_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  type_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  dateValue              TIMESTAMP          NOT NULL,
+  dynamicDef             NUMBER(1, 0),
+  valueType              NUMBER(10, 0),
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, dateValue)
 );
 
 CREATE TABLE m_any_long (
-  owner_id       NUMBER(19, 0)     NOT NULL,
-  owner_oid      VARCHAR2(36 CHAR) NOT NULL,
-  ownerType      NUMBER(10, 0)     NOT NULL,
-  longValue      NUMBER(19, 0),
-  dynamicDef     NUMBER(1, 0),
-  name_namespace VARCHAR2(255 CHAR),
-  name_localPart VARCHAR2(255 CHAR),
-  type_namespace VARCHAR2(255 CHAR),
-  type_localPart VARCHAR2(255 CHAR),
-  valueType      NUMBER(10, 0)
+  name_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  name_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  anyContainer_owner_id  NUMBER(19, 0)      NOT NULL,
+  anyContainer_owner_oid VARCHAR2(36 CHAR)  NOT NULL,
+  anyContainer_ownertype NUMBER(10, 0)      NOT NULL,
+  type_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  type_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  longValue              NUMBER(19, 0)      NOT NULL,
+  dynamicDef             NUMBER(1, 0),
+  valueType              NUMBER(10, 0),
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, longValue)
 );
 
 CREATE TABLE m_any_reference (
-  owner_id       NUMBER(19, 0)     NOT NULL,
-  owner_oid      VARCHAR2(36 CHAR) NOT NULL,
-  ownerType      NUMBER(10, 0)     NOT NULL,
-  oidValue       VARCHAR2(255 CHAR),
-  dynamicDef     NUMBER(1, 0),
-  name_namespace VARCHAR2(255 CHAR),
-  name_localPart VARCHAR2(255 CHAR),
-  type_namespace VARCHAR2(255 CHAR),
-  type_localPart VARCHAR2(255 CHAR),
-  valueType      NUMBER(10, 0)
+  name_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  name_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  anyContainer_owner_id  NUMBER(19, 0)      NOT NULL,
+  anyContainer_owner_oid VARCHAR2(36 CHAR)  NOT NULL,
+  anyContainer_ownertype NUMBER(10, 0)      NOT NULL,
+  type_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  type_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  targetoid              VARCHAR2(255 CHAR) NOT NULL,
+  description            CLOB,
+  dynamicDef             NUMBER(1, 0),
+  filter                 CLOB,
+  relation_namespace     VARCHAR2(255 CHAR),
+  relation_localPart     VARCHAR2(100 CHAR),
+  targetType             NUMBER(10, 0),
+  valueType              NUMBER(10, 0),
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, targetoid)
 );
 
 CREATE TABLE m_any_string (
-  owner_id       NUMBER(19, 0)     NOT NULL,
-  owner_oid      VARCHAR2(36 CHAR) NOT NULL,
-  ownerType      NUMBER(10, 0)     NOT NULL,
-  stringValue    VARCHAR2(255 CHAR),
-  dynamicDef     NUMBER(1, 0),
-  name_namespace VARCHAR2(255 CHAR),
-  name_localPart VARCHAR2(255 CHAR),
-  type_namespace VARCHAR2(255 CHAR),
-  type_localPart VARCHAR2(255 CHAR),
-  valueType      NUMBER(10, 0)
+  name_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  name_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  anyContainer_owner_id  NUMBER(19, 0)      NOT NULL,
+  anyContainer_owner_oid VARCHAR2(36 CHAR)  NOT NULL,
+  anyContainer_ownertype NUMBER(10, 0)      NOT NULL,
+  type_namespace         VARCHAR2(255 CHAR) NOT NULL,
+  type_localPart         VARCHAR2(100 CHAR) NOT NULL,
+  stringValue            VARCHAR2(255 CHAR) NOT NULL,
+  dynamicDef             NUMBER(1, 0),
+  valueType              NUMBER(10, 0),
+  PRIMARY KEY (name_namespace, name_localPart, anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownertype, type_namespace, type_localPart, stringValue)
 );
 
 CREATE TABLE m_assignment (
@@ -91,7 +100,7 @@ CREATE TABLE m_assignment (
   owner_oid                   VARCHAR2(36 CHAR) NOT NULL,
   targetRef_description       CLOB,
   targetRef_filter            CLOB,
-  targetRef_relationLocalPart VARCHAR2(255 CHAR),
+  targetRef_relationLocalPart VARCHAR2(100 CHAR),
   targetRef_relationNamespace VARCHAR2(255 CHAR),
   targetRef_targetOid         VARCHAR2(36 CHAR),
   targetRef_type              NUMBER(10, 0),
@@ -127,16 +136,22 @@ CREATE TABLE m_audit_event (
 );
 
 CREATE TABLE m_connector (
-  connectorBundle  VARCHAR2(255 CHAR),
-  connectorType    VARCHAR2(255 CHAR),
-  connectorVersion VARCHAR2(255 CHAR),
-  framework        VARCHAR2(255 CHAR),
-  name_norm        VARCHAR2(255 CHAR),
-  name_orig        VARCHAR2(255 CHAR),
-  namespace        VARCHAR2(255 CHAR),
-  xmlSchema        CLOB,
-  id               NUMBER(19, 0)     NOT NULL,
-  oid              VARCHAR2(36 CHAR) NOT NULL,
+  connectorBundle              VARCHAR2(255 CHAR),
+  connectorHostRef_description CLOB,
+  connectorHostRef_filter      CLOB,
+  c16_relationLocalPart        VARCHAR2(100 CHAR),
+  c16_relationNamespace        VARCHAR2(255 CHAR),
+  connectorHostRef_targetOid   VARCHAR2(36 CHAR),
+  connectorHostRef_type        NUMBER(10, 0),
+  connectorType                VARCHAR2(255 CHAR),
+  connectorVersion             VARCHAR2(255 CHAR),
+  framework                    VARCHAR2(255 CHAR),
+  name_norm                    VARCHAR2(255 CHAR),
+  name_orig                    VARCHAR2(255 CHAR),
+  namespace                    VARCHAR2(255 CHAR),
+  xmlSchema                    CLOB,
+  id                           NUMBER(19, 0)     NOT NULL,
+  oid                          VARCHAR2(36 CHAR) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -167,12 +182,18 @@ CREATE TABLE m_container (
 );
 
 CREATE TABLE m_exclusion (
-  description CLOB,
-  owner_id    NUMBER(19, 0)     NOT NULL,
-  owner_oid   VARCHAR2(36 CHAR) NOT NULL,
-  policy      NUMBER(10, 0),
-  id          NUMBER(19, 0)     NOT NULL,
-  oid         VARCHAR2(36 CHAR) NOT NULL,
+  description                 CLOB,
+  owner_id                    NUMBER(19, 0)     NOT NULL,
+  owner_oid                   VARCHAR2(36 CHAR) NOT NULL,
+  policy                      NUMBER(10, 0),
+  targetRef_description       CLOB,
+  targetRef_filter            CLOB,
+  targetRef_relationLocalPart VARCHAR2(100 CHAR),
+  targetRef_relationNamespace VARCHAR2(255 CHAR),
+  targetRef_targetOid         VARCHAR2(36 CHAR),
+  targetRef_type              NUMBER(10, 0),
+  id                          NUMBER(19, 0)     NOT NULL,
+  oid                         VARCHAR2(36 CHAR) NOT NULL,
   PRIMARY KEY (id, oid)
 );
 
@@ -271,7 +292,7 @@ CREATE TABLE m_reference (
   reference_type NUMBER(10, 0)      NOT NULL,
   owner_id       NUMBER(19, 0)      NOT NULL,
   owner_oid      VARCHAR2(36 CHAR)  NOT NULL,
-  relLocalPart   VARCHAR2(255 CHAR) NOT NULL,
+  relLocalPart   VARCHAR2(100 CHAR) NOT NULL,
   relNamespace   VARCHAR2(255 CHAR) NOT NULL,
   targetOid      VARCHAR2(36 CHAR)  NOT NULL,
   description    CLOB,
@@ -288,7 +309,7 @@ CREATE TABLE m_resource (
   configuration                  CLOB,
   connectorRef_description       CLOB,
   connectorRef_filter            CLOB,
-  connectorRef_relationLocalPart VARCHAR2(255 CHAR),
+  connectorRef_relationLocalPart VARCHAR2(100 CHAR),
   connectorRef_relationNamespace VARCHAR2(255 CHAR),
   connectorRef_targetOid         VARCHAR2(36 CHAR),
   connectorRef_type              NUMBER(10, 0),
@@ -308,25 +329,31 @@ CREATE TABLE m_resource (
 );
 
 CREATE TABLE m_resource_shadow (
-  enabled                  NUMBER(1, 0),
-  validFrom                TIMESTAMP,
-  validTo                  TIMESTAMP,
-  attemptNumber            NUMBER(10, 0),
-  dead                     NUMBER(1, 0),
-  failedOperationType      NUMBER(10, 0),
-  intent                   VARCHAR2(255 CHAR),
-  name_norm                VARCHAR2(255 CHAR),
-  name_orig                VARCHAR2(255 CHAR),
-  objectChange             CLOB,
-  class_namespace          VARCHAR2(255 CHAR),
-  class_localPart          VARCHAR2(255 CHAR),
-  synchronizationSituation NUMBER(10, 0),
-  synchronizationTimestamp TIMESTAMP,
-  id                       NUMBER(19, 0)     NOT NULL,
-  oid                      VARCHAR2(36 CHAR) NOT NULL,
-  attrId                   NUMBER(19, 0),
-  attrOid                  VARCHAR2(36 CHAR),
-  attrType                 NUMBER(10, 0),
+  enabled                       NUMBER(1, 0),
+  validFrom                     TIMESTAMP,
+  validTo                       TIMESTAMP,
+  attemptNumber                 NUMBER(10, 0),
+  dead                          NUMBER(1, 0),
+  failedOperationType           NUMBER(10, 0),
+  intent                        VARCHAR2(255 CHAR),
+  name_norm                     VARCHAR2(255 CHAR),
+  name_orig                     VARCHAR2(255 CHAR),
+  objectChange                  CLOB,
+  class_namespace               VARCHAR2(255 CHAR),
+  class_localPart               VARCHAR2(100 CHAR),
+  resourceRef_description       CLOB,
+  resourceRef_filter            CLOB,
+  resourceRef_relationLocalPart VARCHAR2(100 CHAR),
+  resourceRef_relationNamespace VARCHAR2(255 CHAR),
+  resourceRef_targetOid         VARCHAR2(36 CHAR),
+  resourceRef_type              NUMBER(10, 0),
+  synchronizationSituation      NUMBER(10, 0),
+  synchronizationTimestamp      TIMESTAMP,
+  id                            NUMBER(19, 0)     NOT NULL,
+  oid                           VARCHAR2(36 CHAR) NOT NULL,
+  attrId                        NUMBER(19, 0),
+  attrOid                       VARCHAR2(36 CHAR),
+  attrType                      NUMBER(10, 0),
   PRIMARY KEY (id, oid)
 );
 
@@ -357,14 +384,14 @@ CREATE TABLE m_system_configuration (
   connectorFramework             CLOB,
   d22_description                CLOB,
   defaultUserTemplateRef_filter  CLOB,
-  d22_relationLocalPart          VARCHAR2(255 CHAR),
+  d22_relationLocalPart          VARCHAR2(100 CHAR),
   d22_relationNamespace          VARCHAR2(255 CHAR),
   d22_targetOid                  VARCHAR2(36 CHAR),
   defaultUserTemplateRef_type    NUMBER(10, 0),
   g36                            CLOB,
   g23_description                CLOB,
   globalPasswordPolicyRef_filter CLOB,
-  g23_relationLocalPart          VARCHAR2(255 CHAR),
+  g23_relationLocalPart          VARCHAR2(100 CHAR),
   g23_relationNamespace          VARCHAR2(255 CHAR),
   g23_targetOid                  VARCHAR2(36 CHAR),
   globalPasswordPolicyRef_type   NUMBER(10, 0),
@@ -396,14 +423,14 @@ CREATE TABLE m_task (
   node                        VARCHAR2(255 CHAR),
   objectRef_description       CLOB,
   objectRef_filter            CLOB,
-  objectRef_relationLocalPart VARCHAR2(255 CHAR),
+  objectRef_relationLocalPart VARCHAR2(100 CHAR),
   objectRef_relationNamespace VARCHAR2(255 CHAR),
   objectRef_targetOid         VARCHAR2(36 CHAR),
   objectRef_type              NUMBER(10, 0),
   otherHandlersUriStack       CLOB,
   ownerRef_description        CLOB,
   ownerRef_filter             CLOB,
-  ownerRef_relationLocalPart  VARCHAR2(255 CHAR),
+  ownerRef_relationLocalPart  VARCHAR2(100 CHAR),
   ownerRef_relationNamespace  VARCHAR2(255 CHAR),
   ownerRef_targetOid          VARCHAR2(36 CHAR),
   ownerRef_type               NUMBER(10, 0),
@@ -503,28 +530,28 @@ CREATE INDEX iDate ON m_any_date (dateValue);
 
 ALTER TABLE m_any_date
 ADD CONSTRAINT fk_any_date
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 
 CREATE INDEX iLong ON m_any_long (longValue);
 
 ALTER TABLE m_any_long
 ADD CONSTRAINT fk_any_long
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 
-CREATE INDEX iOid ON m_any_reference (oidValue);
+CREATE INDEX iTargetOid ON m_any_reference (targetoid);
 
 ALTER TABLE m_any_reference
 ADD CONSTRAINT fk_any_reference
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 
 CREATE INDEX iString ON m_any_string (stringValue);
 
 ALTER TABLE m_any_string
 ADD CONSTRAINT fk_any_string
-FOREIGN KEY (owner_id, owner_oid, ownerType)
+FOREIGN KEY (anyContainer_owner_id, anyContainer_owner_oid, anyContainer_ownerType)
 REFERENCES m_any;
 
 CREATE INDEX iAssignmentEnabled ON m_assignment (enabled);
@@ -631,6 +658,8 @@ FOREIGN KEY (id, oid)
 REFERENCES m_object;
 
 CREATE INDEX iResourceObjectShadowEnabled ON m_resource_shadow (enabled);
+
+CREATE INDEX iShadowResourceRef ON m_resource_shadow (resourceRef_targetOid);
 
 CREATE INDEX iResourceShadowName ON m_resource_shadow (name_norm);
 

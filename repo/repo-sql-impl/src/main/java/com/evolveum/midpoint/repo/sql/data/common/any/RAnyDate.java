@@ -33,9 +33,6 @@ import javax.xml.namespace.QName;
 import java.sql.Timestamp;
 
 /**
- * todo fix primary key of this class, also name and type should probably be
- * in there, maybe more columns are necessary
- *
  * @author lazyman
  */
 @Entity

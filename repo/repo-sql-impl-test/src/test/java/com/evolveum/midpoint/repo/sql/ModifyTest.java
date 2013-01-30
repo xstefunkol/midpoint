@@ -403,6 +403,18 @@ public class ModifyTest extends BaseSQLRepoTest {
             session = getFactory().openSession();
             session.beginTransaction();
             user = createUser(456L, DATE);
+
+//            Set<RAnyString> strings = new HashSet<RAnyString>();
+//            user.getExtension().setStrings(strings);
+//            RAnyString s1 = new RAnyString();
+//            s1.setAnyContainer(user.getExtension());
+//            strings.add(s1);
+//            s1.setDynamic(false);
+//            s1.setName(new QName("http://example.com/p", "weapon"));
+//            s1.setType(new QName("http://www.w3.org/2001/XMLSchema", "string"));
+//            s1.setValue("gun");
+//            s1.setValueType(RValueType.PROPERTY);
+
             user.setId(0L);
             user.setOid(id.getOid());
             session.merge(user);

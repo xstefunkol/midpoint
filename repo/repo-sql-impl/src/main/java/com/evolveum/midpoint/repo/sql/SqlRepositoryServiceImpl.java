@@ -93,12 +93,12 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			throws ObjectNotFoundException, SchemaException, DtoTranslationException {
 		Criteria query = session.createCriteria(ClassMapper.getHQLTypeClass(type));
 
-        if (lock) {
-            query.setLockMode(LockMode.PESSIMISTIC_WRITE);
-        }
-
         query.add(Restrictions.eq("oid", oid));
 		query.add(Restrictions.eq("id", 0L));
+
+//        if (lock) {
+//            query.setLockMode(LockMode.PESSIMISTIC_WRITE);
+//        }
 
 		RObject object = (RObject) query.uniqueResult();
 		if (object == null) {
@@ -106,7 +106,17 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 					+ "' was not found.", null, oid);
 		}
 
-		LOGGER.trace("Transforming data to JAXB type.");
+        if (lock) {
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Locking object " + object + "... (session = " + session + ")");
+            }
+            session.buildLockRequest(new LockOptions(LockMode.PESSIMISTIC_WRITE)).lock(object);
+            LOGGER.trace("Locked; doing refresh.");
+            session.refresh(object);
+            LOGGER.trace("Refreshed.");
+        }
+
+        LOGGER.trace("Transforming data to JAXB type.");
 		PrismObject<T> objectType = object.toJAXB(getPrismContext()).asPrismObject();
 		validateObjectType(objectType, type);
 
@@ -736,7 +746,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			session = beginTransaction();
 
 			// get user
-			PrismObject<T> prismObject = getObject(session, type, oid, false);
+			PrismObject<T> prismObject = getObject(session, type, oid, true);
 			// apply diff
 			if (LOGGER.isTraceEnabled()) {
 				LOGGER.trace("OBJECT before:\n{}", new Object[] { prismObject.dump() });
@@ -765,7 +775,9 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 
 			recomputeHierarchy(prismObject.asObjectable(), session, modifications);
 
+            LOGGER.trace("Before commit...");
 			session.getTransaction().commit();
+            LOGGER.trace("Committed!");
 		} catch (PessimisticLockException ex) {
 			rollbackTransaction(session);
 			throw ex;

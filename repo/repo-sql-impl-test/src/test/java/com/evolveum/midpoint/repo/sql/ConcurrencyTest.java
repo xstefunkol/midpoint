@@ -127,7 +127,7 @@ public class ConcurrencyTest extends BaseSQLRepoTest {
         Thread.sleep(1000);         // give the threads a chance to finish (before repo will be shut down)
 
         for (ModifierThread mt : mts) {
-            LOGGER.info("Modifier thread " + mt.id + " finished with an exception: " + mt.threadResult);
+            LOGGER.info("Modifier thread " + mt.id + " finished with an exception: ", mt.threadResult);
         }
 
         for (ModifierThread mt : mts) {

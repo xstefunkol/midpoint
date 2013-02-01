@@ -44,6 +44,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -152,6 +153,9 @@ public class RResourceObjectShadow extends RObject {
     })
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     public Set<RSynchronizationSituationDescription> getSynchronizationSituationDescription() {
+        if (synchronizationSituationDescription == null) {
+            synchronizationSituationDescription = new HashSet<RSynchronizationSituationDescription>();
+        }
         return synchronizationSituationDescription;
     }
 
@@ -348,7 +352,8 @@ public class RResourceObjectShadow extends RObject {
             repo.setSynchronizationSituation(RSynchronizationSituation.toRepoType(jaxb.getSynchronizationSituation()));
         }
 
-        repo.setSynchronizationSituationDescription(RUtil.listSyncSituationToSet(jaxb.getSynchronizationSituationDescription()));
+        repo.getSynchronizationSituationDescription()
+                .addAll(RUtil.listSyncSituationToSet(jaxb.getSynchronizationSituationDescription()));
         repo.setSynchronizationTimestamp(jaxb.getSynchronizationTimestamp());
         repo.setResourceRef(RUtil.jaxbRefToEmbeddedRepoRef(jaxb.getResourceRef(), prismContext));
 

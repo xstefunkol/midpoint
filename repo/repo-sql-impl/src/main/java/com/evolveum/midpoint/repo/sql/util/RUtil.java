@@ -228,22 +228,17 @@ public final class RUtil {
     }
 
     public static Set<RSynchronizationSituationDescription> listSyncSituationToSet(List<SynchronizationSituationDescriptionType> list) {
-        if (list == null || list.isEmpty()) {
-            return null;
+        Set<RSynchronizationSituationDescription> set = new HashSet<RSynchronizationSituationDescription>();
+        if (list != null) {
+            for (SynchronizationSituationDescriptionType str : list) {
+                set.add(RSynchronizationSituationDescription.copyFromJAXB(str));
+            }
         }
 
-        Set<RSynchronizationSituationDescription> set = new HashSet<RSynchronizationSituationDescription>();
-        for (SynchronizationSituationDescriptionType str : list) {
-            set.add(RSynchronizationSituationDescription.copyFromJAXB(str));
-        }
         return set;
     }
 
     public static List<SynchronizationSituationDescriptionType> safeSetSyncSituationToList(Set<RSynchronizationSituationDescription> set) {
-        if (set == null || set.isEmpty()) {
-            return new ArrayList<SynchronizationSituationDescriptionType>();
-        }
-
         List<SynchronizationSituationDescriptionType> list = new ArrayList<SynchronizationSituationDescriptionType>();
         for (RSynchronizationSituationDescription str : set) {
             list.add(RSynchronizationSituationDescription.copyToJAXB(str));
@@ -373,6 +368,7 @@ public final class RUtil {
             fixCompositeIdentifierInMetaModel(sessionFactory, owner.getClazz());
         }
 
+        fixCompositeIdentifierInMetaModel(sessionFactory, RContainer.class);
         fixCompositeIdentifierInMetaModel(sessionFactory, RAssignment.class);
         fixCompositeIdentifierInMetaModel(sessionFactory, RExclusion.class);
         for (RContainerType type : ClassMapper.getKnownTypes()) {

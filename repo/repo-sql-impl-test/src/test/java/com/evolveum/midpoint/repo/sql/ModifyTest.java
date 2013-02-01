@@ -30,13 +30,16 @@ import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.query.LessFilter;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
+import com.evolveum.midpoint.repo.sql.data.common.RAccountShadow;
 import com.evolveum.midpoint.repo.sql.data.common.RAnyContainer;
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
-import com.evolveum.midpoint.repo.sql.data.common.RTask;
 import com.evolveum.midpoint.repo.sql.data.common.RUser;
 import com.evolveum.midpoint.repo.sql.data.common.any.*;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
+import com.evolveum.midpoint.repo.sql.data.common.embedded.RSynchronizationSituationDescription;
+import com.evolveum.midpoint.repo.sql.data.common.enums.RSynchronizationSituation;
 import com.evolveum.midpoint.repo.sql.data.common.id.RContainerId;
+import com.evolveum.midpoint.repo.sql.type.XMLGregorianCalendarType;
 import com.evolveum.midpoint.schema.DeltaConvertor;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.util.SynchronizationSituationUtil;
@@ -47,8 +50,9 @@ import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.xml.ns._public.common.api_types_2.ObjectModificationType;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.*;
 import com.evolveum.prism.xml.ns._public.types_2.PolyStringType;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.hibernate.Session;
-import org.hibernate.metadata.ClassMetadata;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.testng.AssertJUnit;
@@ -57,8 +61,9 @@ import org.testng.annotations.Test;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import java.io.File;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 /**
  * @author lazyman
@@ -72,9 +77,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test(expectedExceptions = SystemException.class, enabled = false)
     public void test010ModifyWithExistingName() throws Exception {
-        System.out.println("====[ test010ModifyWithExistingName ]====");
-        LOGGER.info("=== [ test010ModifyWithExistingName ] ===");
-
         OperationResult result = new OperationResult("MODIFY");
 
         File userFile = new File(TEST_DIR, "modify-user.xml");
@@ -103,9 +105,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test(expectedExceptions = ObjectNotFoundException.class, enabled = false)
     public void test020ModifyNotExistingUser() throws Exception {
-        System.out.println("====[ test020ModifyNotExistingUser ]====");
-        LOGGER.info("=== [ test020ModifyNotExistingUser ] ===");
-
         ObjectModificationType modification = prismContext.getPrismJaxbProcessor().unmarshalObject(
                 new File(TEST_DIR, "change-add.xml"),
                 ObjectModificationType.class);
@@ -119,9 +118,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test(enabled = false)
     public void test030ModifyUserOnNonExistingAccountTest() throws Exception {
-        System.out.println("====[ test030ModifyUserOnNonExistingAccountTest ]====");
-        LOGGER.info("=== [ test030ModifyUserOnNonExistingAccountTest ] ===");
-
         OperationResult result = new OperationResult("MODIFY");
 
         //add user
@@ -155,9 +151,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test(enabled = false)
     public void test031ModifyUserOnExistingAccountTest() throws Exception {
-        System.out.println("====[ test031ModifyUserOnExistingAccountTest ]====");
-        LOGGER.info("=== [ test031ModifyUserOnExistingAccountTest ] ===");
-
         OperationResult result = new OperationResult("MODIFY");
 
         //add account
@@ -196,11 +189,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void test032ModifyTaskObjectRef() throws Exception {
-        System.out.println("====[ test032ModifyTaskObjectRef ]====");
-        LOGGER.info("=== [ test032ModifyTaskObjectRef ] ===");
-
-        ClassMetadata metadata = getFactory().getClassMetadata(RTask.class);
-
         OperationResult result = new OperationResult("MODIFY");
         File taskFile = new File(TEST_DIR, "task.xml");
         System.out.println("ADD");
@@ -284,8 +272,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void testModifyUserAddRole() throws Exception {
-        System.out.println("====[ testModifyUserAddRole ]====");
-        LOGGER.info("=== [ testModifyUserAddRole ] ===");
         OperationResult parentResult = new OperationResult("Modify user -> add roles");
         String userToModifyOid = "f65963e3-9d47-4b18-aaf3-bfc98bdfa000";
 
@@ -324,8 +310,7 @@ public class ModifyTest extends BaseSQLRepoTest {
     }
 
     @Test
-    public void testModifyDeleteObjectChnageFromAccount() throws Exception {
-        System.out.println("====[ testModifyDeleteObjectChnageFromAccount ]====");
+    public void testModifyDeleteObjectChangeFromAccount() throws Exception {
         OperationResult parentResult = new OperationResult("testModifyDeleteObjectChnageFromAccount");
         PrismObject<AccountShadowType> accShadow = prismContext.getPrismDomProcessor().parseObject(new File(TEST_DIR + "/account-delete-object-change.xml"));
         String oid = repositoryService.addObject(accShadow, parentResult);
@@ -350,9 +335,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void testExtensionModify() throws Exception {
-        System.out.println("====[ testExtensionModify ]====");
-        LOGGER.info("====[ testExtensionModify ]====");
-
         final QName QNAME_LOOT = new QName("http://example.com/p", "loot");
 
         File userFile = new File(TEST_DIR, "user-with-extension.xml");
@@ -386,7 +368,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void simpleModifyExtensionDateTest() throws Exception {
-        LOGGER.info("===[simpleModifyExtensionDateTest]===");
         final Timestamp DATE = new Timestamp(new Date().getTime());
         RUser user = createUser(123L, DATE);
 
@@ -514,9 +495,6 @@ public class ModifyTest extends BaseSQLRepoTest {
 
     @Test
     public void testModifyAccountSynchronizationSituation() throws Exception {
-        System.out.println("====[ testModifyAccountSynchronizationSituation ]====");
-        LOGGER.info("=== [ testModifyAccountSynchronizationSituation ] ===");
-
         OperationResult result = new OperationResult("testModifyAccountSynchronizationSituation");
 
         //add account
@@ -567,5 +545,109 @@ public class ModifyTest extends BaseSQLRepoTest {
         AssertJUnit.assertEquals(1, shadows.size());
 
         System.out.println("shadow: " + shadows.get(0).dump());
+    }
+
+    @Test
+    public void modifySynchronizationDescription() {
+        //add
+        RAccountShadow s1 = new RAccountShadow();
+        s1.setName(new RPolyString("acc", "acc"));
+
+        LOGGER.info("add:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(s1, ToStringStyle.MULTI_LINE_STYLE)});
+        Session session = getFactory().openSession();
+        session.beginTransaction();
+        final RContainerId ID = (RContainerId) session.save(s1);
+        session.getTransaction().commit();
+        session.close();
+
+        //modify1
+        s1 = new RAccountShadow();
+        s1.setId(0L);
+        s1.setOid(ID.getOid());
+        s1.setName(new RPolyString("acc", "acc"));
+        RSynchronizationSituationDescription desc = new RSynchronizationSituationDescription();
+        desc.setSituation(RSynchronizationSituation.LINKED);
+//        Date date1 = new Date(System.currentTimeMillis());
+        XMLGregorianCalendar date1 = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
+        LOGGER.info("Date is: {}, {} {}", new Object[]{date1, date1, date1.getClass()});
+        desc.setTimestampValue(date1);
+        s1.getSynchronizationSituationDescription().add(desc);
+
+        LOGGER.info("modify1:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(s1, ToStringStyle.MULTI_LINE_STYLE)});
+        session = getFactory().openSession();
+        session.beginTransaction();
+        session.merge(s1);
+        session.getTransaction().commit();
+        session.close();
+
+        //get1
+        session = getFactory().openSession();
+        session.beginTransaction();
+        RAccountShadow shadow = (RAccountShadow) session.get(RAccountShadow.class, ID);
+        LOGGER.info("get1:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(shadow, ToStringStyle.MULTI_LINE_STYLE)});
+        AssertJUnit.assertEquals(1, shadow.getSynchronizationSituationDescription().size());
+
+        Iterator<RSynchronizationSituationDescription> i = shadow.getSynchronizationSituationDescription().iterator();
+        Date t;
+        while (i.hasNext()) {
+            t = XMLGregorianCalendarType.asDate(i.next().getTimestampValue());
+//            t = i.next().getTimestampValue();
+            LOGGER.info("Date from result: {}, {}", new Object[]{t, t.getTime()});
+        }
+
+
+        //modify2
+        s1 = new RAccountShadow();
+        s1.setId(0L);
+        s1.setOid(ID.getOid());
+        s1.setName(new RPolyString("acc", "acc"));
+        desc = new RSynchronizationSituationDescription();
+        desc.setSituation(RSynchronizationSituation.LINKED);
+        XMLGregorianCalendar date2 = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
+//        Date date2 = new Date(System.currentTimeMillis());
+        LOGGER.info("Date is: {}, {} {}", new Object[]{date2, date2, date2.getClass()});
+        desc.setTimestampValue(date2);
+        s1.getSynchronizationSituationDescription().add(desc);
+        s1.setSynchronizationTimestamp(date2);
+
+
+//        session = getFactory().openSession();
+//        session.beginTransaction();
+//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description");
+////        Timestamp t10 = (Timestamp)((Object[])query.list().get(0))[4];
+////        Timestamp t11 = new Timestamp(XMLGregorianCalendarType.asDate(date1).getTime());
+////        Timestamp t12 = (Timestamp) XMLGregorianCalendarType.asDate(date1);
+//                //SQLQuery query = session.createSQLQuery("delete from m_sync_situation_description where timestampvalue=?");
+////        query.setTimestamp(0, XMLGregorianCalendarType.asDate(XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis())));
+////        int update = query.executeUpdate();
+////        System.out.println(update);
+//        session.getTransaction().commit();
+//        session.close();
+
+
+
+        LOGGER.info("modify2:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(s1, ToStringStyle.MULTI_LINE_STYLE)});
+        session = getFactory().openSession();
+        session.beginTransaction();
+        session.merge(s1);
+        session.getTransaction().commit();
+        session.close();
+
+        //get2
+        session = getFactory().openSession();
+        session.beginTransaction();
+        shadow = (RAccountShadow) session.get(RAccountShadow.class, ID);
+        LOGGER.info("get2:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(shadow, ToStringStyle.MULTI_LINE_STYLE)});
+
+        i = shadow.getSynchronizationSituationDescription().iterator();
+        while (i.hasNext()) {
+            t = XMLGregorianCalendarType.asDate(i.next().getTimestampValue());
+//            t = i.next().getTimestampValue();
+            LOGGER.info("Date from result: {}, {}", new Object[]{t, t.getTime()});
+        }
+
+        AssertJUnit.assertEquals(1, shadow.getSynchronizationSituationDescription().size());
+        session.getTransaction().commit();
+        session.close();
     }
 }

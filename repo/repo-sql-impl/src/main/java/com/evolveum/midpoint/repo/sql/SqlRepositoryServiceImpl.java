@@ -165,16 +165,18 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
         long opHandle = pm.registerOperationStart("getObject");
 
-		while (true) {
-			try {
-				PrismObject<T> retval = getObjectAttempt(type, oid, subResult);
-                pm.registerOperationFinish(opHandle, attempt);
-                return retval;
-			} catch (RuntimeException ex) {
-				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
-                pm.registerOperationNewTrial(opHandle, attempt);
-			}
-		}
+        try {
+		    while (true) {
+			    try {
+				    return getObjectAttempt(type, oid, subResult);
+			    } catch (RuntimeException ex) {
+				    attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                    pm.registerOperationNewTrial(opHandle, attempt);
+			    }
+		    }
+        } finally {
+            pm.registerOperationFinish(opHandle, attempt);
+        }
 	}
 
 	private <T extends ObjectType> PrismObject<T> getObjectAttempt(Class<T> type, String oid, OperationResult result)
@@ -474,16 +476,19 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
         long opHandle = pm.registerOperationStart("deleteObject");
 
-        while (true) {
-			try {
-				deleteObjectAttempt(type, oid, subResult);
-                pm.registerOperationFinish(opHandle, attempt);
-				return;
-			} catch (RuntimeException ex) {
-				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
-                pm.registerOperationNewTrial(opHandle, attempt);
-			}
-		}
+        try {
+            while (true) {
+                try {
+                    deleteObjectAttempt(type, oid, subResult);
+                    return;
+                } catch (RuntimeException ex) {
+                    attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                    pm.registerOperationNewTrial(opHandle, attempt);
+                }
+            }
+        } finally {
+            pm.registerOperationFinish(opHandle, attempt);
+        }
 	}
 
 	private <T extends ObjectType> void deleteObjectAttempt(Class<T> type, String oid, OperationResult result)
@@ -762,16 +767,20 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
         long opHandle = pm.registerOperationStart("modifyObject");
 
-        while (true) {
-			try {
-				modifyObjectAttempt(type, oid, modifications, subResult);
-                pm.registerOperationFinish(opHandle, attempt);
-				return;
-			} catch (RuntimeException ex) {
-				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
-                pm.registerOperationNewTrial(opHandle, attempt);
-			}
-		}
+        try {
+            while (true) {
+                try {
+                    modifyObjectAttempt(type, oid, modifications, subResult);
+                    return;
+                } catch (RuntimeException ex) {
+                    attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                    pm.registerOperationNewTrial(opHandle, attempt);
+                }
+            }
+        } finally {
+            pm.registerOperationFinish(opHandle, attempt);
+        }
+
 	}
 
 	private <T extends ObjectType> void modifyObjectAttempt(Class<T> type, String oid,
@@ -1032,16 +1041,18 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
         long opHandle = pm.registerOperationStart("listResourceObjectShadow");
 
-        while (true) {
-			try {
-				List<PrismObject<T>> retval = listResourceObjectShadowsAttempt(resourceOid, resourceObjectShadowType, subResult);
-                pm.registerOperationFinish(opHandle, attempt);
-                return retval;
-			} catch (RuntimeException ex) {
-				attempt = logOperationAttempt(resourceOid, operation, attempt, ex, subResult);
-                pm.registerOperationNewTrial(opHandle, attempt);
-			}
-		}
+        try {
+            while (true) {
+                try {
+                    return listResourceObjectShadowsAttempt(resourceOid, resourceObjectShadowType, subResult);
+                } catch (RuntimeException ex) {
+                    attempt = logOperationAttempt(resourceOid, operation, attempt, ex, subResult);
+                    pm.registerOperationNewTrial(opHandle, attempt);
+                }
+            }
+        } finally {
+            pm.registerOperationFinish(opHandle, attempt);
+        }
 	}
 
 	private <T extends ResourceObjectShadowType> List<PrismObject<T>> listResourceObjectShadowsAttempt(

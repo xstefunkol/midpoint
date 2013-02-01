@@ -89,8 +89,33 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 	private static final Trace LOGGER = TraceManager.getTrace(SqlRepositoryServiceImpl.class);
 	private static final int MAX_CONSTRAINT_NAME_LENGTH = 40;
 
-	private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid, boolean lock)
+    private SqlRepositoryFactory repositoryFactory;
+
+    public SqlRepositoryServiceImpl(SqlRepositoryFactory repositoryFactory) {
+        this.repositoryFactory = repositoryFactory;
+    }
+
+    private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid, boolean lockForUpdate, boolean sharedLock)
 			throws ObjectNotFoundException, SchemaException, DtoTranslationException {
+
+
+//        // brutal hack!
+//
+//        if (lockForUpdate || sharedLock) {
+//            //String how = lockForUpdate ? " FOR UPDATE" : " LOCK IN SHARE MODE";
+//            String how = lockForUpdate ? " FOR UPDATE" : " FOR SHARE";
+//            LOGGER.info("Trying to lock object " + oid + how);
+//            long time = System.currentTimeMillis();
+//            SQLQuery q = session.createSQLQuery("select id from m_container where id = 0 and oid = ?" + how);
+//            q.setString(0, oid);
+//            Object result = q.uniqueResult();
+//            if (result == null) {
+//                throw new ObjectNotFoundException("Object of type '" + type.getSimpleName() + "' with oid '" + oid
+//                        + "' was not found.", null, oid);
+//            }
+//            LOGGER.info("Locked (" + (System.currentTimeMillis() - time) + " ms)");
+//        }
+
 		Criteria query = session.createCriteria(ClassMapper.getHQLTypeClass(type));
 
         query.add(Restrictions.eq("oid", oid));
@@ -106,7 +131,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 					+ "' was not found.", null, oid);
 		}
 
-        if (lock) {
+        if (lockForUpdate) {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Locking object " + object + "... (session = " + session + ")");
             }
@@ -137,11 +162,17 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		subResult.addParam("type", type.getName());
 		subResult.addParam("oid", oid);
 
+        SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
+        long opHandle = pm.registerOperationStart("getObject");
+
 		while (true) {
 			try {
-				return getObjectAttempt(type, oid, subResult);
+				PrismObject<T> retval = getObjectAttempt(type, oid, subResult);
+                pm.registerOperationFinish(opHandle, attempt);
+                return retval;
 			} catch (RuntimeException ex) {
 				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                pm.registerOperationNewTrial(opHandle, attempt);
 			}
 		}
 	}
@@ -156,7 +187,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		try {
 			session = beginTransaction();
 
-			objectType = getObject(session, type, oid, false);
+			objectType = getObject(session, type, oid, false, true);
 
 			session.getTransaction().commit();
 		} catch (PessimisticLockException ex) {
@@ -440,12 +471,17 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		subResult.addParam("type", type.getName());
 		subResult.addParam("oid", oid);
 
-		while (true) {
+        SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
+        long opHandle = pm.registerOperationStart("deleteObject");
+
+        while (true) {
 			try {
 				deleteObjectAttempt(type, oid, subResult);
+                pm.registerOperationFinish(opHandle, attempt);
 				return;
 			} catch (RuntimeException ex) {
 				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                pm.registerOperationNewTrial(opHandle, attempt);
 			}
 		}
 	}
@@ -723,12 +759,17 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		final String operation = "modifying";
 		int attempt = 1;
 
-		while (true) {
+        SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
+        long opHandle = pm.registerOperationStart("modifyObject");
+
+        while (true) {
 			try {
 				modifyObjectAttempt(type, oid, modifications, subResult);
+                pm.registerOperationFinish(opHandle, attempt);
 				return;
 			} catch (RuntimeException ex) {
 				attempt = logOperationAttempt(oid, operation, attempt, ex, subResult);
+                pm.registerOperationNewTrial(opHandle, attempt);
 			}
 		}
 	}
@@ -746,7 +787,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			session = beginTransaction();
 
 			// get user
-			PrismObject<T> prismObject = getObject(session, type, oid, true);
+			PrismObject<T> prismObject = getObject(session, type, oid, true, false);
 			// apply diff
 			if (LOGGER.isTraceEnabled()) {
 				LOGGER.trace("OBJECT before:\n{}", new Object[] { prismObject.dump() });
@@ -807,6 +848,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			handleGeneralException(ex, session, result);
 		} finally {
 			cleanupSessionAndResult(session, result);
+            LOGGER.trace("Session cleaned up.");
 		}
 
 	}
@@ -986,11 +1028,18 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 
 		final String operation = "listing resource object shadows";
 		int attempt = 1;
-		while (true) {
+
+        SqlPerformanceMonitor pm = repositoryFactory.getPerformanceMonitor();
+        long opHandle = pm.registerOperationStart("listResourceObjectShadow");
+
+        while (true) {
 			try {
-				return listResourceObjectShadowsAttempt(resourceOid, resourceObjectShadowType, subResult);
+				List<PrismObject<T>> retval = listResourceObjectShadowsAttempt(resourceOid, resourceObjectShadowType, subResult);
+                pm.registerOperationFinish(opHandle, attempt);
+                return retval;
 			} catch (RuntimeException ex) {
 				attempt = logOperationAttempt(resourceOid, operation, attempt, ex, subResult);
+                pm.registerOperationNewTrial(opHandle, attempt);
 			}
 		}
 	}

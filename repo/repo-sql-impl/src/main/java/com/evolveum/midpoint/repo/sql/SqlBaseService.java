@@ -55,7 +55,7 @@ public class SqlBaseService {
     private static final Trace LOGGER = TraceManager.getTrace(SqlBaseService.class);
     // how many times we want to repeat operation after lock acquisition,
     // pessimistic, optimistic exception
-    private static final int LOCKING_MAX_ATTEMPTS = 40;
+    static final int LOCKING_MAX_ATTEMPTS = 40;
 
     // timeout will be a random number between 0 and LOCKING_TIMEOUT_STEP * 2^exp where exp is either real attempt # minus 1, or LOCKING_EXP_THRESHOLD (whatever is lesser)
     private static final long LOCKING_TIMEOUT_STEP = 50;
@@ -126,11 +126,11 @@ public class SqlBaseService {
             LOGGER.trace("Waiting: attempt = " + attempt + ", waitTimeInterval = 0.." + waitTimeInterval + ", waitTime = " + waitTime);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("A serialization-related problem occurred when {} object with oid '{}', retrying after "
+//        if (LOGGER.isDebugEnabled()) {
+            LOGGER.info("A serialization-related problem occurred when {} object with oid '{}', retrying after "
                     + "{}ms (this was attempt {} of {})\n{}: {}", new Object[]{operation, oid, waitTime,
                     attempt, LOCKING_MAX_ATTEMPTS, ex.getClass().getSimpleName(), ex.getMessage()});
-        }
+//        }
 
         if (attempt >= LOCKING_MAX_ATTEMPTS) {
             LOGGER.error("A serialization-related problem occurred, maximum attempts (" + attempt + ") reached.", ex);

@@ -132,8 +132,6 @@ public class RAnyConverter {
     private static boolean isIndexable(ItemDefinition definition) {
         if (definition instanceof PrismContainerDefinition) {
             return false;
-        } else if (definition instanceof PrismReferenceDefinition) {
-            return true;
         }
         if (!(definition instanceof PrismPropertyDefinition)) {
             throw new UnsupportedOperationException("Unknown definition type '"

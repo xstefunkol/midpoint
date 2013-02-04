@@ -244,6 +244,7 @@ public class RObjectReference implements ObjectReference {
     public static void copyFromJAXB(ObjectReferenceType jaxb, RObjectReference repo, PrismContext prismContext) {
         Validate.notNull(repo, "Repo object must not be null.");
         Validate.notNull(jaxb, "JAXB object must not be null.");
+        Validate.notEmpty(jaxb.getOid(), "Target oid must not be null.");
 
         if (jaxb.getDescription() != null) {
             repo.setDescription(jaxb.getDescription());

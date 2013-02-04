@@ -375,16 +375,6 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_FUNERAL_TIMESTAMP, DOMUtil.XSD_DATETIME, 0, 1, true);
 	}
 
-    public void assertPropertyDefinition(PrismProperty property, QName type, int minOccurs, int maxOccurs, Boolean indexed) {
-        PrismPropertyDefinition definition = property.getDefinition();
-
-        AssertJUnit.assertNotNull("No definition for " + property, definition);
-        AssertJUnit.assertEquals("Wrong definition type for " + type, type, definition.getTypeName());
-        AssertJUnit.assertEquals("Wrong definition minOccurs for " + property, minOccurs, definition.getMinOccurs()) ;
-        AssertJUnit.assertEquals("Wrong definition maxOccurs for " + property, maxOccurs, definition.getMaxOccurs());
-        AssertJUnit.assertEquals("Property should have indexed=" + indexed, indexed, definition.isIndexed());
-    }
-
     @Test
     public void test301AddUserDeGhoulash() throws Exception {
 		final String TEST_NAME = "test301AddUserDeGhoulash";
@@ -398,13 +388,12 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         
         PrismObject<UserType> user = PrismTestUtil.parseObject(USER_DEGHOULASH_FILE);
         PrismContainer extension = user.findContainer(UserType.F_EXTENSION);
-
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_SHIP), DOMUtil.XSD_STRING, 1, 1, true);
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_TALES), DOMUtil.XSD_STRING, 0, 1, false);
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_WEAPON), DOMUtil.XSD_STRING, 0, -1, true);
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_LOOT), DOMUtil.XSD_INT, 0, 1, true);
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_BAD_LUCK), DOMUtil.XSD_LONG, 0, -1, false);
-        assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_FUNERAL_TIMESTAMP), DOMUtil.XSD_DATETIME, 0, 1, true);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_SHIP), DOMUtil.XSD_STRING, 1, 1, true);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_TALES), DOMUtil.XSD_STRING, 0, 1, false);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_WEAPON), DOMUtil.XSD_STRING, 0, -1, true);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_LOOT), DOMUtil.XSD_INT, 0, 1, true);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_BAD_LUCK), DOMUtil.XSD_LONG, 0, -1, false);
+        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_FUNERAL_TIMESTAMP), DOMUtil.XSD_DATETIME, 0, 1, true);
 
         ObjectDelta<UserType> userAddDelta = ObjectDelta.createAddDelta(user);
         Collection<ObjectDelta<? extends ObjectType>> deltas = MiscSchemaUtil.createCollection(userAddDelta);

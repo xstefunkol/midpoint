@@ -95,35 +95,13 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
         this.repositoryFactory = repositoryFactory;
     }
 
-    private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid, boolean lockForUpdate, boolean sharedLock)
+    private <T extends ObjectType> PrismObject<T> getObject(Session session, Class<T> type, String oid, boolean lockForUpdate)
 			throws ObjectNotFoundException, SchemaException, DtoTranslationException {
-
-
-//        // brutal hack!
-//
-//        if (lockForUpdate || sharedLock) {
-//            //String how = lockForUpdate ? " FOR UPDATE" : " LOCK IN SHARE MODE";
-//            String how = lockForUpdate ? " FOR UPDATE" : " FOR SHARE";
-//            LOGGER.info("Trying to lock object " + oid + how);
-//            long time = System.currentTimeMillis();
-//            SQLQuery q = session.createSQLQuery("select id from m_container where id = 0 and oid = ?" + how);
-//            q.setString(0, oid);
-//            Object result = q.uniqueResult();
-//            if (result == null) {
-//                throw new ObjectNotFoundException("Object of type '" + type.getSimpleName() + "' with oid '" + oid
-//                        + "' was not found.", null, oid);
-//            }
-//            LOGGER.info("Locked (" + (System.currentTimeMillis() - time) + " ms)");
-//        }
 
 		Criteria query = session.createCriteria(ClassMapper.getHQLTypeClass(type));
 
         query.add(Restrictions.eq("oid", oid));
 		query.add(Restrictions.eq("id", 0L));
-
-//        if (lock) {
-//            query.setLockMode(LockMode.PESSIMISTIC_WRITE);
-//        }
 
 		RObject object = (RObject) query.uniqueResult();
 		if (object == null) {
@@ -131,15 +109,15 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 					+ "' was not found.", null, oid);
 		}
 
-        if (lockForUpdate) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Locking object " + object + "... (session = " + session + ")");
-            }
-            session.buildLockRequest(new LockOptions(LockMode.PESSIMISTIC_WRITE)).lock(object);
-            LOGGER.trace("Locked; doing refresh.");
-            session.refresh(object);
-            LOGGER.trace("Refreshed.");
-        }
+//        if (lockForUpdate) {
+//            if (LOGGER.isTraceEnabled()) {
+//                LOGGER.trace("Locking object " + object + "... (session = " + session + ")");
+//            }
+//            session.buildLockRequest(new LockOptions(LockMode.PESSIMISTIC_WRITE)).lock(object);
+//            LOGGER.trace("Locked; doing refresh.");
+//            session.refresh(object);
+//            LOGGER.trace("Refreshed.");
+//        }
 
         LOGGER.trace("Transforming data to JAXB type.");
 		PrismObject<T> objectType = object.toJAXB(getPrismContext()).asPrismObject();
@@ -189,7 +167,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 		try {
 			session = beginTransaction();
 
-			objectType = getObject(session, type, oid, false, true);
+			objectType = getObject(session, type, oid, false);
 
 			session.getTransaction().commit();
 		} catch (PessimisticLockException ex) {
@@ -796,7 +774,7 @@ public class SqlRepositoryServiceImpl extends SqlBaseService implements Reposito
 			session = beginTransaction();
 
 			// get user
-			PrismObject<T> prismObject = getObject(session, type, oid, true, false);
+			PrismObject<T> prismObject = getObject(session, type, oid, true);
 			// apply diff
 			if (LOGGER.isTraceEnabled()) {
 				LOGGER.trace("OBJECT before:\n{}", new Object[] { prismObject.dump() });

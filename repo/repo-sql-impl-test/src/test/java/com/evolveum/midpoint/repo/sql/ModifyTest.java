@@ -548,7 +548,7 @@ public class ModifyTest extends BaseSQLRepoTest {
     }
 
     @Test
-    public void modifySynchronizationDescription() {
+    public void testModifyAccountSynchronizationSituationSimplyfied() {
         //add
         RAccountShadow s1 = new RAccountShadow();
         s1.setName(new RPolyString("acc", "acc"));
@@ -594,7 +594,18 @@ public class ModifyTest extends BaseSQLRepoTest {
 //            t = i.next().getTimestampValue();
             LOGGER.info("Date from result: {}, {}", new Object[]{t, t.getTime()});
         }
+        session.getTransaction().commit();
+        session.close();
 
+//        session = getFactory().openSession();
+//        session.beginTransaction();
+//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description where timestampvalue=?");
+//        query.setTimestamp(0, date1);
+//        List values = query.list();
+//        AssertJUnit.assertNotNull(values);
+//        AssertJUnit.assertEquals(1, values.size());
+//        session.getTransaction().commit();
+//        session.close();
 
         //modify2
         s1 = new RAccountShadow();
@@ -608,17 +619,17 @@ public class ModifyTest extends BaseSQLRepoTest {
         LOGGER.info("Date is: {}, {} {}", new Object[]{date2, date2, date2.getClass()});
         desc.setTimestampValue(date2);
         s1.getSynchronizationSituationDescription().add(desc);
-        s1.setSynchronizationTimestamp(date2);
+//        s1.setSynchronizationTimestamp(date2);
 
 
 //        session = getFactory().openSession();
 //        session.beginTransaction();
-//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description");
+//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description where timestampvalue=?");
 ////        Timestamp t10 = (Timestamp)((Object[])query.list().get(0))[4];
 ////        Timestamp t11 = new Timestamp(XMLGregorianCalendarType.asDate(date1).getTime());
 ////        Timestamp t12 = (Timestamp) XMLGregorianCalendarType.asDate(date1);
 //                //SQLQuery query = session.createSQLQuery("delete from m_sync_situation_description where timestampvalue=?");
-////        query.setTimestamp(0, XMLGregorianCalendarType.asDate(XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis())));
+//        query.setTimestamp(0, date1);
 ////        int update = query.executeUpdate();
 ////        System.out.println(update);
 //        session.getTransaction().commit();

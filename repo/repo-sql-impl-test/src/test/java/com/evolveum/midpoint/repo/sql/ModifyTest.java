@@ -61,9 +61,8 @@ import org.testng.annotations.Test;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import java.io.File;
-import java.sql.*;
+import java.sql.Timestamp;
 import java.util.*;
-import java.util.Date;
 
 /**
  * @author lazyman
@@ -385,17 +384,6 @@ public class ModifyTest extends BaseSQLRepoTest {
             session.beginTransaction();
             user = createUser(456L, DATE);
 
-//            Set<RAnyString> strings = new HashSet<RAnyString>();
-//            user.getExtension().setStrings(strings);
-//            RAnyString s1 = new RAnyString();
-//            s1.setAnyContainer(user.getExtension());
-//            strings.add(s1);
-//            s1.setDynamic(false);
-//            s1.setName(new QName("http://example.com/p", "weapon"));
-//            s1.setType(new QName("http://www.w3.org/2001/XMLSchema", "string"));
-//            s1.setValue("gun");
-//            s1.setValueType(RValueType.PROPERTY);
-
             user.setId(0L);
             user.setOid(id.getOid());
             session.merge(user);
@@ -412,11 +400,32 @@ public class ModifyTest extends BaseSQLRepoTest {
             AssertJUnit.assertEquals(1, extension.getDates().size());
             AssertJUnit.assertEquals(2, extension.getStrings().size());
             AssertJUnit.assertEquals(1, extension.getLongs().size());
+            hasLong(extension.getLongs(), 456L);
 
             session.getTransaction().commit();
-        } finally {
             session.close();
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
         }
+    }
+
+    private void hasLong(Set<RAnyLong> longs, Long value) {
+        for (RAnyLong any : longs) {
+            Long other = any.getValue();
+
+            if (other == null) {
+                if (value == null) {
+                    return;
+                }
+            } else {
+                if (other.equals(value)) {
+                    return;
+                }
+            }
+        }
+        AssertJUnit.fail("Longs doesn't contain value '" + value + "'");
     }
 
     private RUser createUser(Long lootValue, Timestamp dateValue) {
@@ -567,7 +576,6 @@ public class ModifyTest extends BaseSQLRepoTest {
         s1.setName(new RPolyString("acc", "acc"));
         RSynchronizationSituationDescription desc = new RSynchronizationSituationDescription();
         desc.setSituation(RSynchronizationSituation.LINKED);
-//        Date date1 = new Date(System.currentTimeMillis());
         XMLGregorianCalendar date1 = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
         LOGGER.info("Date is: {}, {} {}", new Object[]{date1, date1, date1.getClass()});
         desc.setTimestampValue(date1);
@@ -591,21 +599,10 @@ public class ModifyTest extends BaseSQLRepoTest {
         Date t;
         while (i.hasNext()) {
             t = XMLGregorianCalendarType.asDate(i.next().getTimestampValue());
-//            t = i.next().getTimestampValue();
             LOGGER.info("Date from result: {}, {}", new Object[]{t, t.getTime()});
         }
         session.getTransaction().commit();
         session.close();
-
-//        session = getFactory().openSession();
-//        session.beginTransaction();
-//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description where timestampvalue=?");
-//        query.setTimestamp(0, date1);
-//        List values = query.list();
-//        AssertJUnit.assertNotNull(values);
-//        AssertJUnit.assertEquals(1, values.size());
-//        session.getTransaction().commit();
-//        session.close();
 
         //modify2
         s1 = new RAccountShadow();
@@ -615,27 +612,10 @@ public class ModifyTest extends BaseSQLRepoTest {
         desc = new RSynchronizationSituationDescription();
         desc.setSituation(RSynchronizationSituation.LINKED);
         XMLGregorianCalendar date2 = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
-//        Date date2 = new Date(System.currentTimeMillis());
         LOGGER.info("Date is: {}, {} {}", new Object[]{date2, date2, date2.getClass()});
         desc.setTimestampValue(date2);
         s1.getSynchronizationSituationDescription().add(desc);
-//        s1.setSynchronizationTimestamp(date2);
-
-
-//        session = getFactory().openSession();
-//        session.beginTransaction();
-//        SQLQuery query = session.createSQLQuery("select * from m_sync_situation_description where timestampvalue=?");
-////        Timestamp t10 = (Timestamp)((Object[])query.list().get(0))[4];
-////        Timestamp t11 = new Timestamp(XMLGregorianCalendarType.asDate(date1).getTime());
-////        Timestamp t12 = (Timestamp) XMLGregorianCalendarType.asDate(date1);
-//                //SQLQuery query = session.createSQLQuery("delete from m_sync_situation_description where timestampvalue=?");
-//        query.setTimestamp(0, date1);
-////        int update = query.executeUpdate();
-////        System.out.println(update);
-//        session.getTransaction().commit();
-//        session.close();
-
-
+        s1.setSynchronizationTimestamp(date2);
 
         LOGGER.info("modify2:\n{}", new Object[]{ReflectionToStringBuilder.reflectionToString(s1, ToStringStyle.MULTI_LINE_STYLE)});
         session = getFactory().openSession();
@@ -653,7 +633,6 @@ public class ModifyTest extends BaseSQLRepoTest {
         i = shadow.getSynchronizationSituationDescription().iterator();
         while (i.hasNext()) {
             t = XMLGregorianCalendarType.asDate(i.next().getTimestampValue());
-//            t = i.next().getTimestampValue();
             LOGGER.info("Date from result: {}, {}", new Object[]{t, t.getTime()});
         }
 

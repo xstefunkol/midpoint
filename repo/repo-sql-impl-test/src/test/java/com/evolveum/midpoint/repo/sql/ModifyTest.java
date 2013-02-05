@@ -513,7 +513,7 @@ public class ModifyTest extends BaseSQLRepoTest {
         repositoryService.addObject(account, result);
 
         List<PropertyDelta<?>> syncSituationDeltas = SynchronizationSituationUtil.
-                createSynchronizationSituationDescriptionDelta(account, SynchronizationSituationType.LINKED, null);
+                createSynchronizationSituationDescriptionDelta(account, SynchronizationSituationType.LINKED, "ch");
         PropertyDelta<SynchronizationSituationType> syncSituationDelta = SynchronizationSituationUtil.
                 createSynchronizationSituationDelta(account, SynchronizationSituationType.LINKED);
         syncSituationDeltas.add(syncSituationDelta);
@@ -528,7 +528,7 @@ public class ModifyTest extends BaseSQLRepoTest {
         AssertJUnit.assertEquals(SynchronizationSituationType.LINKED, description.getSituation());
 
 
-        syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(afterFirstModify, null, null);
+        syncSituationDeltas = SynchronizationSituationUtil.createSynchronizationSituationDescriptionDelta(afterFirstModify, null, "ch");
         syncSituationDelta = SynchronizationSituationUtil.createSynchronizationSituationDelta(afterFirstModify, null);
         syncSituationDeltas.add(syncSituationDelta);
 
@@ -577,6 +577,7 @@ public class ModifyTest extends BaseSQLRepoTest {
         s1.setName(new RPolyString("acc", "acc"));
         RSynchronizationSituationDescription desc = new RSynchronizationSituationDescription();
         desc.setSituation(RSynchronizationSituation.LINKED);
+        desc.setChanel("ch");
         XMLGregorianCalendar date1 = XmlTypeConverter.createXMLGregorianCalendar(System.currentTimeMillis());
         LOGGER.info("Date is: {}, {} {}", new Object[]{date1, date1, date1.getClass()});
         desc.setTimestampValue(date1);

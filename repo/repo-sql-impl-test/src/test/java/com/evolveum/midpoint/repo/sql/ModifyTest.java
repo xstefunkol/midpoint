@@ -52,6 +52,7 @@ import com.evolveum.midpoint.xml.ns._public.common.common_2a.*;
 import com.evolveum.prism.xml.ns._public.types_2.PolyStringType;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -637,6 +638,48 @@ public class ModifyTest extends BaseSQLRepoTest {
         }
 
         AssertJUnit.assertEquals(1, shadow.getSynchronizationSituationDescription().size());
+        session.getTransaction().commit();
+        session.close();
+    }
+
+    @Test
+    public void addGetDateTimeTest() {
+        final String OID = SystemObjectsType.SYSTEM_CONFIGURATION.value();
+        Session session = getFactory().openSession();
+        session.beginTransaction();
+        session.createSQLQuery("INSERT INTO m_container VALUES (0, '" + OID + "')").executeUpdate();
+        session.createSQLQuery("INSERT INTO m_any VALUES (0, '" + OID + "', 6)").executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+
+        final long TIME = System.currentTimeMillis();
+
+        session = getFactory().openSession();
+        session.beginTransaction();
+        SQLQuery query = session.createSQLQuery("INSERT INTO m_any_date VALUES (?,?,?,?,?,?,?,?,?,?)");
+        query.setString(0, "nn");
+        query.setString(1,"nl");
+        query.setLong(2, 0L);
+        query.setString(3, OID);
+        query.setInteger(4, 6);
+        query.setString(5, "tn");
+        query.setString(6,"tl");
+        query.setTimestamp(7, new Timestamp(XMLGregorianCalendarType.asDate(XmlTypeConverter.createXMLGregorianCalendar(TIME)).getTime()));
+        query.setBoolean(8, false);
+        query.setBoolean(9, false);
+        query.executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+
+        session = getFactory().openSession();
+        session.beginTransaction();
+        query = session.createSQLQuery("SELECT * FROM m_any_date WHERE dateValue = ?");
+        query.setTimestamp(0, new Timestamp(XMLGregorianCalendarType.asDate(XmlTypeConverter.createXMLGregorianCalendar(TIME)).getTime()));
+        List list = query.list();
+        AssertJUnit.assertNotNull(list);
+        AssertJUnit.assertEquals(1, list.size());
+        AssertJUnit.assertEquals(new Timestamp(XMLGregorianCalendarType.asDate(XmlTypeConverter.createXMLGregorianCalendar(TIME)).getTime()),
+                ((Object[])list.get(0))[7]);
         session.getTransaction().commit();
         session.close();
     }

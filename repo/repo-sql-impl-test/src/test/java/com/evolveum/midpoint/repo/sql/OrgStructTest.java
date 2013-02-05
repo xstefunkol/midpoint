@@ -31,7 +31,9 @@ import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.prism.query.OrgFilter;
 import com.evolveum.midpoint.prism.query.RefFilter;
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
+import com.evolveum.midpoint.repo.sql.data.common.RObject;
 import com.evolveum.midpoint.repo.sql.data.common.RObjectReference;
+import com.evolveum.midpoint.repo.sql.data.common.ROrg;
 import com.evolveum.midpoint.repo.sql.data.common.ROrgClosure;
 import com.evolveum.midpoint.repo.sql.data.common.RUser;
 import com.evolveum.midpoint.repo.sql.data.common.embedded.RPolyString;
@@ -40,6 +42,7 @@ import com.evolveum.midpoint.repo.sql.data.common.type.RParentOrgRef;
 import com.evolveum.midpoint.schema.DeltaConvertor;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.util.ObjectTypeUtil;
+import com.evolveum.midpoint.util.DebugUtil;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.xml.ns._public.common.api_types_2.ObjectModificationType;
@@ -50,8 +53,18 @@ import com.evolveum.midpoint.xml.ns._public.common.common_2a.UserType;
 import com.evolveum.prism.xml.ns._public.query_2.QueryType;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.testng.AssertJUnit;
@@ -342,17 +355,17 @@ public class OrgStructTest extends BaseSQLRepoTest {
     public void test006searchOrgStructUserUnbounded() throws Exception {
         LOGGER.info("===[ SEARCH QUERY ]===");
         OperationResult parentResult = new OperationResult("search objects - org struct");
-        Session session = getFactory().openSession();
-        session.beginTransaction();
+//        Session session = getFactory().openSession();
+//        session.beginTransaction();
 
-        List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
-        LOGGER.info("==============CLOSURE TABLE==========");
-        for (ROrgClosure o : results) {
-            LOGGER.info("=> A: {}, D: {}, depth: {}", new Object[]{o.getAncestor().toJAXB(prismContext),
-                    o.getDescendant().toJAXB(prismContext), o.getDepth()});
-        }
-        session.getTransaction().commit();
-        session.close();
+//        List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
+//        LOGGER.info("==============CLOSURE TABLE==========");
+//        for (ROrgClosure o : results) {
+//            LOGGER.info("=> A: {}, D: {}, depth: {}", new Object[]{o.getAncestor().toJAXB(prismContext),
+//                    o.getDescendant().toJAXB(prismContext), o.getDepth()});
+//        }
+//        session.getTransaction().commit();
+//        session.close();
 
         // File file = new File(TEST_DIR + "/query-org-struct.xml")
         QueryType queryType = prismContext.getPrismJaxbProcessor().unmarshalObject(new File(QUERY_ORG_STRUCT_USER_UNBOUNDED), QueryType.class);
@@ -401,40 +414,40 @@ public class OrgStructTest extends BaseSQLRepoTest {
         }
     }
 
-    @Test(enabled = false)  //TODO FIX THIS TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    @Test
     public void test007searchRootOrg() throws Exception {
         LOGGER.info("===[ SEARCH ROOT QUERY ]===");
         OperationResult parentResult = new OperationResult("search root org struct");
-        Session session = getFactory().openSession();
-        session.beginTransaction();
+//        Session session = getFactory().openSession();
+//        session.beginTransaction();
+//
+//        List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
+//        LOGGER.info("==============CLOSURE TABLE==========");
+//        for (ROrgClosure o : results) {
+//            LOGGER.info("=> A: {}, D: {}, depth: {}", new Object[]{o.getAncestor().toJAXB(prismContext),
+//                    o.getDescendant().toJAXB(prismContext), o.getDepth()});
+//        }
+//        
+//        Query rootOrgQuery = session.createQuery("select org from ROrg as org where org.oid in (select descendant.oid from ROrgClosure group by descendant.oid having count(descendant.oid)=1)");
+//        List<ROrg> results = rootOrgQuery.list();
+////      LOGGER.info("==============CLOSURE TABLE==========");
+//      for (ROrg o : results) {
+//          System.out.println("=> result: " + ObjectTypeUtil.toShortString(o.toJAXB(prismContext)));
+//      }
+        ObjectQuery q = ObjectQuery.createObjectQuery(OrgFilter.createRootOrg());
+        List<PrismObject<OrgType>> rootOrgs = repositoryService.searchObjects(OrgType.class, q, parentResult);
+        
+        System.out.println("####################query results: "+ rootOrgs.size());
+        for (PrismObject<OrgType> obj : rootOrgs){
+        	
+        		System.out.println("root org: "+ obj.dump());
+        	}
+        AssertJUnit.assertEquals("Expected two root organization units, but got: " + rootOrgs.size(), 2, rootOrgs.size());
+//        session.getTransaction().commit();
+//        session.close();
 
-        List<ROrgClosure> results = session.createQuery("from ROrgClosure").list();
-        LOGGER.info("==============CLOSURE TABLE==========");
-        for (ROrgClosure o : results) {
-            LOGGER.info("=> A: {}, D: {}, depth: {}", new Object[]{o.getAncestor().toJAXB(prismContext),
-                    o.getDescendant().toJAXB(prismContext), o.getDepth()});
-        }
-        session.getTransaction().commit();
-        session.close();
-
-        // File file = new File(TEST_DIR + "/query-org-struct.xml");
-//		Document document = DOMUtil.parseFile(new File(QUERY_ORG_STRUCT_ORG_DEPTH));
-//		Element filter = DOMUtil.listChildElements(document.getDocumentElement()).get(0);
-//		QueryType query = QueryUtil.createQuery(filter);
-//		QueryType queryType = prismContext.getPrismJaxbProcessor().unmarshalObject(new File(QUERY_ORG_STRUCT_ORG_DEPTH), QueryType.class);
-        try {
-            ObjectQuery objectQuery = ObjectQuery.createObjectQuery(RefFilter.createReferenceEqual(OrgType.class, OrgType.F_PARENT_ORG_REF, prismContext, null));
-//		ObjectQuery objectQuery = QueryConvertor.createObjectQuery(UserType.class, queryType, prismContext);
-            // List<>
-            List<PrismObject<OrgType>> resultss = repositoryService.searchObjects(OrgType.class, objectQuery, parentResult);
-            for (PrismObject<OrgType> u : resultss) {
-                LOGGER.info("ROOT ======> {}", ObjectTypeUtil.toShortString(u.asObjectable()));
-            }
-        } catch (Exception ex) {
-            LOGGER.info("ERROR: {}", ex.getMessage(), ex);
-            throw ex;
-        }
     }
+    
 
     @Test
     public void test009modifyOrgStructRemoveUser() throws Exception {

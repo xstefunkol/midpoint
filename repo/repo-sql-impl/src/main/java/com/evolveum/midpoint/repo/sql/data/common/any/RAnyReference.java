@@ -21,7 +21,6 @@
 
 package com.evolveum.midpoint.repo.sql.data.common.any;
 
-import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.prism.PrismReferenceValue;
 import com.evolveum.midpoint.repo.sql.data.common.RAnyContainer;
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
@@ -29,7 +28,6 @@ import com.evolveum.midpoint.repo.sql.data.common.id.RAnyReferenceId;
 import com.evolveum.midpoint.repo.sql.util.ClassMapper;
 import com.evolveum.midpoint.repo.sql.util.RUtil;
 import com.evolveum.midpoint.util.DOMUtil;
-import com.evolveum.midpoint.xml.ns._public.common.common_2a.ObjectReferenceType;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.ForeignKey;
@@ -111,7 +109,7 @@ public class RAnyReference implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
-            @Column(name = "name_localPart", length = 100)
+            @Column(name = "name_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getName() {
         return name;
@@ -120,7 +118,7 @@ public class RAnyReference implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
-            @Column(name = "type_localPart", length = 100)
+            @Column(name = "type_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getType() {
         return type;
@@ -140,7 +138,7 @@ public class RAnyReference implements RAnyValue {
     }
 
     @Index(name = "iTargetOid")
-    @Column(name = "targetoid")
+    @Column(name = "targetoid", length = 36)
     public String getValue() {
         return value;
     }
@@ -164,7 +162,7 @@ public class RAnyReference implements RAnyValue {
 
     @Columns(columns = {
             @Column(name = "relation_namespace"),
-            @Column(name = "relation_localPart", length = 100)
+            @Column(name = "relation_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getRelation() {
         return relation;

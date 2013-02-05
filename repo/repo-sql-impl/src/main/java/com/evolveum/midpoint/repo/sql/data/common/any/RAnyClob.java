@@ -115,7 +115,7 @@ public class RAnyClob implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
-            @Column(name = "name_localPart", length = 100)
+            @Column(name = "name_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getName() {
         return name;
@@ -124,7 +124,7 @@ public class RAnyClob implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
-            @Column(name = "type_localPart", length = 100)
+            @Column(name = "type_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getType() {
         return type;

@@ -24,6 +24,7 @@ package com.evolveum.midpoint.repo.sql.data.common.any;
 import com.evolveum.midpoint.repo.sql.data.common.RAnyContainer;
 import com.evolveum.midpoint.repo.sql.data.common.RContainerType;
 import com.evolveum.midpoint.repo.sql.data.common.id.RAnyDateId;
+import com.evolveum.midpoint.repo.sql.util.RUtil;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Index;
@@ -102,7 +103,7 @@ public class RAnyDate implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "name_namespace"),
-            @Column(name = "name_localPart", length = 100)
+            @Column(name = "name_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getName() {
         return name;
@@ -111,7 +112,7 @@ public class RAnyDate implements RAnyValue {
     @Id
     @Columns(columns = {
             @Column(name = "type_namespace"),
-            @Column(name = "type_localPart", length = 100)
+            @Column(name = "type_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getType() {
         return type;

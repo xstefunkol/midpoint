@@ -88,7 +88,7 @@ public class RResourceObjectShadow extends RObject {
 
     @Columns(columns = {
             @Column(name = "class_namespace"),
-            @Column(name = "class_localPart", length = 100)
+            @Column(name = "class_localPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     })
     public QName getObjectClass() {
         return objectClass;

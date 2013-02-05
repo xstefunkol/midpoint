@@ -35,7 +35,6 @@ import org.hibernate.annotations.Type;
 import org.w3c.dom.Element;
 
 import javax.persistence.*;
-import javax.xml.namespace.QName;
 
 /**
  * @author lazyman
@@ -115,7 +114,7 @@ public class RObjectReference implements ObjectReference {
     }
 
     @Id
-    @Column(name = "relLocalPart", length = 100)
+    @Column(name = "relLocalPart", length = RUtil.COLUMN_LENGTH_LOCALPART)
     @Override
     public String getRelationLocalPart() {
         if (relationLocalPart == null) {

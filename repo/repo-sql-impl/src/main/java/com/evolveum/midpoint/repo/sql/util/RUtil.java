@@ -65,7 +65,12 @@ public final class RUtil {
     /**
      * This constant is used for mapping type for {@link javax.persistence.Lob} fields.
      */
-    public static final String LOB_STRING_TYPE = "org.hibernate.type.MaterializedClobType";//"org.hibernate.type.TextType";
+    public static final String LOB_STRING_TYPE = "org.hibernate.type.MaterializedClobType";
+
+    /**
+     * This constant is used for {@link QName#localPart} column size in databases.
+     */
+    public static final int COLUMN_LENGTH_LOCALPART = 100;
 
     /**
      * This namespace is used for wrapping xml parts of objects during save to database.

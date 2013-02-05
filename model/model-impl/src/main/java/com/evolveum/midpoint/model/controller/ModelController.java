@@ -47,6 +47,7 @@ import com.evolveum.midpoint.common.policy.PasswordPolicyUtils;
 import com.evolveum.midpoint.common.refinery.RefinedAccountDefinition;
 import com.evolveum.midpoint.common.refinery.RefinedResourceSchema;
 import com.evolveum.midpoint.model.ModelObjectResolver;
+import com.evolveum.midpoint.model.api.ModelDiagnosticService;
 import com.evolveum.midpoint.model.api.ModelExecuteOptions;
 import com.evolveum.midpoint.model.api.ModelInteractionService;
 import com.evolveum.midpoint.model.api.ModelService;
@@ -88,6 +89,7 @@ import com.evolveum.midpoint.repo.api.RepositoryService;
 import com.evolveum.midpoint.repo.cache.RepositoryCache;
 import com.evolveum.midpoint.schema.GetOperationOptions;
 import com.evolveum.midpoint.schema.ObjectOperationOption;
+import com.evolveum.midpoint.schema.RepositoryDiag;
 import com.evolveum.midpoint.schema.SelectorOptions;
 import com.evolveum.midpoint.schema.ObjectSelector;
 import com.evolveum.midpoint.schema.constants.ObjectTypes;
@@ -164,7 +166,7 @@ public class ModelController implements ModelService, ModelInteractionService {
 	public static final String CREATE_ACCOUNT = CLASS_NAME_WITH_DOT + "createAccount";
 	public static final String UPDATE_ACCOUNT = CLASS_NAME_WITH_DOT + "updateAccount";
 	public static final String PROCESS_USER_TEMPLATE = CLASS_NAME_WITH_DOT + "processUserTemplate";
-
+	
 	private static final Trace LOGGER = TraceManager.getTrace(ModelController.class);
 
 	@Autowired(required = true)
@@ -209,6 +211,9 @@ public class ModelController implements ModelService, ModelInteractionService {
 	
 	@Autowired(required = true)
 	Protector protector;
+	
+	@Autowired(required = true)
+	ModelDiagController modelDiagController;
 	
 	
 	public ModelObjectResolver getObjectResolver() {
@@ -1343,6 +1348,5 @@ public class ModelController implements ModelService, ModelInteractionService {
 //            }
 //        }
 //    }
-
 
 }

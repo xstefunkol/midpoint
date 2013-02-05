@@ -31,6 +31,7 @@ import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +41,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
-import com.evolveum.midpoint.prism.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
@@ -58,6 +59,16 @@ import com.evolveum.midpoint.model.api.ModelService;
 import com.evolveum.midpoint.model.api.PolicyViolationException;
 import com.evolveum.midpoint.model.api.context.ModelContext;
 import com.evolveum.midpoint.model.api.context.SynchronizationPolicyDecision;
+import com.evolveum.midpoint.prism.Containerable;
+import com.evolveum.midpoint.prism.Objectable;
+import com.evolveum.midpoint.prism.PrismContainer;
+import com.evolveum.midpoint.prism.PrismContainerDefinition;
+import com.evolveum.midpoint.prism.PrismObject;
+import com.evolveum.midpoint.prism.PrismObjectDefinition;
+import com.evolveum.midpoint.prism.PrismProperty;
+import com.evolveum.midpoint.prism.PrismReference;
+import com.evolveum.midpoint.prism.PrismReferenceDefinition;
+import com.evolveum.midpoint.prism.PrismReferenceValue;
 import com.evolveum.midpoint.prism.delta.ChangeType;
 import com.evolveum.midpoint.prism.delta.ItemDelta;
 import com.evolveum.midpoint.prism.delta.ObjectDelta;
@@ -126,6 +137,9 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
 	private static final XMLGregorianCalendar USER_DEGHOULASH_FUNERAL_TIMESTAMP = 
 								XmlTypeConverter.createXMLGregorianCalendar(1771, 1, 2, 11, 22, 33);
 	
+	private static final File TREASURE_ISLAND_FILE = new File(TEST_DIR, "treasure-island.txt");
+	private static String treasureIsland;
+	
 	private String accountGuybrushDummyRedOid;
 	
 	public TestStrangeCases() throws JAXBException {
@@ -141,9 +155,11 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
 		
 		PrismObject<AccountShadowType> accountGuybrushDummyRed = addObjectFromFile(ACCOUNT_GUYBRUSH_DUMMY_RED_FILENAME, AccountShadowType.class, initResult);
 		accountGuybrushDummyRedOid = accountGuybrushDummyRed.getOid();
+		
+		treasureIsland = IOUtils.toString(new FileInputStream(TREASURE_ISLAND_FILE));
 	}
 
-	@Test(enabled = false)
+	@Test
     public void test100ModifyUserGuybrushAddAccountDummyRedNoAttributesConflict() throws Exception {
 		final String TEST_NAME = "test100ModifyUserGuybrushAddAccountDummyRedNoAttributesConflict";
         displayTestTile(this, TEST_NAME);
@@ -214,7 +230,7 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         
 	}
 
-	@Test(enabled = false)
+	@Test
     public void test180DeleteHalfAssignmentFromUser() throws Exception {
 		String TEST_NAME = "test180DeleteHalfAssignmentFromUser";
         displayTestTile(this, TEST_NAME);
@@ -267,7 +283,7 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         dummyAuditService.assertExecutionSuccess();
 	}
 	
-	@Test(enabled = false)
+	@Test
     public void test190DeleteHalfAssignedUser() throws Exception {
 		String TEST_NAME = "test190DeleteHalfAssignedUser";
         displayTestTile(this, TEST_NAME);
@@ -319,7 +335,7 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         dummyAuditService.assertExecutionSuccess();
 	}
 	
-	@Test(enabled = false)
+	@Test
     public void test200ModifyUserJackBrokenAccountRef() throws Exception {
 		final String TEST_NAME = "test200ModifyUserJackBrokenAccountRef";
         displayTestTile(this, TEST_NAME);
@@ -367,17 +383,21 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         
         PrismObjectDefinition<UserType> userDef = prismContext.getSchemaRegistry().findObjectDefinitionByCompileTimeClass(UserType.class);
         PrismContainerDefinition<Containerable> extensionContainerDef = userDef.findContainerDefinition(UserType.F_EXTENSION);
-
-        //TODO FIX MID-1114
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_SHIP, DOMUtil.XSD_STRING, 1, 1, true);
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_TALES, DOMUtil.XSD_STRING, 0, 1, false);
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_WEAPON, DOMUtil.XSD_STRING, 0, -1, true);
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_LOOT, DOMUtil.XSD_INT, 0, 1, true);
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_BAD_LUCK, DOMUtil.XSD_LONG, 0, -1, false);
-//        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_FUNERAL_TIMESTAMP, DOMUtil.XSD_DATETIME, 0, 1, true);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_SHIP, DOMUtil.XSD_STRING, 1, 1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_SHIP, true);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_TALES, DOMUtil.XSD_STRING, 0, 1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_TALES, false);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_WEAPON, DOMUtil.XSD_STRING, 0, -1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_WEAPON, true);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_LOOT, DOMUtil.XSD_INT, 0, 1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_LOOT, true);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_BAD_LUCK, DOMUtil.XSD_LONG, 0, -1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_BAD_LUCK, null);
+        PrismAsserts.assertPropertyDefinition(extensionContainerDef, PIRACY_FUNERAL_TIMESTAMP, DOMUtil.XSD_DATETIME, 0, 1);
+        PrismAsserts.assertIndexed(extensionContainerDef, PIRACY_FUNERAL_TIMESTAMP, true);
 	}
-
-    @Test
+	
+	@Test
     public void test301AddUserDeGhoulash() throws Exception {
 		final String TEST_NAME = "test301AddUserDeGhoulash";
         displayTestTile(this, TEST_NAME);
@@ -389,15 +409,6 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         dummyAuditService.clear();
         
         PrismObject<UserType> user = PrismTestUtil.parseObject(USER_DEGHOULASH_FILE);
-        PrismContainer extension = user.findContainer(UserType.F_EXTENSION);
-        ////TODO FIX MID-1114
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_SHIP), DOMUtil.XSD_STRING, 1, 1, true);
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_TALES), DOMUtil.XSD_STRING, 0, 1, false);
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_WEAPON), DOMUtil.XSD_STRING, 0, -1, true);
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_LOOT), DOMUtil.XSD_INT, 0, 1, true);
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_BAD_LUCK), DOMUtil.XSD_LONG, 0, -1, false);
-//        PrismAsserts.assertPropertyDefinition(extension.findOrCreateProperty(PIRACY_FUNERAL_TIMESTAMP), DOMUtil.XSD_DATETIME, 0, 1, true);
-
         ObjectDelta<UserType> userAddDelta = ObjectDelta.createAddDelta(user);
         Collection<ObjectDelta<? extends ObjectType>> deltas = MiscSchemaUtil.createCollection(userAddDelta);
                         
@@ -425,26 +436,23 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         
         assertBasicGeGhoulashExtension(userDeGhoulash);
 	}
-
-	@Test(enabled = false) //TODO FIX MID-1114
+	
+	@Test
     public void test310SearchDeGhoulashByShip() throws Exception {
 		final String TEST_NAME = "test310SearchDeGhoulashByShip";
         searchDeGhoulash(TEST_NAME, PIRACY_SHIP, "The Undead Pot");
 	}
-	
-	@Test
-    public void test311SearchDeGhoulashByTales() throws Exception {
-		final String TEST_NAME = "test311SearchDeGhoulashByTales";
-        searchDeGhoulash(TEST_NAME, PIRACY_TALES, "Only a dead meat is a good meat");
-	}
 
-    @Test(enabled = false) //TODO FIX MID-1114
+	// There is no test311SearchDeGhoulashByTales
+	// We cannot search by "tales". This is non-indexed string.
+
+	@Test
     public void test312SearchDeGhoulashByWeaponSpoon() throws Exception {
 		final String TEST_NAME = "test312SearchDeGhoulashByWeaponSpoon";
         searchDeGhoulash(TEST_NAME, PIRACY_WEAPON, "spoon");
 	}
 
-    @Test(enabled = false) //TODO FIX MID-1114
+	@Test
     public void test313SearchDeGhoulashByWeaponFork() throws Exception {
 		final String TEST_NAME = "test313SearchDeGhoulashByWeaponFork";
         searchDeGhoulash(TEST_NAME, PIRACY_WEAPON, "fork");
@@ -462,6 +470,7 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
         searchDeGhoulash(TEST_NAME, PIRACY_BAD_LUCK, 13L);
 	}
 
+	// The "badLuck" property is non-indexed. But it is long, therefore it is still searchable
 	@Test
     public void test316SearchDeGhoulashByBadLuck28561() throws Exception {
 		final String TEST_NAME = "test316SearchDeGhoulashByBadLuck28561";
@@ -519,7 +528,7 @@ public class TestStrangeCases extends AbstractInitializedModelIntegrationTest {
     
     private void assertBasicGeGhoulashExtension(PrismObject<UserType> userDeGhoulash) {
     	assertExtension(userDeGhoulash, PIRACY_SHIP, "The Undead Pot");
-        assertExtension(userDeGhoulash, PIRACY_TALES, "Only a dead meat is a good meat");
+        assertExtension(userDeGhoulash, PIRACY_TALES, treasureIsland);
         assertExtension(userDeGhoulash, PIRACY_WEAPON, "fork", "spoon");
         assertExtension(userDeGhoulash, PIRACY_LOOT, 424242);
         assertExtension(userDeGhoulash, PIRACY_BAD_LUCK, 13L, 169L, 2197L, 28561L, 371293L, 131313131313131313L);

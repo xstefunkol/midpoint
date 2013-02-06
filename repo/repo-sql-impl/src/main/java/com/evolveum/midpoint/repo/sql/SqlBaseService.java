@@ -229,7 +229,7 @@ public class SqlBaseService {
 
         //fix for ORA-08177 can't serialize access for this transaction
         if (ex instanceof QueryTimeoutException) {
-            if (ex.getCause() != null && !(ex.getCause() instanceof SQLException)) {
+            if (ex.getCause() != null && ex.getCause() instanceof SQLException) {
                 SQLException sqlEx = (SQLException) ex.getCause();
                 if (sqlEx.getErrorCode() == 8177) {
                     //todo improve exception handling, maybe "javax.persistence.query.timeout" property can be used

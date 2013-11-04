@@ -31,6 +31,7 @@ import com.evolveum.midpoint.task.api.*;
 import com.evolveum.midpoint.task.quartzimpl.handlers.WaitForSubtasksByPollingTaskHandler;
 import com.evolveum.midpoint.task.quartzimpl.handlers.WaitForTasksTaskHandler;
 import com.evolveum.midpoint.util.exception.ObjectAlreadyExistsException;
+import com.evolveum.midpoint.util.logging.LoggingUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.*;
 import com.evolveum.prism.xml.ns._public.types_2.ItemDeltaType;
 import com.evolveum.prism.xml.ns._public.types_2.PolyStringType;
@@ -69,6 +70,9 @@ public class TaskQuartzImpl implements Task {
 
     private PrismObject<TaskType> taskPrism;
 
+    // used only when the parent is transient
+    private List<Task> transientSubtasks = new ArrayList<Task>();
+
     private String requesteeOid;                                  // temporary information
 
     // private Set<Task> subtasks = new HashSet<Task>();          // relevant only for transient tasks, currently not used
@@ -95,7 +99,8 @@ public class TaskQuartzImpl implements Task {
     private RepositoryService repositoryService;
 
     private static final transient Trace LOGGER = TraceManager.getTrace(TaskQuartzImpl.class);
-
+    private LightweightTaskHandler lightweightTaskHandler;
+    private Thread threadForLightweightTaskHandler;
 
     /**
 	 * Note: This constructor assumes that the task is transient.
@@ -160,6 +165,12 @@ public class TaskQuartzImpl implements Task {
     private void updateTaskResult() {
         createOrUpdateTaskResult(null);
     }
+
+    private void updateStoredTaskResult() throws SchemaException, ObjectNotFoundException {
+        setResultImmediate(getResult(), new OperationResult("dummy"));
+    }
+
+
 
     private void createOrUpdateTaskResult(String operationName) {
         OperationResultType resultInPrism = taskPrism.asObjectable().getResult();
@@ -251,6 +262,43 @@ public class TaskQuartzImpl implements Task {
     @Override
     public Collection<ItemDelta<?>> getPendingModifications() {
         return pendingModifications;
+    }
+
+    @Override
+    public void start() {
+        if (isPersistent()) {
+            throw new IllegalStateException("An attempt to start LightweightTaskHandler in a persistent task; task = " + this);
+        }
+
+        if (lightweightTaskHandler == null) {
+            // nothing to do
+            return;
+        }
+
+        Runnable r = new Runnable() {
+
+            @Override
+            public void run() {
+                LOGGER.debug("Task runnable starting; task = {}", TaskQuartzImpl.this);
+                try {
+                    lightweightTaskHandler.run(TaskQuartzImpl.this);
+                } catch (Throwable t) {
+                    LoggingUtils.logException(LOGGER, "Lightweight task handler has thrown an exception; task = {}", t, TaskQuartzImpl.this);
+                }
+                LOGGER.debug("Lightweight task handler finishing; task = {}", TaskQuartzImpl.this);
+                try {
+                    taskManager.closeTask(TaskQuartzImpl.this, getResult());
+                    checkDependentTasksOnClose(getResult());
+                    updateStoredTaskResult();
+                } catch (Exception e) {     // todo
+                    LoggingUtils.logException(LOGGER, "Couldn't correctly close task {}", e, TaskQuartzImpl.this);
+                }
+            }
+        };
+
+        threadForLightweightTaskHandler = new Thread(r);
+        threadForLightweightTaskHandler.start();       // TODO implement using a thread pool
+        LOGGER.debug("Lightweight task handler started; thread = {}, task = {}", threadForLightweightTaskHandler, this);
     }
 
     public void synchronizeWithQuartz(OperationResult parentResult) {
@@ -2161,15 +2209,30 @@ public class TaskQuartzImpl implements Task {
     @Override
     public Task createSubtask() {
 
-        if (isTransient()) {
-            throw new IllegalStateException("Only persistent tasks can have subtasks (as for now)");
-        }
         TaskQuartzImpl sub = (TaskQuartzImpl) taskManager.createTaskInstance();
         sub.setParent(this.getTaskIdentifier());
         sub.setOwner(this.getOwner());
 
+        if (isTransient()) {
+            registerSubtask(sub);
+        }
+
         LOGGER.trace("New subtask " + sub.getTaskIdentifier() + " has been created.");
         return sub;
+    }
+
+    @Override
+    public Task createSubtask(LightweightTaskHandler handler) {
+        Task sub = createSubtask();
+        ((TaskQuartzImpl) sub).setLightweightTaskHandler(handler);
+        return sub;
+    }
+
+    private void registerSubtask(TaskQuartzImpl sub) {
+        if (transientSubtasks.contains(sub)) {
+            throw new IllegalStateException("An attempt to register already registered subtask " + sub + " in " + this);
+        }
+        transientSubtasks.add(sub);
     }
 
     @Deprecated
@@ -2297,5 +2360,55 @@ public class TaskQuartzImpl implements Task {
     @Override
     public void pushWaitForTasksHandlerUri() {
         pushHandlerUri(WaitForTasksTaskHandler.HANDLER_URI, new ScheduleType(), null);
+    }
+
+    public void setLightweightTaskHandler(LightweightTaskHandler handler) {
+        this.lightweightTaskHandler = handler;
+    }
+
+    public LightweightTaskHandler getLightweightTaskHandler() {
+        return lightweightTaskHandler;
+    }
+
+    @Override
+    public boolean waitForTransientSubtasks(long timeout, OperationResult parentResult) {
+        long endTime = System.currentTimeMillis() + timeout;
+        for (Task t : transientSubtasks) {
+            TaskQuartzImpl tqi = (TaskQuartzImpl) t;
+            if (!tqi.lightweightTaskHandlerFinished()) {
+                long wait = endTime - System.currentTimeMillis();
+                if (wait <= 0) {
+                    return false;
+                }
+                try {
+                    tqi.threadForLightweightTaskHandler.join(wait);
+                } catch (InterruptedException e) {
+                    return false;
+                }
+                if (tqi.threadForLightweightTaskHandler.isAlive()) {
+                    return false;
+                }
+            }
+        }
+        LOGGER.trace("All transient subtasks finished for task {}", this);
+        return true;
+    }
+
+    private boolean lightweightTaskHandlerFinished() {
+        return threadForLightweightTaskHandler == null || !threadForLightweightTaskHandler.isAlive();
+    }
+
+    @Override
+    public List<Task> getTransientSubtasks() {
+        return transientSubtasks;
+    }
+
+    @Override
+    public void switchToBackground(OperationResult result) {
+        taskManager.switchToBackground(this, result);
+    }
+
+    public boolean hasLightweightTaskHandler() {
+        return lightweightTaskHandler != null;
     }
 }

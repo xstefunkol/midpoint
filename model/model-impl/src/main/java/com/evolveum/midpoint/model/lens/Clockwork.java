@@ -180,7 +180,9 @@ public class Clockwork {
 					processPrimaryToSecondary(context, task, result);
 					break;
 				case SECONDARY:
-					processSecondary(context, task, result);
+					if (!processSecondary(context, task, result)) {
+                        return HookOperationMode.BACKGROUND;
+                    }
 					break;
 				case FINAL:
 					processFinal(context, task, result);
@@ -259,13 +261,13 @@ public class Clockwork {
 		context.setState(ModelState.SECONDARY);
 	}
 	
-	private <F extends ObjectType, P extends ObjectType> void processSecondary(LensContext<F,P> context, Task task, OperationResult result) throws ObjectAlreadyExistsException, ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException, SecurityViolationException, ExpressionEvaluationException {
+	private <F extends ObjectType, P extends ObjectType> boolean processSecondary(LensContext<F,P> context, Task task, OperationResult result) throws ObjectAlreadyExistsException, ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException, SecurityViolationException, ExpressionEvaluationException {
 		if (context.getExecutionWave() > context.getMaxWave() + 1) {
 			context.setState(ModelState.FINAL);
-			return;
+			return true;
 		}
 		
-		changeExecutor.executeChanges(context, task, result);
+		boolean continuing = changeExecutor.executeChanges(context, task, result);
 		
 		audit(context, AuditEventStage.EXECUTION, task, result);
 		
@@ -274,6 +276,8 @@ public class Clockwork {
 		context.incrementExecutionWave();
 		
 		LensUtil.traceContext(LOGGER, "CLOCKWORK (" + context.getState() + ")", "change execution", false, context, false);
+
+        return continuing;
 	}
 	
 	/**

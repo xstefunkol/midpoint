@@ -24,10 +24,12 @@ import com.evolveum.midpoint.common.expression.ExpressionFactory;
 import com.evolveum.midpoint.common.refinery.RefinedObjectClassDefinition;
 import com.evolveum.midpoint.model.api.ModelExecuteOptions;
 import com.evolveum.midpoint.model.api.PolicyViolationException;
+import com.evolveum.midpoint.model.api.context.ModelContext;
 import com.evolveum.midpoint.model.api.context.SynchronizationPolicyDecision;
 import com.evolveum.midpoint.model.controller.ModelUtils;
 import com.evolveum.midpoint.model.sync.SynchronizationSituation;
 import com.evolveum.midpoint.model.util.Utils;
+import com.evolveum.midpoint.prism.PrismContainer;
 import com.evolveum.midpoint.prism.PrismContainerValue;
 import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.prism.PrismObject;
@@ -60,6 +62,7 @@ import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.util.ObjectTypeUtil;
 import com.evolveum.midpoint.schema.util.ShadowUtil;
 import com.evolveum.midpoint.schema.util.SynchronizationSituationUtil;
+import com.evolveum.midpoint.task.api.LightweightTaskHandler;
 import com.evolveum.midpoint.task.api.Task;
 import com.evolveum.midpoint.task.api.TaskManager;
 import com.evolveum.midpoint.util.DOMUtil;
@@ -74,6 +77,8 @@ import com.evolveum.midpoint.wf.api.WorkflowService;
 import com.evolveum.midpoint.xml.ns._public.common.api_types_2.PropertyReferenceListType;
 import com.evolveum.midpoint.xml.ns._public.common.common_2a.*;
 
+import com.evolveum.midpoint.xml.ns._public.model.model_context_2.LensContextType;
+import org.apache.commons.lang.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -101,10 +106,13 @@ public class ChangeExecutor {
 	private static final String OPERATION_EXECUTE_DELTA = ChangeExecutor.class.getName() + ".executeDelta";
 	private static final String OPERATION_EXECUTE = ChangeExecutor.class.getName() + ".execute";
 	private static final String OPERATION_EXECUTE_FOCUS = OPERATION_EXECUTE + ".focus";
+    private static final String OPERATION_EXECUTE_PROJECTIONS = OPERATION_EXECUTE + ".projections";
 	private static final String OPERATION_EXECUTE_PROJECTION = OPERATION_EXECUTE + ".projection";
 	private static final String OPERATION_LINK_ACCOUNT = ChangeExecutor.class.getName() + ".linkAccount";
 	private static final String OPERATION_UNLINK_ACCOUNT = ChangeExecutor.class.getName() + ".unlinkAccount";
 	private static final String OPERATION_UPDATE_SITUATION_ACCOUNT = ChangeExecutor.class.getName() + ".updateSituationInAccount";
+
+    private static final long SUBTASKS_EXECUTION_TIMEOUT = 10000L;      // for testing purposes
 
     @Autowired(required = true)
     private transient TaskManager taskManager;
@@ -135,14 +143,15 @@ public class ChangeExecutor {
     	shadowDefinition = prismContext.getSchemaRegistry().findObjectDefinitionByCompileTimeClass(ShadowType.class);
     }
 
-    public <F extends ObjectType, P extends ObjectType> void executeChanges(LensContext<F,P> syncContext, Task task, OperationResult parentResult) throws ObjectAlreadyExistsException,
+    // true = we continue on foreground; false = some processing continues on background (i.e. we have to exit clockwork in current thread)
+    public <F extends ObjectType, P extends ObjectType> boolean executeChanges(final LensContext<F,P> syncContext, Task task, OperationResult parentResult) throws ObjectAlreadyExistsException,
             ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException, SecurityViolationException, ExpressionEvaluationException {
     	
     	OperationResult result = parentResult.createSubresult(OPERATION_EXECUTE);
     	
     	// FOCUS
     	
-    	LensFocusContext<F> focusContext = syncContext.getFocusContext();
+    	final LensFocusContext<F> focusContext = syncContext.getFocusContext();
     	if (focusContext != null) {
 	        ObjectDelta<F> userDelta = focusContext.getWaveDelta(syncContext.getExecutionWave());
 	        if (userDelta != null) {
@@ -189,117 +198,163 @@ public class ChangeExecutor {
     	}
 
     	// PROJECTIONS
+
+        OperationResult projectionsResult = result.createSubresult(OPERATION_EXECUTE_PROJECTIONS);
+
+        List<Task> executionSubtasks = new ArrayList<Task>();
     	
-        for (LensProjectionContext<P> accCtx : syncContext.getProjectionContexts()) {
+        for (final LensProjectionContext<P> accCtx : syncContext.getProjectionContexts()) {
         	if (accCtx.getWave() != syncContext.getExecutionWave()) {
         		continue;
 			}
-        	OperationResult subResult = result.createSubresult(OPERATION_EXECUTE_PROJECTION+"."+accCtx.getObjectTypeClass().getSimpleName());
-        	subResult.addContext("discriminator", accCtx.getResourceShadowDiscriminator());
+        	final OperationResult projectionResult = projectionsResult.createSubresult(OPERATION_EXECUTE_PROJECTION+"."+accCtx.getObjectTypeClass().getSimpleName());
+        	projectionResult.addContext("discriminator", accCtx.getResourceShadowDiscriminator());
 			if (accCtx.getResource() != null) {
-				subResult.addParam("resource", accCtx.getResource().getName());
+				projectionResult.addParam("resource", accCtx.getResource().getName());
 			}
-			try {
-				
-				executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.BEFORE, task, subResult);
-				
-				ObjectDelta<P> accDelta = accCtx.getExecutableDelta();
-				if (accCtx.getSynchronizationPolicyDecision() == SynchronizationPolicyDecision.BROKEN) {
-					if (syncContext.getFocusContext().getDelta() != null
-							&& syncContext.getFocusContext().getDelta().isDelete()
-							&& syncContext.getOptions() != null
-							&& ModelExecuteOptions.isForce(syncContext.getOptions())) {
-						if (accDelta == null) {
-							accDelta = ObjectDelta.createDeleteDelta(accCtx.getObjectTypeClass(),
-									accCtx.getOid(), prismContext);
-						}
-					}
-					if (accDelta != null && accDelta.isDelete()) {
+            LightweightTaskHandler executeDeltaHandler = new LightweightTaskHandler() {
 
-						executeDelta(accDelta, accCtx, syncContext, accCtx.getResource(), task, subResult);
+                @Override
+                public void run(Task subtask) {
 
-					}
-				} else {
-					
-					if (accDelta == null || accDelta.isEmpty()) {
-						if (LOGGER.isTraceEnabled()) {
-							LOGGER.trace("No change for account "
-									+ accCtx.getResourceShadowDiscriminator());
-						}
-						if (focusContext != null) {
-							updateAccountLinks(focusContext.getObjectNew(), focusContext, accCtx, task,
-									subResult);
-						}
-						
-						// Make sure post-reconcile delta is always executed, even if there is no change
-						executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.AFTER, task, subResult);
-						
-						subResult.computeStatus();
-						subResult.recordNotApplicableIfUnknown();
-						continue;
-						
-					}
+                    try {
 
-					executeDelta(accDelta, accCtx, syncContext, accCtx.getResource(), task, subResult);
+                        executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.BEFORE, subtask, projectionResult);
 
-				}
+                        ObjectDelta<P> accDelta = accCtx.getExecutableDelta();
 
-				if (focusContext != null) {
-					updateAccountLinks(focusContext.getObjectNew(), focusContext, accCtx, task, subResult);
-				}
-				
-				executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.AFTER, task, subResult);
-				
-				subResult.computeStatus();
-				subResult.recordNotApplicableIfUnknown();
-				
-			} catch (SchemaException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (ObjectNotFoundException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (ObjectAlreadyExistsException e) {
-				// in his case we do not need to set account context as
-				// broken, instead we need to restart projector for this
-				// context to recompute new account or find out if the
-				// account was already linked..
-				// and also do not set fatal error to the operation result, this is a special case
-				// if it is fatal, it will be set later
-				// but we need to set some result
-				subResult.recordHandledError(e);
-				continue;
-			} catch (CommunicationException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (ConfigurationException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (SecurityViolationException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (ExpressionEvaluationException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			} catch (RuntimeException e) {
-				recordProjectionExecutionException(e, accCtx, subResult, SynchronizationPolicyDecision.BROKEN);
-				continue;
-			}
+                        if (accCtx.getSynchronizationPolicyDecision() == SynchronizationPolicyDecision.BROKEN) {
+                            if (syncContext.getFocusContext().getDelta() != null
+                                    && syncContext.getFocusContext().getDelta().isDelete()
+                                    && syncContext.getOptions() != null
+                                    && ModelExecuteOptions.isForce(syncContext.getOptions())) {
+                                if (accDelta == null) {
+                                    accDelta = ObjectDelta.createDeleteDelta(accCtx.getObjectTypeClass(),
+                                            accCtx.getOid(), prismContext);
+                                }
+                            }
+                            if (accDelta != null && accDelta.isDelete()) {
+
+                                executeDelta(accDelta, accCtx, syncContext, accCtx.getResource(), subtask, projectionResult);
+
+                            }
+                        } else {
+
+                            if (accDelta == null || accDelta.isEmpty()) {
+                                if (LOGGER.isTraceEnabled()) {
+                                    LOGGER.trace("No change for account "
+                                            + accCtx.getResourceShadowDiscriminator());
+                                }
+                                if (focusContext != null) {
+                                    updateAccountLinks(focusContext.getObjectNew(), focusContext, accCtx, subtask,
+                                            projectionResult);
+                                }
+
+                                // Make sure post-reconcile delta is always executed, even if there is no change
+                                executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.AFTER, subtask, projectionResult);
+
+                                projectionResult.computeStatus();
+                                projectionResult.recordNotApplicableIfUnknown();
+                                return;
+
+                            }
+
+                            executeDelta(accDelta, accCtx, syncContext, accCtx.getResource(), subtask, projectionResult);
+
+                        }
+
+                        if (focusContext != null) {
+                            updateAccountLinks(focusContext.getObjectNew(), focusContext, accCtx, subtask, projectionResult);
+                        }
+
+                        executeReconciliationScript(accCtx, syncContext, ProvisioningScriptOrderType.AFTER, subtask, projectionResult);
+
+                        projectionResult.computeStatus();
+                        projectionResult.recordNotApplicableIfUnknown();
+                    } catch (SchemaException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (ObjectNotFoundException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (ObjectAlreadyExistsException e) {
+                        // in his case we do not need to set account context as
+                        // broken, instead we need to restart projector for this
+                        // context to recompute new account or find out if the
+                        // account was already linked..
+                        // and also do not set fatal error to the operation result, this is a special case
+                        // if it is fatal, it will be set later
+                        // but we need to set some result
+                        projectionResult.recordHandledError(e);
+                    } catch (CommunicationException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (ConfigurationException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (SecurityViolationException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (ExpressionEvaluationException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    } catch (RuntimeException e) {
+                        recordProjectionExecutionException(e, accCtx, projectionResult, SynchronizationPolicyDecision.BROKEN);
+                    }
+
+                    // if the task carrying this Runnable was switched to background in the meantime, we have to store
+                    // current context to the task extension
+
+                    if (subtask.isPersistent()) {
+                        try {
+                            storeModelContext(subtask, syncContext, projectionResult);
+                        } catch (SchemaException e) {       // we can do nothing meaningful with these exceptions here
+                            throw new RuntimeException(e);
+                        } catch (ObjectAlreadyExistsException e) {
+                            throw new RuntimeException(e);
+                        } catch (ObjectNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+
+                public void storeModelContext(Task task, ModelContext context, OperationResult result) throws SchemaException, ObjectAlreadyExistsException, ObjectNotFoundException {
+                    PrismContainer<LensContextType> modelContext = ((LensContext) context).toPrismContainer();
+                    task.setExtensionContainer(modelContext);
+                    task.savePendingModifications(result);
+                }
+
+                private <P extends ObjectType> void recordProjectionExecutionException(Exception e, LensProjectionContext<P> accCtx,
+                                                                                       OperationResult subResult, SynchronizationPolicyDecision decision) {
+                    subResult.recordFatalError(e);
+                    LOGGER.error("Error executing changes for {}: {}", new Object[]{accCtx.toHumanReadableString(), e.getMessage(), e});
+                    if (decision != null) {
+                        accCtx.setSynchronizationPolicyDecision(decision);
+                    }
+                }
+
+            };
+
+            Task subtask = task.createSubtask(executeDeltaHandler);
+            subtask.setResult(projectionResult);
+            subtask.start();
+            LOGGER.debug("Execution subtask {} for {} has been created and started", subtask, accCtx.getResource());
+            executionSubtasks.add(subtask);
 		}
-        
-        // Result computation here needs to be slightly different
-        result.computeStatusComposite();
 
+        boolean subtasksFinished = task.waitForTransientSubtasks(SUBTASKS_EXECUTION_TIMEOUT, result);
+        if (!subtasksFinished) {
+            LOGGER.trace("Some subtasks have not finished yet; root task = {}", task);
+            for (Task subtask : task.getTransientSubtasks()) {
+                subtask.switchToBackground(result);
+            }
+            task.switchToBackground(result);
+        }
+
+        // Result computation for projections needs to be slightly different
+        projectionsResult.computeStatusComposite();
+        result.computeStatus();
+
+        if (!subtasksFinished && !result.isError()) {
+            result.recordInProgress();
+        }
+
+        return subtasksFinished;
     }
-
-	private <P extends ObjectType> void recordProjectionExecutionException(Exception e, LensProjectionContext<P> accCtx,
-			OperationResult subResult, SynchronizationPolicyDecision decision) {
-		subResult.recordFatalError(e);
-		LOGGER.error("Error executing changes for {}: {}", new Object[]{accCtx.toHumanReadableString(), e.getMessage(), e});
-		if (decision != null) {
-			accCtx.setSynchronizationPolicyDecision(decision);
-		}
-	}
 
 	private void recordFatalError(OperationResult subResult, OperationResult result, String message, Throwable e) {
 		if (message == null) {

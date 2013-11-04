@@ -580,7 +580,7 @@ public class TaskManagerQuartzImpl implements TaskManager, BeanFactoryAware {
 		}
 
 		try {
-			addTaskToRepositoryAndQuartz(taskImpl, parentResult);
+			addTaskToRepositoryAndMaybeQuartz(taskImpl, parentResult);
 		} catch (ObjectAlreadyExistsException ex) {
 			// This should not happen. If it does, it is a bug. It is OK to convert to a runtime exception
 			throw new IllegalStateException("Got ObjectAlreadyExistsException while not expecting it (task:"+task+")",ex);
@@ -597,14 +597,14 @@ public class TaskManagerQuartzImpl implements TaskManager, BeanFactoryAware {
         if (task.getTaskIdentifier() == null) {
             task.getTaskPrismObject().asObjectable().setTaskIdentifier(generateTaskIdentifier().toString());
         }
-		String oid = addTaskToRepositoryAndQuartz(task, result);
+		String oid = addTaskToRepositoryAndMaybeQuartz(task, result);
         result.computeStatus();
         return oid;
 	}
 
-	private String addTaskToRepositoryAndQuartz(Task task, OperationResult parentResult) throws ObjectAlreadyExistsException, SchemaException {
+	private String addTaskToRepositoryAndMaybeQuartz(Task task, OperationResult parentResult) throws ObjectAlreadyExistsException, SchemaException {
 
-        OperationResult result = parentResult.createSubresult(DOT_IMPL_CLASS + "addTaskToRepositoryAndQuartz");
+        OperationResult result = parentResult.createSubresult(DOT_IMPL_CLASS + "addTaskToRepositoryAndMaybeQuartz");
         result.addArbitraryObjectAsParam("task", task);
 
 		PrismObject<TaskType> taskPrism = task.getTaskPrismObject();
@@ -620,8 +620,10 @@ public class TaskManagerQuartzImpl implements TaskManager, BeanFactoryAware {
         }
 
 		((TaskQuartzImpl) task).setOid(oid);
-		
-		synchronizeTaskWithQuartz((TaskQuartzImpl) task, result);
+
+        if (!((TaskQuartzImpl) task).hasRunnable()) {       // only tasks without Runnable should go under control of Quartz
+		    synchronizeTaskWithQuartz((TaskQuartzImpl) task, result);
+        }
 
         result.computeStatus();
 		return oid;

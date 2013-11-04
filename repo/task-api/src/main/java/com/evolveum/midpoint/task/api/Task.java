@@ -747,6 +747,14 @@ public interface Task extends Dumpable {
     Task createSubtask();
 
     /**
+     * Creates a subtask, ready to execute a given LightweightTaskHandler.
+     *
+     * @return
+     */
+    Task createSubtask(LightweightTaskHandler handler);
+
+
+    /**
      * Returns the identifier of the task's parent (or null of there is no parent task).
      * @return
      */
@@ -860,6 +868,14 @@ public interface Task extends Dumpable {
     @Deprecated
     TaskRunResult waitForSubtasks(Integer interval, Collection<ItemDelta<?>> extensionDeltas, OperationResult parentResult) throws ObjectNotFoundException, SchemaException, ObjectAlreadyExistsException;
 
+    /**
+     * Waits for transient subtasks.
+     *
+     * @param timeout How long to wait (in milliseconds)
+     * @param parentResult
+     * @return true if all subtasks are finished
+     */
+    boolean waitForTransientSubtasks(long timeout, OperationResult parentResult);
 
     // ====================================================================================== Supplementary information
 
@@ -921,4 +937,12 @@ public interface Task extends Dumpable {
      */
     Collection<ItemDelta<?>> getPendingModifications();
 
+    /**
+     * Starts execution of a transient task carrying a LightweightTaskHandler.
+     */
+    void start();
+
+    List<Task> getTransientSubtasks();
+
+    void switchToBackground(OperationResult result);
 }

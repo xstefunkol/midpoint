@@ -29,6 +29,7 @@ import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.application.DescriptorLoader;
 import com.evolveum.midpoint.web.component.GuiComponents;
+import com.evolveum.midpoint.web.page.PageBase;
 import com.evolveum.midpoint.web.page.admin.home.PageDashboard;
 import com.evolveum.midpoint.web.page.error.PageError;
 import com.evolveum.midpoint.web.page.error.PageError401;
@@ -36,7 +37,12 @@ import com.evolveum.midpoint.web.page.error.PageError403;
 import com.evolveum.midpoint.web.page.error.PageError404;
 import com.evolveum.midpoint.web.page.login.PageLogin;
 import com.evolveum.midpoint.web.resource.img.ImgResources;
+import com.evolveum.midpoint.web.theme.MidPointThemeProvider;
 import com.evolveum.midpoint.web.util.MidPointPageParametersEncoder;
+import de.agilecoders.wicket.core.Bootstrap;
+import de.agilecoders.wicket.core.settings.BootstrapSettings;
+import de.agilecoders.wicket.core.settings.IBootstrapSettings;
+import de.agilecoders.wicket.less.BootstrapLess;
 import org.apache.commons.configuration.Configuration;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authroles.authentication.AbstractAuthenticatedWebSession;
@@ -58,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -114,6 +121,14 @@ public class MidPointApplication extends AuthenticatedWebApplication {
     @Override
     public void init() {
         super.init();
+
+        IBootstrapSettings settings = new BootstrapSettings();
+        settings.setAutoAppendResources(false);
+        settings.setThemeProvider(new MidPointThemeProvider());
+        Bootstrap.install(this, settings);
+        BootstrapLess.install(this);
+
+        new AnnotatedMountScanner().scanPackage(PageBase.class.getPackage().getName()).mount(this);
 
         GuiComponents.init();
 

@@ -67,6 +67,7 @@
         <jdbc.postgres>9.1-901.jdbc4</jdbc.postgres>
         <jdbc.mysql>5.1.25</jdbc.mysql>
         <wicket.version>6.17.0</wicket.version>
+        <wicket.bootstrap.version>0.9.5</wicket.bootstrap.version>
         <groovy.version>1.8.6</groovy.version>
         <activiti-engine.version>5.15.1</activiti-engine.version>
         <activiti-spring.version>5.15.1</activiti-spring.version>
@@ -117,6 +118,26 @@
                 <groupId>org.apache.wicket</groupId>
                 <artifactId>wicket-datetime</artifactId>
                 <version>${wicket.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wicketstuff</groupId>
+                <artifactId>wicketstuff-annotation</artifactId>
+                <version>${wicket.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.agilecoders.wicket</groupId>
+                <artifactId>wicket-bootstrap-core</artifactId>
+                <version>${wicket.bootstrap.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.agilecoders.wicket</groupId>
+                <artifactId>wicket-bootstrap-extensions</artifactId>
+                <version>${wicket.bootstrap.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.agilecoders.wicket</groupId>
+                <artifactId>wicket-bootstrap-less</artifactId>
+                <version>${wicket.bootstrap.version}</version>
             </dependency>
 
             <dependency>

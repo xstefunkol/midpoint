@@ -30,6 +30,7 @@ import com.evolveum.midpoint.web.component.util.VisibleEnableBehaviour;
 import com.evolveum.midpoint.web.security.MidPointApplication;
 import com.evolveum.midpoint.web.security.MidPointAuthWebSession;
 import com.evolveum.midpoint.web.session.SessionStorage;
+import de.agilecoders.wicket.core.Bootstrap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.wicket.Component;
@@ -99,12 +100,16 @@ public abstract class PageTemplate extends WebPage {
 
     @Override
     public void renderHead(IHeaderResponse response) {
-        super.renderHead(response);
+
 
         //this attaches jquery.js as first header item, which is used in our scripts.
-        CoreLibrariesContributor.contribute(getApplication(), response);
+        // CoreLibrariesContributor.contribute(getApplication(), response);
+
+        Bootstrap.renderHead(response);
 
         response.render(OnDomReadyHeaderItem.forScript("updateBodyTopPadding()"));
+
+        super.renderHead(response);
     }
 
     @Override

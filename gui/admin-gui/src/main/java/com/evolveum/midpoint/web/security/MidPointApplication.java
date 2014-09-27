@@ -128,7 +128,7 @@ public class MidPointApplication extends AuthenticatedWebApplication {
         Bootstrap.install(this, settings);
         BootstrapLess.install(this);
 
-        new AnnotatedMountScanner().scanPackage(PageBase.class.getPackage().getName()).mount(this);
+//        new AnnotatedMountScanner().scanPackage(PageBase.class.getPackage().getName()).mount(this);
 
         GuiComponents.init();
 

@@ -31,6 +31,7 @@ import com.evolveum.midpoint.web.security.MidPointApplication;
 import com.evolveum.midpoint.web.security.MidPointAuthWebSession;
 import com.evolveum.midpoint.web.session.SessionStorage;
 import de.agilecoders.wicket.core.Bootstrap;
+import de.agilecoders.wicket.less.LessResourceReference;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.wicket.Component;
@@ -43,6 +44,7 @@ import org.apache.wicket.devutils.debugbar.DebugBar;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.FeedbackMessages;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -100,11 +102,6 @@ public abstract class PageTemplate extends WebPage {
 
     @Override
     public void renderHead(IHeaderResponse response) {
-
-
-        //this attaches jquery.js as first header item, which is used in our scripts.
-        // CoreLibrariesContributor.contribute(getApplication(), response);
-
         Bootstrap.renderHead(response);
 
         response.render(OnDomReadyHeaderItem.forScript("updateBodyTopPadding()"));

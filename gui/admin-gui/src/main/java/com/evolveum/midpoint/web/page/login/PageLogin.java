@@ -16,8 +16,6 @@
 
 package com.evolveum.midpoint.web.page.login;
 
-import com.evolveum.midpoint.security.api.AuthorizationConstants;
-import com.evolveum.midpoint.web.application.AuthorizationAction;
 import com.evolveum.midpoint.web.application.PageDescriptor;
 import com.evolveum.midpoint.web.component.menu.top.LocalePanel;
 import com.evolveum.midpoint.web.component.menu.top.TopMenuBar;
@@ -25,6 +23,9 @@ import com.evolveum.midpoint.web.page.PageBase;
 import com.evolveum.midpoint.web.page.admin.home.PageDashboard;
 import com.evolveum.midpoint.web.security.MidPointAuthWebSession;
 
+import de.agilecoders.wicket.less.LessResourceReference;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -68,5 +69,13 @@ public class PageLogin extends PageBase {
     @Override
     protected IModel<String> createPageTitleModel() {
         return new Model<>("");
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse response) {
+        super.renderHead(response);
+
+        response.render(CssHeaderItem.forReference(
+                new LessResourceReference(PageLogin.class, "PageLogin.less")));
     }
 }

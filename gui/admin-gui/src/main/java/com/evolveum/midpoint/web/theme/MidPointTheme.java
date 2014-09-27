@@ -1,5 +1,7 @@
 package com.evolveum.midpoint.web.theme;
 
+import com.evolveum.midpoint.web.resource.css.CssResource;
+import com.evolveum.midpoint.web.resource.js.JsResource;
 import de.agilecoders.wicket.core.settings.ITheme;
 import de.agilecoders.wicket.less.LessResourceReference;
 import org.apache.wicket.markup.head.CssHeaderItem;
@@ -7,6 +9,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.request.resource.UrlResourceReference;
 
 import java.net.MalformedURLException;
@@ -31,30 +34,29 @@ public class MidPointTheme implements ITheme {
 //                new PackageResourceReference(MidPointTheme.class, "bootswatch/bootstrap.css")));
 
         response.render(CssHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./css/easy-pie-chart/jquery.easypiechart.css"))));
+                new SharedResourceReference(CssResource.class, "jquery.easypiechart.css")));
 
         // bootstrap select, https://github.com/silviomoreto/bootstrap-select/releases
         response.render(CssHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./css/bootstrap-select/bootstrap-multiselect.css"))));
+                new SharedResourceReference(CssResource.class, "bootstrap-multiselect.css")));
         response.render(CssHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./css/bootstrap-select/bootstrap-select.css"))));
-
+                new SharedResourceReference(CssResource.class, "bootstrap-select.css")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/bootstrap-select/bootstrap-multiselect.js"))));
+                new SharedResourceReference(JsResource.class, "bootstrap-multiselect.js")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/bootstrap-select/bootstrap-select.js"))));
+                new SharedResourceReference(JsResource.class, "bootstrap-select.js")));
 
         // jquery easy pie chart
         response.render(CssHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./css/easy-pie-chart/jquery.easypiechart.css"))));
+                new SharedResourceReference(CssResource.class, "jquery.easypiechart.css")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/easy-pie-chart/jquery.easypiechart.js"))));
+                new SharedResourceReference(JsResource.class, "jquery.easypiechart.js")));
 
         // jquery pnotify
         response.render(CssHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./css/pnotify/jquery.pnotify.default.css"))));
+                new SharedResourceReference(CssResource.class, "jquery.pnotify.default.css")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/pnotify/jquery.pnotify.js"))));
+                new SharedResourceReference(JsResource.class, "jquery.pnotify.js")));
 
         // midpoint theme
         response.render(CssHeaderItem.forReference(
@@ -62,13 +64,13 @@ public class MidPointTheme implements ITheme {
 
         //todo remove obsolete JS [lazyman]
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/evolveum.js"))));
+                new SharedResourceReference(JsResource.class, "obsolete/evolveum.js")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/midpoint/ace-editor.js"))));
+                new SharedResourceReference(JsResource.class, "obsolete/ace-editor.js")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/midpoint/dropdown-multiple.js"))));
+                new SharedResourceReference(JsResource.class, "obsolete/dropdown-multiple.js")));
         response.render(JavaScriptHeaderItem.forReference(
-                new UrlResourceReference(Url.parse("./js/midpoint/midpoint.js"))));
+                new SharedResourceReference(JsResource.class, "obsolete/midpoint.js")));
     }
 
     @Override

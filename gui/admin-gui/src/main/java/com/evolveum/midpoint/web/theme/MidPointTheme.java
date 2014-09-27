@@ -25,7 +25,10 @@ public class MidPointTheme implements ITheme {
     @Override
     public void renderHead(IHeaderResponse response) {
         response.render(CssHeaderItem.forReference(
-                new PackageResourceReference(MidPointTheme.class, "bootswatch/bootstrap.css")));
+                new PackageResourceReference(MidPointTheme.class, "bootstrap/bootstrap.css")));
+
+//        response.render(CssHeaderItem.forReference(
+//                new PackageResourceReference(MidPointTheme.class, "bootswatch/bootstrap.css")));
 
         response.render(CssHeaderItem.forReference(
                 new UrlResourceReference(Url.parse("./css/easy-pie-chart/jquery.easypiechart.css"))));
@@ -56,6 +59,16 @@ public class MidPointTheme implements ITheme {
         // midpoint theme
         response.render(CssHeaderItem.forReference(
                 new LessResourceReference(MidPointTheme.class, "MidPointTheme.less")));
+
+        //todo remove obsolete JS [lazyman]
+        response.render(JavaScriptHeaderItem.forReference(
+                new UrlResourceReference(Url.parse("./js/evolveum.js"))));
+        response.render(JavaScriptHeaderItem.forReference(
+                new UrlResourceReference(Url.parse("./js/midpoint/ace-editor.js"))));
+        response.render(JavaScriptHeaderItem.forReference(
+                new UrlResourceReference(Url.parse("./js/midpoint/dropdown-multiple.js"))));
+        response.render(JavaScriptHeaderItem.forReference(
+                new UrlResourceReference(Url.parse("./js/midpoint/midpoint.js"))));
     }
 
     @Override

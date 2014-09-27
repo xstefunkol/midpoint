@@ -62,6 +62,12 @@ public class MidPointTheme implements ITheme {
         response.render(CssHeaderItem.forReference(
                 new LessResourceReference(MidPointTheme.class, "MidPointTheme.less")));
 
+        // backward compatibility
+        response.render(JavaScriptHeaderItem.forReference(
+                new SharedResourceReference(JsResource.class, "html5shiv.js")));
+        response.render(JavaScriptHeaderItem.forReference(
+                new SharedResourceReference(JsResource.class, "respond.min.js")));
+
         //todo remove obsolete JS [lazyman]
         response.render(JavaScriptHeaderItem.forReference(
                 new SharedResourceReference(JsResource.class, "obsolete/evolveum.js")));

@@ -18,7 +18,6 @@
  * DEPRECATED [lazyman]
  */
 
-var objectFormHelpContainer = null;
 var interval = 0;
 var ajaxError = 0;
 
@@ -44,37 +43,15 @@ function isIE() {
 }
 
 function init() {
-	//loadScript("js/less.js");
-
 	$(document).unbind("mousedown");
 	$("#blackWindow").css("opacity", .8);
 	$("#blackWindow").hide();
 	$("#xmlExport").hide();
 	
-	$(".left-menu ul li").css("opacity", .8);
-	$(".left-menu ul li a").css("opacity", .5);
-	$(".left-menu ul").css("margin-top", - $(".left-menu ul").height() / 2);
-	setTimeout("showLeftMenu()",500);
-	$(".left-menu .selected-left").css("opacity", 1);
-	$(".left-menu .selected-left").append("<img class='leftNavArrow' src='img/leftNavArrow.png' alt='' />");
-	$(".left-menu .selected-left").parent().css("opacity", 1);
-	$(".left-menu .selected-left").parent().css("background", "#333333");
-	
 	if (!isIE9OrNewer()){
 		$(".acc .acc-section").css("height", "1px");
 		$(".acc-content .sortedTable table").css("width", $(".acc-content").width());
 	}
-	
-	$(".optionPanel").css("height",$(".optionRightBar").height());
-	$(".optionLeftBar").css("height",$(".optionRightBar").height());
-	
-	$(".objectFormAttribute").mouseenter(function(){
-		objectFormHelpContainer = $(this).find(".objectFormHelpContainer");
-
-		interval = setTimeout("showFormHelpContainer()",1000);
-	}).mouseleave(function(){
-		hideFormHelpContainer();
-	});
 
 	var el = $('.searchPanel');
     el.focus(function(e) {
@@ -129,98 +106,11 @@ function hideAjaxStatusSign() {
     document.getElementById('ajax_busy').style.display = 'none';
 }
 
-function showLeftMenu() {
-	if($(".left-menu ul").find(".leftMenuRow").html() != null){
-		$(".left-menu ul").animate({left: -252}, {duration: 500, easing: "easeOutQuart"});
-	}
-}
-
-function showFormHelpContainer(){
-    //show if help is not empty
-    if ($(objectFormHelpContainer).find('.objectFormHelpContent').text() == '') {
-        return;
-    }
-	objectFormHelpContainer.show();
-	clearTimeout(interval);
-}
-
-function hideFormHelpContainer(){
-    //hide if help is not empty
-    if ($(objectFormHelpContainer).find('.objectFormHelpContent').text() == '') {
-        return;
-    }
-	clearTimeout(interval);
-	objectFormHelpContainer.hide();
-}
-
-function setFooterPos(){
-	var winHeight = $(window).height();
-	var contentHeight = $(".content").height() + 200;
-	if(winHeight > contentHeight){
-		$("#footer").css("position", "absolute");
-		$("#footer").css("bottom", 0);
-	} else {
-		$("#footer").css("position", "relative");
-		$("#footer").css("bottom", 0);
-	}
-}
-
-function loadScript(url){
-    var script = document.createElement("script");
-    script.type = "text/javascript";
-
-    if (script.readyState){  //IE
-        script.onreadystatechange = function(){
-            if (script.readyState == "loaded" ||
-                    script.readyState == "complete"){
-                script.onreadystatechange = null;
-                //callback();
-            }
-        };
-    } else {  //Others
-        script.onload = function(){
-            //callback();
-        };
-    }
-    script.src = url;
-    document.getElementsByTagName("head")[0].appendChild(script);
-}
-
-function unselectText(){
-	var sel ;
-	if(document.selection && document.selection.empty){
-		document.selection.empty() ;
-	} else if(window.getSelection) {
-		sel=window.getSelection();
-		if(sel && sel.removeAllRanges)
-		sel.removeAllRanges() ;
-	}
-}
-
-function scrollToTop() {
-	$('body,html').animate({
-		scrollTop: 0
-	}, 800);
-	return false;
-}
-
 function initXml(xml) {
 	var output = "<small>*to hide the window, please click on the black background</small><h1>XML report</h1>" + xml;
 	$("#xmlExportContent").html(output);
 	$("#xmlExport").show();
 	$("#blackWindow").show();
-}
-
-function disablePaste(disable) {
-	document.onkeydown = checkKeycode;
-	function checkKeycode(e) {
-		var keycode = null;
-		if (window.event) keycode = window.event.keyCode;
-		else if (e) keycode = e.which;
-		if(keycode == 86){
-			return !disable;
-		}
-	}
 }
 
 function setupFunc() {

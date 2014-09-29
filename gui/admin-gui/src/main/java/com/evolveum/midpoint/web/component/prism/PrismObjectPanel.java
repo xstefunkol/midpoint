@@ -47,6 +47,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.request.resource.SharedResourceReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -251,7 +252,7 @@ public class PrismObjectPanel extends Panel {
             }
         });
 
-        Image shield = new Image("shield", new PackageResourceReference(ImgResources.class, ImgResources.SHIELD));
+        Label shield = new Label("shield");
         shield.add(new VisibleEnableBehaviour() {
 
             @Override

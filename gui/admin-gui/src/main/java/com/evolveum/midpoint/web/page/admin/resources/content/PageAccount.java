@@ -38,7 +38,7 @@ import com.evolveum.midpoint.web.component.util.ObjectWrapperUtil;
 import com.evolveum.midpoint.web.component.util.VisibleEnableBehaviour;
 import com.evolveum.midpoint.web.page.admin.resources.PageAdminResources;
 import com.evolveum.midpoint.web.page.admin.resources.PageResources;
-import com.evolveum.midpoint.web.resource.img.ImgResources;
+import com.evolveum.midpoint.web.resource.img.ImgResource;
 import com.evolveum.midpoint.web.util.OnePageParameterEncoder;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.web.util.WebModelUtils;
@@ -50,7 +50,6 @@ import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowType;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -133,7 +132,7 @@ public class PageAccount extends PageAdminResources {
         mainForm.add(protectedMessage);
 
         PrismObjectPanel userForm = new PrismObjectPanel("account", accountModel, new PackageResourceReference(
-                ImgResources.class, ImgResources.HDD_PRISM), mainForm) {
+                ImgResource.class, ImgResource.HDD_PRISM), mainForm) {
 
             @Override
             protected IModel<String> createDescription(IModel<ObjectWrapper> model) {

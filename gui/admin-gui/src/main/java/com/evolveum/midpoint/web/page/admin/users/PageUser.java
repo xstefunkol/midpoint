@@ -93,7 +93,7 @@ import com.evolveum.midpoint.web.page.admin.users.component.ResourcesPopup;
 import com.evolveum.midpoint.web.page.admin.users.dto.SimpleUserResourceProvider;
 import com.evolveum.midpoint.web.page.admin.users.dto.UserAccountDto;
 import com.evolveum.midpoint.web.page.admin.users.dto.UserDtoStatus;
-import com.evolveum.midpoint.web.resource.img.ImgResources;
+import com.evolveum.midpoint.web.resource.img.ImgResource;
 import com.evolveum.midpoint.web.security.MidPointApplication;
 import com.evolveum.midpoint.web.util.OnePageParameterEncoder;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
@@ -349,7 +349,7 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
         initSummaryInfo(mainForm);
 
         PrismObjectPanel userForm = new PrismObjectPanel(ID_USER_FORM, userModel, new PackageResourceReference(
-                ImgResources.class, ImgResources.USER_PRISM), mainForm) {
+                ImgResource.class, ImgResource.USER_PRISM), mainForm) {
 
             @Override
             protected IModel<String> createDescription(IModel<ObjectWrapper> model) {
@@ -605,8 +605,8 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
                 Panel panel;
 
                 if(dto.isLoadedOK()){
-                    packageRef = new PackageResourceReference(ImgResources.class,
-                            ImgResources.HDD_PRISM);
+                    packageRef = new PackageResourceReference(ImgResource.class,
+                            ImgResource.HDD_PRISM);
 
                     panel = new PrismObjectPanel("account", new PropertyModel<ObjectWrapper>(
                             item.getModel(), "object"), packageRef, (Form) PageUser.this.get(ID_MAIN_FORM)) {

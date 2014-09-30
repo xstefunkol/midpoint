@@ -16,7 +16,7 @@
 
 package com.evolveum.midpoint.web.component;
 
-import com.evolveum.midpoint.web.resource.img.ImgResources;
+import com.evolveum.midpoint.web.resource.img.ImgResource;
 import com.evolveum.midpoint.web.component.util.BaseSimplePanel;
 import com.evolveum.midpoint.web.component.util.FutureUpdateBehavior;
 import com.evolveum.midpoint.web.component.util.VisibleEnableBehaviour;
@@ -32,7 +32,6 @@ import org.apache.wicket.util.time.Duration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 /**
@@ -41,7 +40,7 @@ import java.util.concurrent.Future;
 public abstract class AsyncUpdatePanel<V, T> extends BaseSimplePanel {
 
     private static final ResourceReference PRELOADER =
-            new PackageResourceReference(ImgResources.class, "ajax-loader.gif");
+            new PackageResourceReference(ImgResource.class, "ajax-loader.gif");
 
     /**
      * Duration in seconds.

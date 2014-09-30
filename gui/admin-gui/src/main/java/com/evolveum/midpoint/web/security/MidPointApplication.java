@@ -29,14 +29,15 @@ import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.application.DescriptorLoader;
 import com.evolveum.midpoint.web.component.GuiComponents;
-import com.evolveum.midpoint.web.page.PageBase;
 import com.evolveum.midpoint.web.page.admin.home.PageDashboard;
 import com.evolveum.midpoint.web.page.error.PageError;
 import com.evolveum.midpoint.web.page.error.PageError401;
 import com.evolveum.midpoint.web.page.error.PageError403;
 import com.evolveum.midpoint.web.page.error.PageError404;
 import com.evolveum.midpoint.web.page.login.PageLogin;
-import com.evolveum.midpoint.web.resource.img.ImgResources;
+import com.evolveum.midpoint.web.resource.css.CssResource;
+import com.evolveum.midpoint.web.resource.img.ImgResource;
+import com.evolveum.midpoint.web.resource.js.JsResource;
 import com.evolveum.midpoint.web.theme.MidPointThemeProvider;
 import com.evolveum.midpoint.web.util.MidPointPageParametersEncoder;
 import de.agilecoders.wicket.core.Bootstrap;
@@ -64,7 +65,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -148,7 +148,9 @@ public class MidPointApplication extends AuthenticatedWebApplication {
         }
 
         //pretty url for resources (e.g. images)
-        mountFiles(ImgResources.BASE_PATH, ImgResources.class);
+        mountFiles("/shared/img", ImgResource.class);
+        mountFiles("/shared/css", CssResource.class);
+        mountFiles("/shared/js", JsResource.class);
 
         //exception handling an error pages
         IApplicationSettings appSettings = getApplicationSettings();
@@ -179,11 +181,7 @@ public class MidPointApplication extends AuthenticatedWebApplication {
             String packagePath = clazz.getPackage().getName().replace('.', '/');
 
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            Resource[] res = resolver.getResources("classpath:" + packagePath + "/*.png");
-            if (res != null) {
-                list.addAll(Arrays.asList(res));
-            }
-            res = resolver.getResources("classpath:" + packagePath + "/*.gif");
+            Resource[] res = resolver.getResources("classpath:" + packagePath + "/*.*");
             if (res != null) {
                 list.addAll(Arrays.asList(res));
             }
@@ -191,7 +189,7 @@ public class MidPointApplication extends AuthenticatedWebApplication {
             for (Resource resource : list) {
                 URI uri = resource.getURI();
                 File file = new File(uri.toString());
-                mountResource(path + "/" + file.getName(), new SharedResourceReference(clazz, file.getName()));
+                mountResource(path + '/' + file.getName(), new SharedResourceReference(clazz, file.getName()));
             }
         } catch (Exception ex) {
             LoggingUtils.logException(LOGGER, "Couldn't mount files", ex);

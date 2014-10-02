@@ -69,7 +69,7 @@
     </xsd:import>
 
     <xsd:import namespace="http://www.w3.org/2001/04/xmlenc#" 
-    			schemaLocation="http://www.w3.org/2001/04/xmlenc#">
+    			schemaLocation="http://www.w3.org/2001/04/xmlenc">
         <xsd:annotation>
             <xsd:documentation>
                 The XML Encryption schema. Used for "protected" data types (property encryption).
@@ -3422,6 +3422,14 @@
    								are applied before higher-order dependencies. Dependencies with the same order
    								are applied at the same time. There must be no circular dependency formed from
    								dependencies of the same order.
+   							</xsd:documentation>
+   						</xsd:annotation>
+   					</xsd:element>
+   					<xsd:element name="forceLoad" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false">
+   						<xsd:annotation>
+   							<xsd:documentation>
+   								Specifies if the shadow on which we depends has to be load. By default we do
+   								not force to load full dependent shadow.
    							</xsd:documentation>
    						</xsd:annotation>
    					</xsd:element>

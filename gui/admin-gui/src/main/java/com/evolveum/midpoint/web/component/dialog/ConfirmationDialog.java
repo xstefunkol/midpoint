@@ -16,102 +16,60 @@
 
 package com.evolveum.midpoint.web.component.dialog;
 
-import com.evolveum.midpoint.web.component.AjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
+import org.apache.commons.lang.Validate;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 
 /**
  * @author lazyman
  */
-public class ConfirmationDialog extends ModalWindow {
+public class ConfirmationDialog extends Modal {
 
     private static final String ID_CONFIRM_TEXT = "confirmText";
-    private static final String ID_YES = "yes";
-    private static final String ID_NO = "no";
+
+    private IModel<String> noLabel = new StringResourceModel("confirmationDialog.no", this, null);
+    private IModel<String> yesLabel = new StringResourceModel("confirmationDialog.yes", this, null);
 
     private int confirmType;
 
-    public ConfirmationDialog(String id) {
-        this(id, null, null);
-    }
-
     public ConfirmationDialog(String id, IModel<String> title, IModel<String> message) {
         super(id);
-        if (title != null) {
-            setTitle(title);
-        }
-        setCssClassName(ModalWindow.CSS_CLASS_GRAY);
-        setCookieName(ConfirmationDialog.class.getSimpleName() + ((int) (Math.random() * 100)));
-        showUnloadConfirmation(false);
-        setResizable(false);
-        setInitialWidth(350);
-        setInitialHeight(150);
-        setWidthUnit("px");
+        Validate.notNull(message, "Message model must not be null.");
 
-
-        setCloseButtonCallback(new ModalWindow.CloseButtonCallback() {
-
-            @Override
-            public boolean onCloseButtonClicked(AjaxRequestTarget target) {
-                return true;
-            }
-        });
-
-        setWindowClosedCallback(new ModalWindow.WindowClosedCallback() {
-
-            @Override
-            public void onClose(AjaxRequestTarget target) {
-                ConfirmationDialog.this.close(target);
-            }
-        });
-
-        WebMarkupContainer content = new WebMarkupContainer(getContentId());
-        setContent(content);
-
-        if (message == null) {
-            message = new Model();
-        }
-        initLayout(content, message);
-    }
-
-    public boolean getLabelEscapeModelStrings(){
-        return true;
-    }
-
-    public void setMessage(IModel<String> message) {
-        Label label = (Label) getContent().get(ID_CONFIRM_TEXT);
-        label.setDefaultModel(message);
-    }
-
-    private void initLayout(WebMarkupContainer content, IModel<String> message) {
-        Label label = new Label(ID_CONFIRM_TEXT, message);
-        label.setEscapeModelStrings(getLabelEscapeModelStrings());
-        content.add(label);
-
-        AjaxButton yesButton = new AjaxButton(ID_YES, new StringResourceModel("confirmationDialog.yes",
-                this, null)) {
-
-            @Override
-            public void onClick(AjaxRequestTarget target) {
-                yesPerformed(target);
-            }
-        };
-        content.add(yesButton);
-
-        AjaxButton noButton = new AjaxButton(ID_NO, new StringResourceModel("confirmationDialog.no",
-                this, null)) {
+        header(title);
+        add(new Label(ID_CONFIRM_TEXT, message));
+        addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Default) {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
                 noPerformed(target);
             }
-        };
-        content.add(noButton);
+        }.setLabel(noLabel));
+
+        addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Primary) {
+
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                yesPerformed(target);
+            }
+        }.setLabel(yesLabel));
+    }
+
+    public ConfirmationDialog setYesLabel(IModel<String> yesLabel) {
+        Validate.notNull(yesLabel, "Yes label model must not be null.");
+        this.yesLabel = yesLabel;
+        return this;
+    }
+
+    public ConfirmationDialog setNoLabel(IModel<String> noLabel) {
+        Validate.notNull(noLabel, "No label model must not be null.");
+        this.noLabel = noLabel;
+        return this;
     }
 
     public void yesPerformed(AjaxRequestTarget target) {
@@ -137,5 +95,11 @@ public class ConfirmationDialog extends ModalWindow {
      */
     public void setConfirmType(int confirmType) {
         this.confirmType = confirmType;
+    }
+
+    @Override
+    public Modal show(AjaxRequestTarget target) {
+        target.add(this);
+        return super.show(target);
     }
 }

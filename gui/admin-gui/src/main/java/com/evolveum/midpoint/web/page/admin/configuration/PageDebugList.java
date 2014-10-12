@@ -60,12 +60,12 @@ import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.web.util.WebModelUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import de.agilecoders.wicket.less.LessResourceReference;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -206,11 +206,6 @@ public class PageDebugList extends PageAdminConfiguration {
                         deleteSelectedConfirmed(target, dto.getObjects());
                         break;
                 }
-            }
-
-            @Override
-            public boolean getLabelEscapeModelStrings(){
-                return false;
             }
         };
         add(deleteConfirm);
@@ -528,6 +523,9 @@ public class PageDebugList extends PageAdminConfiguration {
             @Override
             public String getObject() {
                 DebugConfDialogDto dto = confDialogModel.getObject();
+                if (dto == null || dto.getOperation() == null) {
+                    return "";
+                }
 
                 switch (dto.getOperation()) {
                     case DELETE_ALL_TYPE:
@@ -704,7 +702,7 @@ public class PageDebugList extends PageAdminConfiguration {
                 searchDto.getType().getClassDefinition());
         confDialogModel.setObject(dto);
 
-        ModalWindow dialog = (ModalWindow) get(ID_CONFIRM_DELETE_POPUP);
+        Modal dialog = (Modal) get(ID_CONFIRM_DELETE_POPUP);
         dialog.show(target);
     }
 
@@ -736,7 +734,7 @@ public class PageDebugList extends PageAdminConfiguration {
                 searchDto.getType().getClassDefinition());
         confDialogModel.setObject(dto);
 
-        ModalWindow dialog = (ModalWindow) get(ID_CONFIRM_DELETE_POPUP);
+        Modal dialog = (Modal) get(ID_CONFIRM_DELETE_POPUP);
         dialog.show(target);
     }
 

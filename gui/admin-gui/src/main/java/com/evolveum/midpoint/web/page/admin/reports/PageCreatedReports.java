@@ -56,10 +56,10 @@ import com.evolveum.midpoint.web.util.WebModelUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.MetadataType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ReportOutputType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ReportType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -522,7 +522,7 @@ public class PageCreatedReports extends PageAdminReports {
         ReportDeleteDialogDto dto = new ReportDeleteDialogDto(op, null);
         deleteModel.setObject(dto);
 
-        ModalWindow dialog = (ModalWindow) get(ID_CONFIRM_DELETE);
+        Modal dialog = (Modal) get(ID_CONFIRM_DELETE);
         dialog.show(target);
     }
 
@@ -541,7 +541,7 @@ public class PageCreatedReports extends PageAdminReports {
         ReportDeleteDialogDto dto = new ReportDeleteDialogDto(op, selected);
         deleteModel.setObject(dto);
 
-        ModalWindow dialog = (ModalWindow) get(ID_CONFIRM_DELETE);
+        Modal dialog = (Modal) get(ID_CONFIRM_DELETE);
         dialog.show(target);
     }
 

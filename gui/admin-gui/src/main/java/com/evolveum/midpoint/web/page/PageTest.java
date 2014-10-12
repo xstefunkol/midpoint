@@ -23,15 +23,21 @@ import com.evolveum.midpoint.web.component.AjaxSubmitButton;
 import com.evolveum.midpoint.web.page.admin.home.PageAdminHome;
 import com.evolveum.midpoint.web.page.admin.users.PageUsers;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.util.lang.Bytes;
 
 /**
  * @author lazyman
  */
-@PageDescriptor(url = "/admin/test", action = {@AuthorizationAction(actionUri = AuthorizationConstants.AUTZ_NO_ACCESS_URL)})
+@PageDescriptor(url = "/admin/test", action = {@AuthorizationAction(actionUri = AuthorizationConstants.AUTZ_UI_PERMIT_ALL)})
 public class PageTest extends PageBase {
 
     public PageTest() {
@@ -39,27 +45,33 @@ public class PageTest extends PageBase {
     }
 
     private void initLayout() {
-        Form form = new Form("form");
-        form.setMaxSize(Bytes.kilobytes(192));
-//        form.setMultiPart(true);
-        add(form);
+        final Modal modal = new Modal("modal")
+                .header(new Model("Delete user"))
+                .addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Default) {
 
-        FileUploadField fileUpload = new FileUploadField("fileInput");
-        form.add(fileUpload);
+                    @Override
+                    public void onClick(AjaxRequestTarget target) {
+                        System.out.println("cancel clicked");
+                    }
+                }.setLabel(new Model("Cancel")))
+                .addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Primary) {
 
-        AjaxSubmitButton save = new AjaxSubmitButton("save",
-                createStringResource("pageUser.button.save")) {
+                    @Override
+                    public void onClick(AjaxRequestTarget target) {
+                        System.out.println("delete clicked");
+                    }
+                }.setLabel(new Model("Delete")))
+                .addCloseButton(new Model("Close me"));
+        add(modal);
+
+        BootstrapAjaxLink button = new BootstrapAjaxLink("button", Buttons.Type.Primary) {
 
             @Override
-            protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-                setResponsePage(PageUsers.class);
-            }
-
-            @Override
-            protected void onError(AjaxRequestTarget target, Form<?> form) {
-                target.add(getFeedbackPanel());
+            public void onClick(AjaxRequestTarget target) {
+                modal.show(target);
             }
         };
-        form.add(save);
+        button.setLabel(new Model("show"));
+        add(button);
     }
 }

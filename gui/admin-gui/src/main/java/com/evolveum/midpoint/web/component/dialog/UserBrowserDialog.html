@@ -13,43 +13,34 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
+<wicket:extend xmlns:wicket="http://wicket.apache.org">
+    <form class="form-inline pull-right search-form" wicket:id="searchForm" style="padding: 5px;">
+        <table style="display: inline; margin-right: 30px;">
+            <tr>
+                <td>
+                    <input type="checkbox" wicket:id="nameCheck" size="30"/>
+                    <wicket:message key="userBrowserDialog.name"/>
+                </td>
+                <td><input type="checkbox" wicket:id="fullNameCheck"/>
+                    <wicket:message key="userBrowserDialog.fullName"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="checkbox" wicket:id="givenNameCheck"/>
+                    <wicket:message key="userBrowserDialog.givenName"/>
+                </td>
+                <td>
+                    <input type="checkbox" wicket:id="familyNameCheck"/>
+                    <wicket:message key="userBrowserDialog.familyName"/>
+                </td>
+            </tr>
+        </table>
 
-<wicket:panel xmlns:wicket="http://wicket.apache.org">
-    <div wicket:id="content">
+        <div wicket:id="basicSearch" />
+    </form>
 
-        <form class="form-inline pull-right search-form" wicket:id="searchForm"
-              style="padding: 5px;">
-            <table style="display: inline; margin-right: 30px;">
-                <tr>
-                    <td>
-                        <input type="checkbox" wicket:id="nameCheck" size="30"/>
-                        <wicket:message key="userBrowserDialog.name"/>
-                    </td>
-                    <td><input type="checkbox" wicket:id="fullNameCheck"/>
-                        <wicket:message key="userBrowserDialog.fullName"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="checkbox" wicket:id="givenNameCheck"/>
-                        <wicket:message key="userBrowserDialog.givenName"/>
-                    </td>
-                    <td>
-                        <input type="checkbox" wicket:id="familyNameCheck"/>
-                        <wicket:message key="userBrowserDialog.familyName"/>
-                    </td>
-                </tr>
-            </table>
-
-            <div wicket:id="basicSearch" />
-        </form>
-
-        <form  class="clearfix" wicket:id="mainForm" style="margin: 5px;">
-            <div wicket:id="table"/>
-
-            <p align="right">
-                <a class="btn btn-sm btn-default"  wicket:id="cancelButton"/>
-            </p>
-        </form>
-    </div>
-</wicket:panel>
+    <form  class="clearfix" wicket:id="mainForm" style="margin: 5px;">
+        <div wicket:id="table"/>
+    </form>
+</wicket:extend>

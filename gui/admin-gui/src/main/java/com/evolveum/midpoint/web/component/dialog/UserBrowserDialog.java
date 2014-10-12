@@ -26,7 +26,6 @@ import com.evolveum.midpoint.prism.query.SubstringFilter;
 import com.evolveum.midpoint.util.logging.LoggingUtils;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
-import com.evolveum.midpoint.web.component.AjaxButton;
 import com.evolveum.midpoint.web.component.BasicSearchPanel;
 import com.evolveum.midpoint.web.component.data.ObjectDataProvider;
 import com.evolveum.midpoint.web.component.data.TablePanel;
@@ -37,16 +36,16 @@ import com.evolveum.midpoint.web.component.util.SelectableBean;
 import com.evolveum.midpoint.web.page.PageBase;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.UserType;
-
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -59,7 +58,9 @@ import java.util.List;
 /**
  * @author lazyman
  */
-public class UserBrowserDialog extends ModalWindow {
+public class UserBrowserDialog extends Modal<UserBrowserDto> {
+
+    private static final Trace LOGGER = TraceManager.getTrace(UserBrowserDialog.class);
 
     private static final String ID_SEARCH_FORM = "searchForm";
     private static final String ID_MAIN_FORM = "mainForm";
@@ -68,34 +69,22 @@ public class UserBrowserDialog extends ModalWindow {
     private static final String ID_CHECK_GIVEN_NAME = "givenNameCheck";
     private static final String ID_CHECK_FAMILY_NAME = "familyNameCheck";
     private static final String ID_BASIC_SEARCH = "basicSearch";
-    private static final String ID_BUTTON_CANCEL = "cancelButton";
     private static final String ID_TABLE = "table";
 
-    private static final Trace LOGGER = TraceManager.getTrace(UserBrowserDialog.class);
-    private IModel<UserBrowserDto> model;
     private boolean initialized;
 
     public UserBrowserDialog(String id) {
         super(id);
 
-        setTitle(createStringResource("userBrowserDialog.title"));
-        showUnloadConfirmation(false);
-        setCssClassName(ModalWindow.CSS_CLASS_GRAY);
-        setCookieName(UserBrowserDialog.class.getSimpleName() + ((int) (Math.random() * 100)));
-        setInitialWidth(900);
-        setInitialHeight(500);
-        setWidthUnit("px");
+        header(createStringResource("userBrowserDialog.title"));
 
-        model = new LoadableModel<UserBrowserDto>(false) {
+        setModel(new LoadableModel<UserBrowserDto>(false) {
 
             @Override
             protected UserBrowserDto load() {
                 return new UserBrowserDto();
             }
-        };
-
-        WebMarkupContainer content = new WebMarkupContainer(getContentId());
-        setContent(content);
+        });
     }
 
     @Override
@@ -106,35 +95,39 @@ public class UserBrowserDialog extends ModalWindow {
             return;
         }
 
-        initLayout((WebMarkupContainer) get(getContentId()));
+        initLayout();
         initialized = true;
     }
 
-    private void initLayout(WebMarkupContainer content) {
+    private void initLayout() {
         Form mainForm = new Form(ID_MAIN_FORM);
-        content.add(mainForm);
+        add(mainForm);
 
         Form searchForm = new Form(ID_SEARCH_FORM);
         searchForm.setOutputMarkupId(true);
-        content.add(searchForm);
+        add(searchForm);
 
 //        TextField<String> search = new TextField<String>("searchText", new PropertyModel<String>(model, "searchText"));
 //        mainForm.add(search);
 
-        CheckBox nameCheck = new CheckBox(ID_CHECK_NAME, new PropertyModel<Boolean>(model, UserBrowserDto.F_NAME));
+        CheckBox nameCheck = new CheckBox(ID_CHECK_NAME,
+                new PropertyModel<Boolean>(getModel(), UserBrowserDto.F_NAME));
         searchForm.add(nameCheck);
-        CheckBox fullNameCheck = new CheckBox(ID_CHECK_FULL_NAME, new PropertyModel<Boolean>(model, UserBrowserDto.F_FULL_NAME));
+        CheckBox fullNameCheck = new CheckBox(ID_CHECK_FULL_NAME,
+                new PropertyModel<Boolean>(getModel(), UserBrowserDto.F_FULL_NAME));
         searchForm.add(fullNameCheck);
-        CheckBox givenNameCheck = new CheckBox(ID_CHECK_GIVEN_NAME, new PropertyModel<Boolean>(model, UserBrowserDto.F_GIVEN_NAME));
+        CheckBox givenNameCheck = new CheckBox(ID_CHECK_GIVEN_NAME,
+                new PropertyModel<Boolean>(getModel(), UserBrowserDto.F_GIVEN_NAME));
         searchForm.add(givenNameCheck);
-        CheckBox familyNameCheck = new CheckBox(ID_CHECK_FAMILY_NAME, new PropertyModel<Boolean>(model, UserBrowserDto.F_FAMILY_NAME));
+        CheckBox familyNameCheck = new CheckBox(ID_CHECK_FAMILY_NAME,
+                new PropertyModel<Boolean>(getModel(), UserBrowserDto.F_FAMILY_NAME));
         searchForm.add(familyNameCheck);
 
         BasicSearchPanel<UserBrowserDto> basicSearch = new BasicSearchPanel<UserBrowserDto>(ID_BASIC_SEARCH) {
 
             @Override
             protected IModel<String> createSearchTextModel() {
-                return new PropertyModel<>(model, UserBrowserDto.F_SEARCH_TEXT);
+                return new PropertyModel<>(getModel(), UserBrowserDto.F_SEARCH_TEXT);
             }
 
             @Override
@@ -155,15 +148,13 @@ public class UserBrowserDialog extends ModalWindow {
         table.setOutputMarkupId(true);
         mainForm.add(table);
 
-        AjaxButton cancelButton = new AjaxButton(ID_BUTTON_CANCEL,
-                createStringResource("userBrowserDialog.button.cancelButton")) {
+        addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Default) {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
                 cancelPerformed(target);
             }
-        };
-        mainForm.add(cancelButton);
+        }.setLabel(new StringResourceModel("userBrowserDialog.button.cancelButton", this, null)));
     }
 
     private PageBase getPageBase() {
@@ -241,11 +232,11 @@ public class UserBrowserDialog extends ModalWindow {
     }
 
     private TablePanel getTable() {
-        return (TablePanel) getContent().get("mainForm:table");
+        return (TablePanel) get("mainForm:table");
     }
 
     private ObjectQuery createQuery() {
-        UserBrowserDto dto = model.getObject();
+        UserBrowserDto dto = getModelObject();
         ObjectQuery query = null;
         if (StringUtils.isEmpty(dto.getSearchText())) {
             return null;
@@ -262,23 +253,23 @@ public class UserBrowserDialog extends ModalWindow {
 
             String normalizedString = normalizer.normalize(dto.getSearchText());
 
-			if (dto.isName()) {
-				filters.add(SubstringFilter.createSubstring(UserType.F_NAME, UserType.class, prismContext, 
-						normalizedString));
-			}
+            if (dto.isName()) {
+                filters.add(SubstringFilter.createSubstring(UserType.F_NAME, UserType.class, prismContext,
+                        normalizedString));
+            }
 
-			if (dto.isFamilyName()) {
-				filters.add(SubstringFilter.createSubstring(UserType.F_FAMILY_NAME, UserType.class, prismContext,
-						normalizedString));
-			}
-			if (dto.isFullName()) {
-				filters.add(SubstringFilter.createSubstring(UserType.F_FULL_NAME, UserType.class, prismContext,
-						normalizedString));
-			}
-			if (dto.isGivenName()) {
-				filters.add(SubstringFilter.createSubstring(UserType.F_GIVEN_NAME, UserType.class, prismContext,
-						normalizedString));
-			}
+            if (dto.isFamilyName()) {
+                filters.add(SubstringFilter.createSubstring(UserType.F_FAMILY_NAME, UserType.class, prismContext,
+                        normalizedString));
+            }
+            if (dto.isFullName()) {
+                filters.add(SubstringFilter.createSubstring(UserType.F_FULL_NAME, UserType.class, prismContext,
+                        normalizedString));
+            }
+            if (dto.isGivenName()) {
+                filters.add(SubstringFilter.createSubstring(UserType.F_GIVEN_NAME, UserType.class, prismContext,
+                        normalizedString));
+            }
 
             if (!filters.isEmpty()) {
                 query = new ObjectQuery().createObjectQuery(OrFilter.createOr(filters));
@@ -291,15 +282,15 @@ public class UserBrowserDialog extends ModalWindow {
         return query;
     }
 
-    private void clearSearchPerformed(AjaxRequestTarget target){
-        model.setObject(new UserBrowserDto());
+    private void clearSearchPerformed(AjaxRequestTarget target) {
+        setModelObject(new UserBrowserDto());
 
         TablePanel panel = getTable();
         DataTable table = panel.getDataTable();
         ObjectDataProvider provider = (ObjectDataProvider) table.getDataProvider();
         provider.setQuery(null);
 
-        target.add(getContent().get(ID_SEARCH_FORM));
+        target.add(get(ID_SEARCH_FORM));
         target.add(panel);
     }
 

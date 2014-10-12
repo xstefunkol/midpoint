@@ -56,9 +56,9 @@ import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.web.util.WebModelUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
@@ -503,7 +503,7 @@ public class PageUsers extends PageAdminUsers {
             return;
         }
 
-        ModalWindow dialog = (ModalWindow) get(DIALOG_CONFIRM_DELETE);
+        Modal dialog = (Modal) get(DIALOG_CONFIRM_DELETE);
         dialog.show(target);
     }
 

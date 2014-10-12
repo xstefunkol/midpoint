@@ -21,7 +21,6 @@ import com.evolveum.midpoint.prism.*;
 import com.evolveum.midpoint.prism.delta.ChangeType;
 import com.evolveum.midpoint.prism.delta.ObjectDelta;
 import com.evolveum.midpoint.prism.delta.ReferenceDelta;
-import com.evolveum.midpoint.prism.match.PolyStringOrigMatchingRule;
 import com.evolveum.midpoint.prism.path.ItemPath;
 import com.evolveum.midpoint.prism.query.*;
 import com.evolveum.midpoint.schema.processor.ObjectClassComplexTypeDefinition;
@@ -62,10 +61,10 @@ import com.evolveum.midpoint.web.util.OnePageParameterEncoder;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -622,7 +621,7 @@ public class PageContentAccounts extends PageAdminResources {
     }
 
     private void showModalWindow(String id, AjaxRequestTarget target) {
-        ModalWindow window = (ModalWindow) get(id);
+        Modal window = (Modal) get(id);
         window.show(target);
     }
 

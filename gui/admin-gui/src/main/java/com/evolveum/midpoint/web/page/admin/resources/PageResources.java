@@ -61,10 +61,10 @@ import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ConnectorHostType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ResourceType;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -426,7 +426,7 @@ public class PageResources extends PageAdminResources {
             return;
         }
 
-        ModalWindow dialog = (ModalWindow) get(ID_DELETE_HOSTS_POPUP);
+        Modal dialog = (Modal) get(ID_DELETE_HOSTS_POPUP);
         dialog.show(target);
     }
 
@@ -443,7 +443,7 @@ public class PageResources extends PageAdminResources {
             return;
         }
 
-        ModalWindow dialog = (ModalWindow) get(ID_DELETE_RESOURCES_POPUP);
+        Modal dialog = (Modal) get(ID_DELETE_RESOURCES_POPUP);
         dialog.show(target);
     }
 

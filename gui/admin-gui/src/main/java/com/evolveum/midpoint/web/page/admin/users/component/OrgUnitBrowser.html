@@ -13,25 +13,16 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<wicket:panel xmlns:wicket="http://wicket.apache.org">
+<wicket:extend xmlns:wicket="http://wicket.apache.org">
     <div wicket:id="feedback" />
 
-    <div wicket:id="content">
+    <form wicket:id="mainForm" class="form-inline pull-right"
+            style="padding: 5px;">
 
-        <form wicket:id="mainForm" class="form-inline pull-right"
-                style="padding: 5px;">
+        <div wicket:id="basicSearch" />
+    </form>
 
-            <div wicket:id="basicSearch" />
-        </form>
-
-        <div class="clearfix">
-            <div wicket:id="table"/>
-        </div>
-
-        <div class="pull-right" style="padding: 0 15px;">
-            <a class="btn btn-sm btn-default" wicket:id="cancel"/>
-            <a class="btn btn-sm btn-info" wicket:id="createRoot"/>
-        </div>
+    <div class="clearfix">
+        <div wicket:id="table"/>
     </div>
-</wicket:panel>
+</wicket:extend>

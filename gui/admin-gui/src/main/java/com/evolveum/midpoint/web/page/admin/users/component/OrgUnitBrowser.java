@@ -21,12 +21,13 @@ import com.evolveum.midpoint.prism.PrismReference;
 import com.evolveum.midpoint.prism.PrismReferenceValue;
 import com.evolveum.midpoint.prism.match.PolyStringNormMatchingRule;
 import com.evolveum.midpoint.prism.polystring.PolyStringNormalizer;
-import com.evolveum.midpoint.prism.query.*;
+import com.evolveum.midpoint.prism.query.AndFilter;
+import com.evolveum.midpoint.prism.query.ObjectQuery;
+import com.evolveum.midpoint.prism.query.SubstringFilter;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.util.logging.LoggingUtils;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
-import com.evolveum.midpoint.web.component.AjaxButton;
 import com.evolveum.midpoint.web.component.BasicSearchPanel;
 import com.evolveum.midpoint.web.component.data.ObjectDataProvider;
 import com.evolveum.midpoint.web.component.data.TablePanel;
@@ -39,15 +40,15 @@ import com.evolveum.midpoint.web.page.admin.users.dto.OrgUnitSearchDto;
 import com.evolveum.midpoint.web.session.UsersStorage;
 import com.evolveum.midpoint.web.util.WebModelUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.OrgType;
-
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
@@ -60,7 +61,7 @@ import java.util.List;
 /**
  * @author lazyman
  */
-public class OrgUnitBrowser extends ModalWindow {
+public class OrgUnitBrowser extends Modal<OrgUnitSearchDto> {
 
     public static enum Operation {MOVE, ADD, REMOVE, RECOMPUTE}
 
@@ -72,14 +73,11 @@ public class OrgUnitBrowser extends ModalWindow {
     private static final String ID_BASIC_SEARCH = "basicSearch";
     private static final String ID_TABLE = "table";
     private static final String ID_MAIN_FORM = "mainForm";
-    private static final String ID_CANCEL = "cancel";
-    private static final String ID_CREATE_ROOT = "createRoot";
     private static final String ID_FEEDBACK = "feedback";
 
     private boolean movingRoot;
     private boolean initialized;
     private Operation operation;
-    private IModel<OrgUnitSearchDto> searchModel;
 
     /**
      * Objects which were selected on page, not in this dialog. It's used for example to filter org. units
@@ -91,32 +89,23 @@ public class OrgUnitBrowser extends ModalWindow {
     public OrgUnitBrowser(String id) {
         super(id);
 
-        setTitle(createStringResource("OrgUnitBrowser.title"));
-        setCssClassName(ModalWindow.CSS_CLASS_GRAY);
-        setCookieName(OrgUnitBrowser.class.getSimpleName() + ((int) (Math.random() * 100)));
-        showUnloadConfirmation(false);
-        setInitialWidth(900);
-        setInitialHeight(530);
-        setWidthUnit("px");
+        header(createStringResource("OrgUnitBrowser.title"));
         setOutputMarkupId(true);
 
-        searchModel = new LoadableModel<OrgUnitSearchDto>() {
+        setModel(new LoadableModel<OrgUnitSearchDto>() {
 
             @Override
             protected OrgUnitSearchDto load() {
                 UsersStorage storage = getPageBase().getSessionStorage().getUsers();
                 OrgUnitSearchDto dto = storage.getOrgUnitSearch();
 
-                if(dto == null){
+                if (dto == null) {
                     dto = new OrgUnitSearchDto();
                 }
 
                 return dto;
             }
-        };
-
-        WebMarkupContainer content = new WebMarkupContainer(getContentId());
-        setContent(content);
+        });
     }
 
     public boolean isMovingRoot() {
@@ -160,24 +149,24 @@ public class OrgUnitBrowser extends ModalWindow {
             return;
         }
 
-        initLayout((WebMarkupContainer) get(getContentId()));
+        initLayout();
         initialized = true;
     }
 
-    private void initLayout(WebMarkupContainer container) {
+    private void initLayout() {
         FeedbackPanel feedback = new FeedbackPanel(ID_FEEDBACK);
         feedback.setOutputMarkupId(true);
         add(feedback);
 
         Form form = new Form(ID_MAIN_FORM);
         form.setOutputMarkupId(true);
-        container.add(form);
+        add(form);
 
         BasicSearchPanel<OrgUnitSearchDto> basicSearch = new BasicSearchPanel<OrgUnitSearchDto>(ID_BASIC_SEARCH) {
 
             @Override
             protected IModel<String> createSearchTextModel() {
-                return new PropertyModel<>(searchModel, OrgUnitSearchDto.F_SEARCH_TEXT);
+                return new PropertyModel<>(getModel(), OrgUnitSearchDto.F_SEARCH_TEXT);
             }
 
             @Override
@@ -207,38 +196,34 @@ public class OrgUnitBrowser extends ModalWindow {
         List<IColumn<OrgTableDto, String>> columns = initColumns();
         TablePanel table = new TablePanel(ID_TABLE, provider, columns);
         table.setOutputMarkupId(true);
-        container.add(table);
+        add(table);
 
-        AjaxButton cancel = new AjaxButton(ID_CANCEL,
-                createStringResource("OrgUnitBrowser.cancel")) {
+        addButton(new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Default) {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
                 cancelPerformed(target);
             }
-        };
-        container.add(cancel);
+        }.setLabel(new StringResourceModel("OrgUnitBrowser.cancel", this, null)));
 
-        AjaxButton createRoot = new AjaxButton(ID_CREATE_ROOT,
-                createStringResource("OrgUnitBrowser.createRoot")) {
+        BootstrapAjaxLink createRoot = new BootstrapAjaxLink(Modal.BUTTON_MARKUP_ID, Buttons.Type.Info) {
 
             @Override
             public void onClick(AjaxRequestTarget target) {
                 createRootPerformed(target);
             }
-        };
-        createRoot.add(new VisibleEnableBehaviour(){
+        }.setLabel(new StringResourceModel("OrgUnitBrowser.createRoo", this, null));
+        createRoot.add(new VisibleEnableBehaviour() {
             @Override
             public boolean isVisible() {
                 return !isMovingRoot();
             }
         });
-        container.add(createRoot);
+        addButton(createRoot);
     }
 
-    private TablePanel getOrgUnitTablePanel(){
-        String[] path = new String[]{getContentId(), ID_TABLE};
-        return (TablePanel) get(StringUtils.join(path, ":"));
+    private TablePanel getOrgUnitTablePanel() {
+        return (TablePanel) get(ID_TABLE);
     }
 
     private ObjectQuery createQueryFromSelected() {
@@ -298,33 +283,33 @@ public class OrgUnitBrowser extends ModalWindow {
 
     }
 
-    private ObjectQuery createSearchQuery(){
-        OrgUnitSearchDto dto = searchModel.getObject();
+    private ObjectQuery createSearchQuery() {
+        OrgUnitSearchDto dto = getModelObject();
         ObjectQuery query = null;
 
-        if(StringUtils.isEmpty(dto.getText())){
-            if(createRootQuery() != null){
+        if (StringUtils.isEmpty(dto.getText())) {
+            if (createRootQuery() != null) {
                 return createRootQuery();
             } else {
                 return null;
             }
         }
 
-        try{
+        try {
             PolyStringNormalizer normalizer = getPageBase().getPrismContext().getDefaultPolyStringNormalizer();
             String normalized = normalizer.normalize(dto.getText());
 
             SubstringFilter substring = SubstringFilter.createSubstring(OrgType.F_NAME, OrgType.class,
                     getPageBase().getPrismContext(), PolyStringNormMatchingRule.NAME, normalized);
 
-            if(createRootQuery() != null){
+            if (createRootQuery() != null) {
                 AndFilter and = AndFilter.createAnd(createRootQuery().getFilter(), substring);
                 query = ObjectQuery.createObjectQuery(and);
             } else {
                 query = ObjectQuery.createObjectQuery(substring);
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             error(getString("OrgUnitBrowser.message.queryError") + " " + e.getMessage());
             LoggingUtils.logException(LOGGER, "Couldn't create query filter.", e);
         }
@@ -332,7 +317,7 @@ public class OrgUnitBrowser extends ModalWindow {
         return query;
     }
 
-    public ObjectQuery createRootQuery(){
+    public ObjectQuery createRootQuery() {
         return null;
     }
 
@@ -346,15 +331,14 @@ public class OrgUnitBrowser extends ModalWindow {
         provider.setQuery(query);
 
         UsersStorage storage = getPageBase().getSessionStorage().getUsers();
-        storage.setOrgUnitSearch(searchModel.getObject());
+        storage.setOrgUnitSearch(getModelObject());
         panel.setCurrentPage(storage.getOrgUnitPaging());
 
-        target.add(get(getContentId()));
-        target.add(panel);
+        target.add(this);
     }
 
-    private void clearSearchPerformed(AjaxRequestTarget target){
-        searchModel.setObject(new OrgUnitSearchDto());
+    private void clearSearchPerformed(AjaxRequestTarget target) {
+        setModelObject(new OrgUnitSearchDto());
 
         TablePanel panel = getOrgUnitTablePanel();
         DataTable table = panel.getDataTable();
@@ -362,11 +346,10 @@ public class OrgUnitBrowser extends ModalWindow {
         provider.setQuery(null);
 
         UsersStorage storage = getPageBase().getSessionStorage().getUsers();
-        storage.setOrgUnitSearch(searchModel.getObject());
+        storage.setOrgUnitSearch(getModelObject());
         panel.setCurrentPage(storage.getOrgUnitPaging());
 
-        target.add(get(getContentId()));
-        target.add(panel);
+        target.add(this);
     }
 
     private void cancelPerformed(AjaxRequestTarget target) {

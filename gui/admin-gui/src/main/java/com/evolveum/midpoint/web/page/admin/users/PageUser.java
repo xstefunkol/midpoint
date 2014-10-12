@@ -115,13 +115,12 @@ import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.TaskExecutionStatusType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.TaskType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.UserType;
-import com.evolveum.prism.xml.ns._public.types_3.PolyStringType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -378,14 +377,6 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
         initResourceModal();
         initAssignableModal();
         initConfirmationDialogs();
-    }
-
-    private String getLabelFromPolyString(PolyStringType poly){
-        if(poly == null || poly.getOrig() == null){
-            return "-";
-        } else{
-            return poly.getOrig();
-        }
     }
 
     private void initSummaryInfo(Form mainForm){
@@ -954,43 +945,46 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
         mainForm.add(new ExecuteChangeOptionsPanel(ID_EXECUTE_OPTIONS, executeOptionsModel, true));
     }
 
+    //todo modal
     private void showAssignablePopup(AjaxRequestTarget target, Class<? extends ObjectType> type) {
-        ModalWindow modal = (ModalWindow) get(MODAL_ID_ASSIGNABLE);
-        AssignablePopupContent content = (AssignablePopupContent) modal.get(modal.getContentId());
-        content.setType(type);
+        Modal modal = (Modal) get(MODAL_ID_ASSIGNABLE);
+//        AssignablePopupContent content = (AssignablePopupContent) modal.get(modal.getContentId());
+//        content.setType(type);
         showModalWindow(MODAL_ID_ASSIGNABLE, target);
     }
-
+    //todo modal
     private void initResourceModal() {
-        ModalWindow window = createModalWindow(MODAL_ID_RESOURCE,
-                createStringResource("pageUser.title.selectResource"), 1100, 560);
-
-        final SimpleUserResourceProvider provider = new SimpleUserResourceProvider(this, accountsModel);
-        window.setContent(new ResourcesPopup(window.getContentId()) {
-
-            @Override
-            public SimpleUserResourceProvider getProvider(){
-                return provider;
-            }
-
-            @Override
-            protected void addPerformed(AjaxRequestTarget target, List<ResourceType> newResources) {
-                addSelectedAccountPerformed(target, newResources);
-            }
-        });
+        Modal window = new Modal(MODAL_ID_RESOURCE);
+//        ModalWindow window = createModalWindow(MODAL_ID_RESOURCE,
+//                createStringResource("pageUser.title.selectResource"), 1100, 560);
+//
+//        final SimpleUserResourceProvider provider = new SimpleUserResourceProvider(this, accountsModel);
+//        window.setContent(new ResourcesPopup(window.getContentId()) {
+//
+//            @Override
+//            public SimpleUserResourceProvider getProvider(){
+//                return provider;
+//            }
+//
+//            @Override
+//            protected void addPerformed(AjaxRequestTarget target, List<ResourceType> newResources) {
+//                addSelectedAccountPerformed(target, newResources);
+//            }
+//        });
         add(window);
     }
-
+    //todo modal
     private void initAssignableModal() {
-        ModalWindow window = createModalWindow(MODAL_ID_ASSIGNABLE,
-                createStringResource("pageUser.title.selectAssignable"), 1100, 560);
-        window.setContent(new AssignablePopupContent(window.getContentId()) {
-
-            @Override
-            protected void addPerformed(AjaxRequestTarget target, List<ObjectType> selected) {
-                addSelectedAssignablePerformed(target, selected);
-            }
-        });
+        Modal window = new Modal(MODAL_ID_ASSIGNABLE);
+//        Modal window = createModalWindow(MODAL_ID_ASSIGNABLE,
+//                createStringResource("pageUser.title.selectAssignable"), 1100, 560);
+//        window.setContent(new AssignablePopupContent(window.getContentId()) {
+//
+//            @Override
+//            protected void addPerformed(AjaxRequestTarget target, List<ObjectType> selected) {
+//                addSelectedAssignablePerformed(target, selected);
+//            }
+//        });
         add(window);
     }
 
@@ -1591,7 +1585,7 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
     }
 
     private List<AssignmentEditorDto> getSelectedAssignments() {
-        List<AssignmentEditorDto> selected = new ArrayList<AssignmentEditorDto>();
+        List<AssignmentEditorDto> selected = new ArrayList<>();
 
         List<AssignmentEditorDto> all = assignmentsModel.getObject();
         for (AssignmentEditorDto wrapper : all) {
@@ -1604,7 +1598,7 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
     }
 
     private void addSelectedAccountPerformed(AjaxRequestTarget target, List<ResourceType> newResources) {
-        ModalWindow window = (ModalWindow) get(MODAL_ID_RESOURCE);
+        Modal window = (Modal) get(MODAL_ID_RESOURCE);
         window.close(target);
 
         if (newResources.isEmpty()) {
@@ -1680,7 +1674,7 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
     }
 
     private void addSelectedAssignablePerformed(AjaxRequestTarget target, List<ObjectType> newAssignables) {
-        ModalWindow window = (ModalWindow) get(MODAL_ID_ASSIGNABLE);
+        Modal window = (Modal) get(MODAL_ID_ASSIGNABLE);
         window.close(target);
 
         if (newAssignables.isEmpty()) {
@@ -1773,7 +1767,7 @@ public class PageUser extends PageAdminUsers implements ProgressReportingAwarePa
     }
 
     private void showModalWindow(String id, AjaxRequestTarget target) {
-        ModalWindow window = (ModalWindow) get(id);
+        Modal window = (Modal) get(id);
         window.show(target);
     }
 

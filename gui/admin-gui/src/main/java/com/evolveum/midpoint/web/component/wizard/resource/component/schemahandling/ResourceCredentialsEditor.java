@@ -26,6 +26,7 @@ import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.component.form.multivalue.MultiValueTextEditPanel;
 import com.evolveum.midpoint.web.component.util.SimplePanel;
 import com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling.modal.MappingEditorDialog;
+import com.evolveum.midpoint.web.component.wizard.resource.dto.MappingTypeDto;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -88,8 +89,20 @@ public class ResourceCredentialsEditor extends SimplePanel<ResourceCredentialsDe
                 new EnumChoiceRenderer<AttributeFetchStrategyType>(this));
         add(fetchStrategy);
 
-        TextField outboundLabel = new TextField<>(ID_OUTBOUND_LABEL,
-                new PropertyModel<String>(getModel(), "password.outbound.name"));
+        TextField outboundLabel = new TextField<>(ID_OUTBOUND_LABEL, new AbstractReadOnlyModel<String>() {
+
+            @Override
+            public String getObject() {
+                ResourceCredentialsDefinitionType credentials = getModel().getObject();
+
+                if(credentials == null || credentials.getPassword() == null){
+                    return null;
+                }
+
+                return MappingTypeDto.createMappingLabel(credentials.getPassword().getOutbound(), LOGGER, getPageBase().getPrismContext(),
+                        getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
+            }
+        });
         outboundLabel.setEnabled(false);
         outboundLabel.setOutputMarkupId(true);
         add(outboundLabel);
@@ -113,13 +126,8 @@ public class ResourceCredentialsEditor extends SimplePanel<ResourceCredentialsDe
 
                     @Override
                     public String getObject() {
-                        MappingType mapping = model.getObject();
-
-                        if(mapping != null){
-                            return mapping.getName();
-                        } else {
-                            return null;
-                        }
+                        return MappingTypeDto.createMappingLabel(model.getObject(), LOGGER, getPageBase().getPrismContext(),
+                                getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
                     }
                 };
             }

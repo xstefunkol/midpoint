@@ -16,7 +16,6 @@
 package com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling;
 
 import com.evolveum.midpoint.prism.PrismObject;
-import com.evolveum.midpoint.prism.match.MatchingRuleRegistry;
 import com.evolveum.midpoint.schema.processor.ObjectClassComplexTypeDefinition;
 import com.evolveum.midpoint.schema.processor.ResourceAttributeDefinition;
 import com.evolveum.midpoint.schema.processor.ResourceSchema;
@@ -30,6 +29,7 @@ import com.evolveum.midpoint.web.component.util.SimplePanel;
 import com.evolveum.midpoint.web.component.util.VisibleEnableBehaviour;
 import com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling.modal.LimitationsEditorDialog;
 import com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling.modal.MappingEditorDialog;
+import com.evolveum.midpoint.web.component.wizard.resource.dto.MappingTypeDto;
 import com.evolveum.midpoint.web.page.admin.resources.PageResources;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
@@ -221,7 +221,20 @@ public class ResourceAttributeEditor extends SimplePanel<ResourceAttributeDefini
         add(matchingRule);
 
         TextField outboundLabel = new TextField<>(ID_OUTBOUND_LABEL,
-                new PropertyModel<String>(getModel(), "outbound.name"));
+                new AbstractReadOnlyModel<String>() {
+
+                    @Override
+                    public String getObject() {
+                        ResourceAttributeDefinitionType attributeDefinition = getModel().getObject();
+
+                        if(attributeDefinition == null){
+                            return null;
+                        }
+
+                        return MappingTypeDto.createMappingLabel(attributeDefinition.getOutbound(), LOGGER, getPageBase().getPrismContext(),
+                                getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
+                    }
+                });
         outboundLabel.setEnabled(false);
         outboundLabel.setOutputMarkupId(true);
         add(outboundLabel);
@@ -245,13 +258,8 @@ public class ResourceAttributeEditor extends SimplePanel<ResourceAttributeDefini
 
                     @Override
                     public String getObject() {
-                        MappingType mapping = model.getObject();
-
-                        if(mapping != null){
-                            return mapping.getName();
-                        } else {
-                            return null;
-                        }
+                        return MappingTypeDto.createMappingLabel(model.getObject(), LOGGER, getPageBase().getPrismContext(),
+                                getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
                     }
                 };
             }

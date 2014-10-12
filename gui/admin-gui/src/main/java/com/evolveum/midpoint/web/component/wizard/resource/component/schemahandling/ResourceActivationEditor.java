@@ -16,9 +16,12 @@
 
 package com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling;
 
+import com.evolveum.midpoint.util.logging.Trace;
+import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.component.form.multivalue.MultiValueTextEditPanel;
 import com.evolveum.midpoint.web.component.util.SimplePanel;
 import com.evolveum.midpoint.web.component.wizard.resource.component.schemahandling.modal.MappingEditorDialog;
+import com.evolveum.midpoint.web.component.wizard.resource.dto.MappingTypeDto;
 import com.evolveum.midpoint.web.util.WebMiscUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.AttributeFetchStrategyType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.MappingType;
@@ -38,6 +41,8 @@ import java.util.List;
  *  @author shood
  * */
 public class ResourceActivationEditor extends SimplePanel<ResourceActivationDefinitionType>{
+
+    private static final Trace LOGGER = TraceManager.getTrace(ResourceActivationEditor.class);
 
     private static final String ID_EXISTENCE_FS = "existenceFetchStrategy";
     private static final String ID_EXISTENCE_OUT = "existenceOutbound";
@@ -119,7 +124,8 @@ public class ResourceActivationEditor extends SimplePanel<ResourceActivationDefi
 
                     @Override
                     public String getObject() {
-                        return model.getObject().getName();
+                        return MappingTypeDto.createMappingLabel(model.getObject(), LOGGER, getPageBase().getPrismContext(),
+                                getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
                     }
                 };
             }
@@ -145,13 +151,8 @@ public class ResourceActivationEditor extends SimplePanel<ResourceActivationDefi
 
                     @Override
                     public String getObject() {
-                        MappingType mapping = model.getObject();
-
-                        if(mapping != null){
-                            return mapping.getName();
-                        } else {
-                            return null;
-                        }
+                        return MappingTypeDto.createMappingLabel(model.getObject(), LOGGER, getPageBase().getPrismContext(),
+                                getString("MappingType.label.placeholder"), getString("MultiValueField.nameNotSpecified"));
                     }
                 };
             }

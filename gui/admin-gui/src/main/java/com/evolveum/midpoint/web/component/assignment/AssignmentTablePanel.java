@@ -41,6 +41,7 @@ import com.evolveum.midpoint.web.page.admin.users.component.AssignablePopupConte
 import com.evolveum.midpoint.web.page.admin.users.dto.UserDtoStatus;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -236,7 +237,7 @@ public class AssignmentTablePanel<T extends ObjectType> extends SimplePanel<Assi
         });
         add(assignWindow);
 
-        ModalWindow deleteDialog = new ConfirmationDialog(ID_MODAL_DELETE_ASSIGNMENT,
+        Modal deleteDialog = new ConfirmationDialog(ID_MODAL_DELETE_ASSIGNMENT,
                 createStringResource("AssignmentTablePanel.modal.title.confirmDeletion"),
                 new AbstractReadOnlyModel<String>() {
 

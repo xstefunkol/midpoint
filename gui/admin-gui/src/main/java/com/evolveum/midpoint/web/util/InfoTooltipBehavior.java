@@ -24,10 +24,38 @@ import org.apache.wicket.Component;
  */
 public class InfoTooltipBehavior extends TooltipBehavior {
 
+    private boolean isContainerModal = false;
+
+    public InfoTooltipBehavior(){
+
+    }
+
+    public InfoTooltipBehavior(boolean isContainerModal){
+        this.isContainerModal = isContainerModal;
+    }
+
+    @Override
+    public String getModalContainer(Component component) {
+        String id = component.getMarkupId();
+
+        if(component.getParent() != null){
+            Component parent = component.getParent();
+
+            id = parent.getParent() != null? parent.getParent().getMarkupId() : parent.getMarkupId();
+        }
+
+        return id;
+    }
+
     @Override
     public void onConfigure(Component component) {
         super.onConfigure(component);
 
         component.add(AttributeModifier.replace("class", "fa fa-fw fa-info-circle text-info"));
+    }
+
+    @Override
+    public boolean isInsideModal() {
+        return isContainerModal;
     }
 }

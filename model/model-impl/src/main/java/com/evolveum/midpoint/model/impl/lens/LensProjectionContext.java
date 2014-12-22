@@ -54,6 +54,7 @@ import com.evolveum.midpoint.schema.util.SchemaDebugUtil;
 import com.evolveum.midpoint.util.Cloner;
 import com.evolveum.midpoint.util.DebugUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.AssignmentPolicyEnforcementType;
+import com.evolveum.midpoint.xml.ns._public.common.common_3.FailedOperationTypeType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.FocusType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.LayerType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ObjectType;
@@ -687,8 +688,10 @@ public class LensProjectionContext extends LensElementContext<ShadowType> implem
 	 */
 	public ObjectDelta<ShadowType> getExecutableDelta() throws SchemaException {
 		SynchronizationPolicyDecision policyDecision = getSynchronizationPolicyDecision();
-		ObjectDelta<ShadowType> origDelta = getDelta();
+		ObjectDelta<ShadowType> origDelta = getFixedDelta();
 		if (policyDecision == SynchronizationPolicyDecision.ADD) {
+			// let's try to retrieve original (non-fixed) delta. Maybe it's ADD delta so we spare fixing it.
+			origDelta = getDelta();
             if (origDelta == null || origDelta.isModify()) {
             	// We need to convert modify delta to ADD
             	ObjectDelta<ShadowType> addDelta = new ObjectDelta<ShadowType>(getObjectTypeClass(),
@@ -1161,8 +1164,9 @@ public class LensProjectionContext extends LensElementContext<ShadowType> implem
     public void determineFullShadowFlag(OperationResultType fetchResult) {
         if (fetchResult != null
                 && (fetchResult.getStatus() == OperationResultStatusType.PARTIAL_ERROR
-                    || fetchResult.getStatus() == OperationResultStatusType.FATAL_ERROR)) {                 // todo what about other kinds of status? [e.g. in-progress]
-            setFullShadow(false);
+                    || fetchResult.getStatus() == OperationResultStatusType.FATAL_ERROR)
+                    && (getObjectAny().asObjectable().getFailedOperationType() == null || getObjectAny().asObjectable().getFailedOperationType() != FailedOperationTypeType.ADD)) {                 // todo what about other kinds of status? [e.g. in-progress]
+           	setFullShadow(false);
         } else {
             setFullShadow(true);
         }

@@ -119,7 +119,11 @@ public class PageDebugList extends PageAdminConfiguration {
 
     private int objectsDeleted = 0;
 
-    public PageDebugList() {
+    public PageDebugList(){
+        this(true);
+    }
+
+    public PageDebugList(boolean clearPagingInSession) {
         searchModel = new LoadableModel<DebugSearchDto>(false) {
 
             @Override
@@ -137,6 +141,7 @@ public class PageDebugList extends PageAdminConfiguration {
             }
         };
 
+        getSessionStorage().clearPagingInSession(clearPagingInSession);
         initLayout();
     }
 
@@ -220,9 +225,16 @@ public class PageDebugList extends PageAdminConfiguration {
 
         DebugSearchDto dto = searchModel.getObject();
         Class type = dto.getType().getClassDefinition();
-        addOrReplaceTable(new RepositoryObjectDataProvider(this, type));
+        addOrReplaceTable(new RepositoryObjectDataProvider(this, type){
 
-        AjaxCheckBox zipCheck = new AjaxCheckBox(ID_ZIP_CHECK, new Model<Boolean>(false)) {
+            @Override
+            protected void saveProviderPaging(ObjectQuery query, ObjectPaging paging) {
+                ConfigurationStorage storage = getSessionStorage().getConfiguration();
+                storage.setDebugSearchPaging(paging);
+            }
+        });
+
+        AjaxCheckBox zipCheck = new AjaxCheckBox(ID_ZIP_CHECK, new Model<>(false)) {
 
             @Override
             protected void onUpdate(AjaxRequestTarget target) {
@@ -248,8 +260,13 @@ public class PageDebugList extends PageAdminConfiguration {
         provider.setQuery(createQuery());
         Form mainForm = (Form) get(ID_MAIN_FORM);
 
-        TablePanel table = new TablePanel(ID_TABLE, provider, initColumns(provider.getType()), UserProfileStorage.TableId.CONF_DEBUG_LIST_PANEL);
+        TablePanel table = new TablePanel(ID_TABLE, provider, initColumns(provider.getType()),
+                UserProfileStorage.TableId.CONF_DEBUG_LIST_PANEL, getItemsPerPage(UserProfileStorage.TableId.CONF_DEBUG_LIST_PANEL));
         table.setOutputMarkupId(true);
+
+        ConfigurationStorage storage = getSessionStorage().getConfiguration();
+        table.setCurrentPage(storage.getDebugSearchPaging());
+
         mainForm.addOrReplace(table);
     }
 

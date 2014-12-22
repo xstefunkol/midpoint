@@ -41,6 +41,7 @@ import com.evolveum.midpoint.web.util.WebModelUtils;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
 
 import de.agilecoders.wicket.less.LessResourceReference;
+import org.apache.commons.lang.Validate;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.CssHeaderItem;
@@ -99,7 +100,11 @@ public class PageDashboard extends PageAdminHome {
 
     private PrismObject<UserType> loadUser() {
         MidPointPrincipal principal = SecurityUtils.getPrincipalUser();
-
+        Validate.notNull(principal, "No principal");
+        if (principal.getOid() == null) {
+        	throw new IllegalArgumentException("No OID in principal: "+principal);
+        }
+        
         OperationResult result = new OperationResult(OPERATION_LOAD_USER);
         PrismObject<UserType> user = WebModelUtils.loadObject(UserType.class,
                 principal.getOid(), result, PageDashboard.this);

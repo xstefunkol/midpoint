@@ -228,7 +228,7 @@ public class PageContentAccounts extends PageAdminResources {
         add(mainForm);
 
         AccountContentDataProvider provider = new AccountContentDataProvider(this,
-                new PropertyModel<String>(resourceModel, "oid"), createObjectClassModel(), createUseConnectorPagingModel()) {
+                new PropertyModel<String>(resourceModel, "oid"), createObjectClassModel(), createUseObjectCountingModel()) {
 
             @Override
             protected void addInlineMenuToDto(AccountContentDto dto) {
@@ -238,7 +238,8 @@ public class PageContentAccounts extends PageAdminResources {
         provider.setQuery(createQuery());
 
         List<IColumn> columns = initColumns();
-        TablePanel table = new TablePanel(ID_TABLE, provider, columns, UserProfileStorage.TableId.PAGE_RESOURCE_ACCOUNTS_PANEL);
+        TablePanel table = new TablePanel(ID_TABLE, provider, columns,
+                UserProfileStorage.TableId.PAGE_RESOURCE_ACCOUNTS_PANEL, getItemsPerPage(UserProfileStorage.TableId.PAGE_RESOURCE_ACCOUNTS_PANEL));
         table.setOutputMarkupId(true);
         mainForm.add(table);
 
@@ -600,13 +601,13 @@ public class PageContentAccounts extends PageAdminResources {
         };
     }
 
-    private IModel<Boolean> createUseConnectorPagingModel() {
+    private IModel<Boolean> createUseObjectCountingModel() {
         return new LoadableModel<Boolean>(false) {
 
             @Override
             protected Boolean load() {
                 try {
-                    return isUseConnectorPaging();
+                    return isUseObjectCounting();
                 } catch (Exception ex) {
                     throw new SystemException(ex.getMessage(), ex);
                 }
@@ -636,7 +637,7 @@ public class PageContentAccounts extends PageAdminResources {
         return null;
     }
 
-    private boolean isUseConnectorPaging() throws SchemaException {
+    private boolean isUseObjectCounting() throws SchemaException {
         MidPointApplication application = (MidPointApplication) getApplication();
         PrismObject<ResourceType> resource = resourceModel.getObject();
         RefinedResourceSchema resourceSchema = RefinedResourceSchema.getRefinedSchema(resource, application.getPrismContext());
@@ -653,7 +654,7 @@ public class PageContentAccounts extends PageAdminResources {
         }
 
         RefinedObjectClassDefinition refinedObjectClassDefinition = resourceSchema.getRefinedDefinition(typeDefinition.getTypeName());
-        return refinedObjectClassDefinition.isPagedSearchEnabled();
+        return refinedObjectClassDefinition.isObjectCountingEnabled();
     }
 
     private void showModalWindow(String id, AjaxRequestTarget target) {

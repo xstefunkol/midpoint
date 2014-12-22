@@ -17,10 +17,7 @@
 package com.evolveum.midpoint.web.page.admin.server;
 
 import com.evolveum.midpoint.prism.delta.ObjectDelta;
-import com.evolveum.midpoint.prism.query.AndFilter;
-import com.evolveum.midpoint.prism.query.EqualFilter;
-import com.evolveum.midpoint.prism.query.ObjectFilter;
-import com.evolveum.midpoint.prism.query.ObjectQuery;
+import com.evolveum.midpoint.prism.query.*;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.result.OperationResultStatus;
 import com.evolveum.midpoint.security.api.AuthorizationConstants;
@@ -112,7 +109,11 @@ public class PageTasks extends PageAdminTasks {
 
     private IModel<TasksSearchDto> searchModel;
 
-    public PageTasks() {
+    public PageTasks(){
+        this(true);
+    }
+
+    public PageTasks(boolean clearSessionStorage) {
         searchModel = new LoadableModel<TasksSearchDto>(false) {
 
             @Override
@@ -120,6 +121,8 @@ public class PageTasks extends PageAdminTasks {
                 return loadTasksSearchDto();
             }
         };
+
+        getSessionStorage().clearPagingInSession(clearSessionStorage);
         initLayout();
     }
 
@@ -154,12 +157,23 @@ public class PageTasks extends PageAdminTasks {
         options.setGetTaskParent(false);
         options.setRetrieveModelContext(false);
         options.setResolveOwnerRef(false);
-        TaskDtoProvider provider = new TaskDtoProvider(PageTasks.this, options);
+        TaskDtoProvider provider = new TaskDtoProvider(PageTasks.this, options){
+
+            @Override
+            protected void saveProviderPaging(ObjectQuery query, ObjectPaging paging) {
+                TasksStorage storage = getSessionStorage().getTasks();
+                storage.setTasksPaging(paging);
+            }
+        };
 
         provider.setQuery(createTaskQuery());
         TablePanel<TaskDto> taskTable = new TablePanel<>(ID_TASK_TABLE, provider, taskColumns,
-                UserProfileStorage.TableId.PAGE_TASKS_PANEL);
+                UserProfileStorage.TableId.PAGE_TASKS_PANEL, getItemsPerPage(UserProfileStorage.TableId.PAGE_TASKS_PANEL));
         taskTable.setOutputMarkupId(true);
+
+        TasksStorage storage = getSessionStorage().getTasks();
+        taskTable.setCurrentPage(storage.getTasksPaging());
+
         mainForm.add(taskTable);
 
         List<IColumn<NodeDto, String>> nodeColumns = initNodeColumns();
@@ -499,7 +513,7 @@ public class PageTasks extends PageAdminTasks {
 
     // used in SubtasksPanel as well
     public static IColumn createTaskNameColumn(final Component component, String label) {
-        return new LinkColumn<TaskDto>(createStringResourceStatic(component, label), TaskDto.F_NAME, TaskDto.F_NAME) {
+        LinkColumn<TaskDto> column = new LinkColumn<TaskDto>(createStringResourceStatic(component, label), TaskDto.F_NAME, TaskDto.F_NAME) {
 
             @Override
             public void onClick(AjaxRequestTarget target, IModel<TaskDto> rowModel) {
@@ -513,7 +527,12 @@ public class PageTasks extends PageAdminTasks {
                 component.setResponsePage(new PageTaskEdit(parameters, (PageBase) component.getPage()));
             }
 
+            @Override
+            public boolean isEnabled(IModel<TaskDto> rowModel) {
+                return super.isEnabled(rowModel) && rowModel.getObject().getOid() != null;
+            }
         };
+        return column;
     }
 
     public static AbstractColumn<TaskDto, String> createTaskCategoryColumn(final Component component, String label) {

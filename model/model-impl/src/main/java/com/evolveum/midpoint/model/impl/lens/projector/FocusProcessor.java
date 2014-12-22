@@ -176,9 +176,6 @@ public class FocusProcessor {
     		return;
     	}
     	
-    	LensContext<F> fContext = (LensContext<F>) context;
-    	LensFocusContext<F> fFocusContext = fContext.getFocusContext();
-    	
     	processFocusFocus((LensContext<F>)context, activityDescription, now, task, result);
 	}
 	
@@ -551,14 +548,14 @@ public class FocusProcessor {
 		if (validityStatusNew == null) {
 			validityStatusDelta.setValueToReplace();
 		} else {
-			validityStatusDelta.setValueToReplace(new PrismPropertyValue<TimeIntervalStatusType>(validityStatusNew, OriginType.USER_POLICY, null));
+			validityStatusDelta.setValueToReplace(new PrismPropertyValue<>(validityStatusNew, OriginType.USER_POLICY, null));
 		}
 		focusContext.swallowToProjectionWaveSecondaryDelta(validityStatusDelta);
 		
 		PrismPropertyDefinition<XMLGregorianCalendar> validityChangeTimestampDef = activationDefinition.findPropertyDefinition(ActivationType.F_VALIDITY_CHANGE_TIMESTAMP);
 		PropertyDelta<XMLGregorianCalendar> validityChangeTimestampDelta 
 				= validityChangeTimestampDef.createEmptyDelta(new ItemPath(UserType.F_ACTIVATION, ActivationType.F_VALIDITY_CHANGE_TIMESTAMP));
-		validityChangeTimestampDelta.setValueToReplace(new PrismPropertyValue<XMLGregorianCalendar>(now, OriginType.USER_POLICY, null));
+		validityChangeTimestampDelta.setValueToReplace(new PrismPropertyValue<>(now, OriginType.USER_POLICY, null));
 		focusContext.swallowToProjectionWaveSecondaryDelta(validityChangeTimestampDelta);
 	}
 	
@@ -571,10 +568,14 @@ public class FocusProcessor {
 		PropertyDelta<ActivationStatusType> effectiveStatusDelta 
 				= effectiveStatusDef.createEmptyDelta(new ItemPath(UserType.F_ACTIVATION, ActivationType.F_EFFECTIVE_STATUS));
 		effectiveStatusDelta.setValueToReplace(new PrismPropertyValue<ActivationStatusType>(effectiveStatusNew, OriginType.USER_POLICY, null));
-		focusContext.swallowToProjectionWaveSecondaryDelta(effectiveStatusDelta);
+		if (!focusContext.alreadyHasDelta(effectiveStatusDelta)){
+			focusContext.swallowToProjectionWaveSecondaryDelta(effectiveStatusDelta);
+		}
 		
 		PropertyDelta<XMLGregorianCalendar> timestampDelta = LensUtil.createActivationTimestampDelta(effectiveStatusNew, now, activationDefinition, OriginType.USER_POLICY);
-		focusContext.swallowToProjectionWaveSecondaryDelta(timestampDelta);
+		if (!focusContext.alreadyHasDelta(timestampDelta)){
+			focusContext.swallowToProjectionWaveSecondaryDelta(timestampDelta);
+		}
 	}
 	
 	

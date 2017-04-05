@@ -92,10 +92,8 @@ import com.evolveum.midpoint.provisioning.api.ResourceObjectShadowChangeDescript
 import com.evolveum.midpoint.provisioning.impl.ProvisioningContext;
 import com.evolveum.midpoint.provisioning.impl.ProvisioningTestUtil;
 import com.evolveum.midpoint.provisioning.impl.opendj.TestOpenDj;
-import com.evolveum.midpoint.provisioning.impl.ucf.TestUcfDummy;
 import com.evolveum.midpoint.provisioning.ucf.api.AttributesToReturn;
 import com.evolveum.midpoint.provisioning.ucf.api.ConnectorInstance;
-import com.evolveum.midpoint.provisioning.ucf.impl.ConnectorFactoryIcfImpl;
 import com.evolveum.midpoint.provisioning.util.ProvisioningUtil;
 import com.evolveum.midpoint.schema.CapabilityUtil;
 import com.evolveum.midpoint.schema.DeltaConvertor;
@@ -150,6 +148,7 @@ import com.evolveum.midpoint.xml.ns._public.common.common_3.SynchronizationSitua
 import com.evolveum.midpoint.xml.ns._public.common.common_3.XmlSchemaType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ActivationCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.CredentialsCapabilityType;
+import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.PasswordCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ScriptCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.TestConnectionCapabilityType;
 
@@ -248,7 +247,7 @@ public class TestDummy extends AbstractDummyTest {
 		TestUtil.assertSuccess(result);
 		
 		// Check connector schema
-		ProvisioningTestUtil.assertConnectorSchemaSanity(connector, prismContext);
+		IntegrationTestTools.assertConnectorSchemaSanity(connector, prismContext);
 		
 		IntegrationTestTools.assertNoSchema(resource);
 	}
@@ -468,7 +467,7 @@ public class TestDummy extends AbstractDummyTest {
 		PrismContainerDefinition confContDef = configurationContainer.getDefinition();
 		assertNotNull("No configuration container definition", confContDef);
 		PrismContainer confingurationPropertiesContainer = configurationContainer
-				.findContainer(ConnectorFactoryIcfImpl.CONNECTOR_SCHEMA_CONFIGURATION_PROPERTIES_ELEMENT_QNAME);
+				.findContainer(SchemaConstants.CONNECTOR_SCHEMA_CONFIGURATION_PROPERTIES_ELEMENT_QNAME);
 		assertNotNull("No configuration properties container", confingurationPropertiesContainer);
 		PrismContainerDefinition confPropsDef = confingurationPropertiesContainer.getDefinition();
 		assertNotNull("No configuration properties container definition", confPropsDef);
@@ -552,7 +551,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertFalse("Account definition is deprecated", accountDef.isDeprecated());
 		assertFalse("Account definition in auxiliary", accountDef.isAuxiliary());
 
-		RefinedAttributeDefinition<String> uidDef = accountDef.findAttributeDefinition(ConnectorFactoryIcfImpl.ICFS_UID);
+		RefinedAttributeDefinition<String> uidDef = accountDef.findAttributeDefinition(SchemaConstants.ICFS_UID);
 		assertEquals(1, uidDef.getMaxOccurs());
 		assertEquals(0, uidDef.getMinOccurs());
 		assertFalse("No UID display name", StringUtils.isBlank(uidDef.getDisplayName()));
@@ -561,7 +560,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertTrue("No UID read", uidDef.canRead());
 		assertTrue("UID definition not in identifiers", accountDef.getPrimaryIdentifiers().contains(uidDef));
 
-		RefinedAttributeDefinition<String> nameDef = accountDef.findAttributeDefinition(ConnectorFactoryIcfImpl.ICFS_NAME);
+		RefinedAttributeDefinition<String> nameDef = accountDef.findAttributeDefinition(SchemaConstants.ICFS_NAME);
 		assertEquals(1, nameDef.getMaxOccurs());
 		assertEquals(1, nameDef.getMinOccurs());
 		assertFalse("No NAME displayName", StringUtils.isBlank(nameDef.getDisplayName()));
@@ -587,7 +586,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertEquals("Wrong fullname displayName", null, fullnameDef.getDisplayName());
 
 		assertNull("The _PASSSWORD_ attribute sneaked into schema",
-				accountDef.findAttributeDefinition(new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				accountDef.findAttributeDefinition(new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 		
 		rememberRefinedResourceSchema(refinedSchema);
 		assertSteadyResource();
@@ -619,7 +618,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertFalse("Empty capabilities returned", nativeCapabilitiesList.isEmpty());
 		CredentialsCapabilityType capCred = CapabilityUtil.getCapability(nativeCapabilitiesList,
 				CredentialsCapabilityType.class);
-		assertNotNull("password native capability not present", capCred.getPassword());
+		assertNativeCredentialsCapability(capCred);
 		
 		ActivationCapabilityType capAct = CapabilityUtil.getCapability(nativeCapabilitiesList,
 				ActivationCapabilityType.class);
@@ -663,6 +662,15 @@ public class TestDummy extends AbstractDummyTest {
 		assertSteadyResource();
 	}
 	
+	protected void assertNativeCredentialsCapability(CredentialsCapabilityType capCred) {
+		PasswordCapabilityType passwordCapabilityType = capCred.getPassword();
+		assertNotNull("password native capability not present", passwordCapabilityType);
+		Boolean readable = passwordCapabilityType.isReadable();
+		if (readable != null) {
+			assertFalse("Unexpected 'readable' in password capability", readable);
+		}
+	}
+
 	/**
 	 * Check if the cached native capabilities were properly stored in the repo 
 	 */
@@ -985,7 +993,7 @@ public class TestDummy extends AbstractDummyTest {
 		
 		// GIVEN
 		Task task = taskManager.createTaskInstance();
-		OperationResult testResult = new OperationResult(TestUcfDummy.class + "." + TEST_NAME);
+		OperationResult testResult = new OperationResult(TestDummy.class + "." + TEST_NAME);
 		
 		// WHEN
 		provisioningService.provisioningSelfTest(testResult, task);
@@ -1126,8 +1134,8 @@ public class TestDummy extends AbstractDummyTest {
 		display("account from provisioning", accountTypeProvisioning);
 		assertShadowName(accountProvisioning, ACCOUNT_WILL_USERNAME);
 		assertEquals("Wrong kind (provisioning)", ShadowKindType.ACCOUNT, accountTypeProvisioning.getKind());
-		assertAttribute(accountProvisioning, ConnectorFactoryIcfImpl.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME));
-		assertAttribute(accountProvisioning, getUidMatchingRule(), ConnectorFactoryIcfImpl.ICFS_UID, willIcfUid);
+		assertAttribute(accountProvisioning, SchemaConstants.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME));
+		assertAttribute(accountProvisioning, getUidMatchingRule(), SchemaConstants.ICFS_UID, willIcfUid);
 		
 		ActivationType activationProvisioning = accountTypeProvisioning.getActivation();
 		if (supportsActivation()) {
@@ -1141,7 +1149,7 @@ public class TestDummy extends AbstractDummyTest {
 		}
 
 		assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-				accountTypeProvisioning, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				accountTypeProvisioning, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 
 		// Check if the account was created in the dummy resource
 
@@ -1172,9 +1180,9 @@ public class TestDummy extends AbstractDummyTest {
 		ShadowType accountTypeRepo = accountRepo.asObjectable();
 		assertShadowName(accountRepo, ACCOUNT_WILL_USERNAME);
 		assertEquals("Wrong kind (repo)", ShadowKindType.ACCOUNT, accountTypeRepo.getKind());
-		assertAttribute(accountRepo, ConnectorFactoryIcfImpl.ICFS_NAME, getWillRepoIcfName());
+		assertAttribute(accountRepo, SchemaConstants.ICFS_NAME, getWillRepoIcfName());
 		if (isIcfNameUidSame()) {
-			assertAttribute(accountRepo, ConnectorFactoryIcfImpl.ICFS_UID, getWillRepoIcfName());
+			assertAttribute(accountRepo, SchemaConstants.ICFS_UID, getWillRepoIcfName());
 		}
 		
 		assertNumberOfAttributes(accountRepo, expectedNumberOfAttributes);
@@ -1227,7 +1235,7 @@ public class TestDummy extends AbstractDummyTest {
 				provisioningAccountType.getName());
 
 		assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-				provisioningAccountType, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				provisioningAccountType, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 
 		// Check if the account was created in the dummy resource
 		DummyAccount dummyAccount = getDummyAccountAssert(transformNameFromResource(ACCOUNT_MORGAN_NAME), getIcfUid(provisioningAccountType));
@@ -1643,7 +1651,7 @@ public class TestDummy extends AbstractDummyTest {
 
 		ObjectQuery query = ObjectQueryUtil.createResourceAndObjectClassQuery(RESOURCE_DUMMY_OID, 
 				new QName(ResourceTypeUtil.getResourceNamespace(resourceType),
-						ConnectorFactoryIcfImpl.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext); 
+						SchemaConstants.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext); 
 
 		final XMLGregorianCalendar startTs = clock.currentTimeXMLGregorianCalendar();
 		
@@ -1752,7 +1760,7 @@ public class TestDummy extends AbstractDummyTest {
 
 		ObjectQuery query = ObjectQueryUtil.createResourceAndObjectClassQuery(RESOURCE_DUMMY_OID, 
 				new QName(ResourceTypeUtil.getResourceNamespace(resourceType),
-						ConnectorFactoryIcfImpl.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext);
+						SchemaConstants.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext);
 		
 		final XMLGregorianCalendar startTs = clock.currentTimeXMLGregorianCalendar();
 
@@ -3110,7 +3118,7 @@ public class TestDummy extends AbstractDummyTest {
 		TestUtil.displayTestTile(TEST_NAME);
 		dummyResource.setDisableNameHintChecks(true);
 		testSeachIterativeSingleAttrFilter(TEST_NAME,
-				ConnectorFactoryIcfImpl.ICFS_UID, willIcfUid, null, true,
+				SchemaConstants.ICFS_UID, willIcfUid, null, true,
 				transformNameFromResource("Will"));
 		dummyResource.setDisableNameHintChecks(false);
 	}
@@ -3119,7 +3127,7 @@ public class TestDummy extends AbstractDummyTest {
 	public void test176SearchUidExactNoFetch() throws Exception {
 		final String TEST_NAME = "test176SearchUidExactNoFetch";
 		TestUtil.displayTestTile(TEST_NAME);
-		testSeachIterativeSingleAttrFilter(TEST_NAME, ConnectorFactoryIcfImpl.ICFS_UID, willIcfUid,
+		testSeachIterativeSingleAttrFilter(TEST_NAME, SchemaConstants.ICFS_UID, willIcfUid,
 				GetOperationOptions.createNoFetch(), false,
 				transformNameFromResource("Will"));
 	}
@@ -3129,7 +3137,7 @@ public class TestDummy extends AbstractDummyTest {
 		final String TEST_NAME = "test177SearchIcfNameRepoized";
 		TestUtil.displayTestTile(TEST_NAME);
 		testSeachIterativeSingleAttrFilter(TEST_NAME,
-				ConnectorFactoryIcfImpl.ICFS_NAME, getWillRepoIcfName(), null, true,
+				SchemaConstants.ICFS_NAME, getWillRepoIcfName(), null, true,
 				transformNameFromResource(ACCOUNT_WILL_USERNAME));
 	}
 	
@@ -3137,7 +3145,7 @@ public class TestDummy extends AbstractDummyTest {
 	public void test180SearchIcfNameRepoizedNoFetch() throws Exception {
 		final String TEST_NAME = "test180SearchIcfNameRepoizedNoFetch";
 		TestUtil.displayTestTile(TEST_NAME);
-		testSeachIterativeSingleAttrFilter(TEST_NAME, ConnectorFactoryIcfImpl.ICFS_NAME, getWillRepoIcfName(),
+		testSeachIterativeSingleAttrFilter(TEST_NAME, SchemaConstants.ICFS_NAME, getWillRepoIcfName(),
 				GetOperationOptions.createNoFetch(), false,
 				transformNameFromResource(ACCOUNT_WILL_USERNAME));
 	}
@@ -3147,7 +3155,7 @@ public class TestDummy extends AbstractDummyTest {
 		final String TEST_NAME = "test181SearchIcfNameExact";
 		TestUtil.displayTestTile(TEST_NAME);
 		testSeachIterativeSingleAttrFilter(TEST_NAME,
-				ConnectorFactoryIcfImpl.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME), null, true,
+				SchemaConstants.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME), null, true,
 				transformNameFromResource(ACCOUNT_WILL_USERNAME));
 	}
 	
@@ -3155,7 +3163,7 @@ public class TestDummy extends AbstractDummyTest {
 	public void test182SearchIcfNameExactNoFetch() throws Exception {
 		final String TEST_NAME = "test182SearchIcfNameExactNoFetch";
 		TestUtil.displayTestTile(TEST_NAME);
-		testSeachIterativeSingleAttrFilter(TEST_NAME, ConnectorFactoryIcfImpl.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME),
+		testSeachIterativeSingleAttrFilter(TEST_NAME, SchemaConstants.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME),
 				GetOperationOptions.createNoFetch(), false,
 				transformNameFromResource(ACCOUNT_WILL_USERNAME));
 	}
@@ -3165,8 +3173,8 @@ public class TestDummy extends AbstractDummyTest {
     public void test183SearchIcfNameAndUidExactNoFetch() throws Exception {
         final String TEST_NAME = "test183SearchIcfNameAndUidExactNoFetch";
         TestUtil.displayTestTile(TEST_NAME);
-        testSeachIterativeAlternativeAttrFilter(TEST_NAME, ConnectorFactoryIcfImpl.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME),
-                ConnectorFactoryIcfImpl.ICFS_UID, willIcfUid,
+        testSeachIterativeAlternativeAttrFilter(TEST_NAME, SchemaConstants.ICFS_NAME, transformNameFromResource(ACCOUNT_WILL_USERNAME),
+        		SchemaConstants.ICFS_UID, willIcfUid,
                 GetOperationOptions.createNoFetch(), false,
                 transformNameFromResource(ACCOUNT_WILL_USERNAME));
     }
@@ -3265,7 +3273,7 @@ public class TestDummy extends AbstractDummyTest {
 
 		ObjectQuery query = QueryBuilder.queryFor(ShadowType.class, prismContext)
 				.item(ShadowType.F_RESOURCE_REF).ref(RESOURCE_DUMMY_OID)
-				.and().item(ShadowType.F_OBJECT_CLASS).eq(new QName(ResourceTypeUtil.getResourceNamespace(resourceType), ConnectorFactoryIcfImpl.ACCOUNT_OBJECT_CLASS_LOCAL_NAME))
+				.and().item(ShadowType.F_OBJECT_CLASS).eq(new QName(ResourceTypeUtil.getResourceNamespace(resourceType), SchemaConstants.ACCOUNT_OBJECT_CLASS_LOCAL_NAME))
 				.and().itemWithDef(attrDef, ShadowType.F_ATTRIBUTES, attrDef.getName()).eq("Sea Monkey")
 				.and().item(ShadowType.F_DEAD).eq(true)
 				.build();
@@ -3313,7 +3321,7 @@ public class TestDummy extends AbstractDummyTest {
 		ObjectQuery query;
         if (useObjectClassFilter) {
             query = ObjectQueryUtil.createResourceAndObjectClassQuery(RESOURCE_DUMMY_OID, new QName(ResourceTypeUtil.getResourceNamespace(resourceType),
-                    ConnectorFactoryIcfImpl.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext);
+            		SchemaConstants.ACCOUNT_OBJECT_CLASS_LOCAL_NAME), prismContext);
             if (attrFilter != null) {
                 AndFilter filter = (AndFilter) query.getFilter();
                 filter.getConditions().add(attrFilter);
@@ -3493,7 +3501,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertEquals("Unexpected number of attributes", 3, attributes.size());
 		
 		assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-				shadow, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				shadow, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 	}
 
 	@Test
@@ -3665,7 +3673,7 @@ public class TestDummy extends AbstractDummyTest {
 		assertAttribute(shadow, DummyResourceContoller.DUMMY_PRIVILEGE_ATTRIBUTE_POWER, 100);
 		
 		assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-				shadow, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				shadow, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 	}
 
     @Test
@@ -3738,7 +3746,7 @@ public class TestDummy extends AbstractDummyTest {
         assertEquals("Unexpected number of attributes", 2, attributes.size());
 
         assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-                shadow, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+                shadow, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
     }
 
 
@@ -4333,11 +4341,11 @@ public class TestDummy extends AbstractDummyTest {
 		PrismObject<ShadowType> repoAccount = repositoryService.getObject(ShadowType.class, ACCOUNT_LECHUCK_OID, null, result);
 		assertShadowName(repoAccount, ACCOUNT_LECHUCK_NAME);
 		assertEquals("Wrong kind (repo)", ShadowKindType.ACCOUNT, repoAccount.asObjectable().getKind());
-		assertAttribute(repoAccount, ConnectorFactoryIcfImpl.ICFS_NAME, ACCOUNT_LECHUCK_NAME);
+		assertAttribute(repoAccount, SchemaConstants.ICFS_NAME, ACCOUNT_LECHUCK_NAME);
 		if (isIcfNameUidSame()) {
-			assertAttribute(repoAccount, ConnectorFactoryIcfImpl.ICFS_UID, ACCOUNT_LECHUCK_NAME);
+			assertAttribute(repoAccount, SchemaConstants.ICFS_UID, ACCOUNT_LECHUCK_NAME);
 		} else {
-			assertAttribute(repoAccount, ConnectorFactoryIcfImpl.ICFS_UID, dummyAccount.getId());
+			assertAttribute(repoAccount, SchemaConstants.ICFS_UID, dummyAccount.getId());
 		}
 		
 		syncServiceMock.assertNotifySuccessOnly();
@@ -4347,18 +4355,18 @@ public class TestDummy extends AbstractDummyTest {
 		display("account from provisioning", provisioningAccount);
 		assertShadowName(provisioningAccount, ACCOUNT_LECHUCK_NAME);
 		assertEquals("Wrong kind (provisioning)", ShadowKindType.ACCOUNT, provisioningAccount.asObjectable().getKind());
-		assertAttribute(provisioningAccount, ConnectorFactoryIcfImpl.ICFS_NAME, transformNameFromResource(ACCOUNT_LECHUCK_NAME));
+		assertAttribute(provisioningAccount, SchemaConstants.ICFS_NAME, transformNameFromResource(ACCOUNT_LECHUCK_NAME));
 		if (isIcfNameUidSame()) {
-			assertAttribute(provisioningAccount, ConnectorFactoryIcfImpl.ICFS_UID, transformNameFromResource(ACCOUNT_LECHUCK_NAME));
+			assertAttribute(provisioningAccount, SchemaConstants.ICFS_UID, transformNameFromResource(ACCOUNT_LECHUCK_NAME));
 		} else {
-			assertAttribute(provisioningAccount, ConnectorFactoryIcfImpl.ICFS_UID, dummyAccount.getId());
+			assertAttribute(provisioningAccount, SchemaConstants.ICFS_UID, dummyAccount.getId());
 		}
 		
 		assertEntitlementGroup(provisioningAccount, GROUP_PIRATES_OID);
 		assertEntitlementPriv(provisioningAccount, PRIVILEGE_PILLAGE_OID);
 
 		assertNull("The _PASSSWORD_ attribute sneaked into shadow", ShadowUtil.getAttributeValues(
-				provisioningAccount, new QName(ConnectorFactoryIcfImpl.NS_ICF_SCHEMA, "password")));
+				provisioningAccount, new QName(SchemaConstants.NS_ICF_SCHEMA, "password")));
 
 		checkConsistency(provisioningAccount);
 		
@@ -4721,7 +4729,7 @@ public class TestDummy extends AbstractDummyTest {
 		shadowType.setObjectClass(defaultAccountDefinition.getTypeName());
 		PrismObject<ShadowType> shadow = shadowType.asPrismObject();
 		PrismContainer<Containerable> attrsCont = shadow.findOrCreateContainer(ShadowType.F_ATTRIBUTES);
-		PrismProperty<String> icfsNameProp = attrsCont.findOrCreateProperty(ConnectorFactoryIcfImpl.ICFS_NAME);
+		PrismProperty<String> icfsNameProp = attrsCont.findOrCreateProperty(SchemaConstants.ICFS_NAME);
 		icfsNameProp.setRealValue(username);
 		return shadow;
 	}
@@ -5282,7 +5290,7 @@ public class TestDummy extends AbstractDummyTest {
 			PrismObject<ShadowType> repoShadow = repositoryService.getObject(ShadowType.class, corsairsShadowOid, null, result);
 			display("Corsairs repo shadow", repoShadow);
 			
-			PrismObject<ShadowType> accountRepo = findShadowByName(new QName(RESOURCE_DUMMY_NS, ConnectorFactoryIcfImpl.GROUP_OBJECT_CLASS_LOCAL_NAME), GROUP_CORSAIRS_NAME, resource, result);
+			PrismObject<ShadowType> accountRepo = findShadowByName(new QName(RESOURCE_DUMMY_NS, SchemaConstants.GROUP_OBJECT_CLASS_LOCAL_NAME), GROUP_CORSAIRS_NAME, resource, result);
 			assertNotNull("Shadow was not created in the repository", accountRepo);
 			display("Repository shadow", accountRepo);
 			ProvisioningTestUtil.checkRepoShadow(repoShadow, ShadowKindType.ENTITLEMENT);
@@ -5344,7 +5352,7 @@ public class TestDummy extends AbstractDummyTest {
 			Collection<ResourceAttribute<?>> attributes = attributesContainer.getAttributes();
 			assertFalse("Attributes container is empty", attributes.isEmpty());
 			assertEquals("Unexpected number of attributes", 2, attributes.size());
-			ResourceAttribute<?> icfsNameAttribute = attributesContainer.findAttribute(ConnectorFactoryIcfImpl.ICFS_NAME);
+			ResourceAttribute<?> icfsNameAttribute = attributesContainer.findAttribute(SchemaConstants.ICFS_NAME);
 			assertNotNull("No ICF name attribute in old  shadow", icfsNameAttribute);
 			assertEquals("Wrong value of ICF name attribute in old  shadow", GROUP_CORSAIRS_NAME,
 					icfsNameAttribute.getRealValue());
@@ -5595,7 +5603,7 @@ public class TestDummy extends AbstractDummyTest {
 		if (expectedNumberOfAttributes != null) {
 			assertEquals("Unexpected number of attributes", (int)expectedNumberOfAttributes, attributes.size());
 		}
-		ResourceAttribute<?> icfsNameAttribute = attributesContainer.findAttribute(ConnectorFactoryIcfImpl.ICFS_NAME);
+		ResourceAttribute<?> icfsNameAttribute = attributesContainer.findAttribute(SchemaConstants.ICFS_NAME);
 		assertNotNull("No ICF name attribute in old  shadow", icfsNameAttribute);
 		assertEquals("Wrong value of ICF name attribute in old  shadow", repoName,
 				icfsNameAttribute.getRealValue());

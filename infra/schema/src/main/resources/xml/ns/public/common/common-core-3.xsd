@@ -32,11 +32,6 @@
             jaxb:extensionBindingPrefixes="xjc"
             jaxb:version="2.0">
 
-
-    <xsd:import namespace="http://www.w3.org/2001/XMLSchema"/>
-    <xsd:import namespace="http://www.w3.org/2001/04/xmlenc#"/>
-
-
     <xsd:import namespace="http://prism.evolveum.com/xml/ns/public/annotation-3"/>
     <xsd:import namespace="http://prism.evolveum.com/xml/ns/public/types-3"/>
     <xsd:import namespace="http://prism.evolveum.com/xml/ns/public/query-3"/>
@@ -47,6 +42,7 @@
     <xsd:include schemaLocation="http://midpoint.evolveum.com/xml/ns/public/common/common-notifications-3" />
     <xsd:include schemaLocation="http://midpoint.evolveum.com/xml/ns/public/common/common-workflows-3" />
     <xsd:include schemaLocation="http://midpoint.evolveum.com/xml/ns/public/common/common-policy-3" />
+    <xsd:include schemaLocation="http://midpoint.evolveum.com/xml/ns/public/common/common-case-management-3" />
 
     <!-- ################################## -->
     <!-- ##      Common Schema Layer     ## -->
@@ -3383,10 +3379,18 @@
     				</xsd:documentation>
     			</xsd:annotation>
     		</xsd:element>
+			<xsd:element name="resetOrder" type="xsd:int" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						The new value for order for this relation (or summary order), to be used when
+						evaluating subsequent inducements.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
     		<xsd:element name="relation" type="xsd:QName" minOccurs="0" maxOccurs="1">
 	   			<xsd:annotation>
     				<xsd:documentation>
-    					Relation to which the order constraints apply.
+    					Relation to which the order constraints apply. If none present, summary (i.e. non-delegation) order is considered.
     				</xsd:documentation>
     			</xsd:annotation>
     		</xsd:element>
@@ -5030,7 +5034,7 @@
     <xsd:complexType name="ResourcePasswordDefinitionType">
         <xsd:sequence>
         	<xsd:element name="fetchStrategy" type="tns:AttributeFetchStrategyType" minOccurs="0"/>
-            <xsd:element name="outbound" type="tns:MappingType" minOccurs="0" maxOccurs="1">
+            <xsd:element name="outbound" type="tns:MappingType" minOccurs="0" maxOccurs="unbounded">
                 <xsd:annotation>
                     <xsd:documentation>
                         Defines how the password value is constructed in case of information flow from IDM to the
@@ -11168,6 +11172,17 @@
 					</xsd:appinfo>
 				</xsd:annotation>
 			</xsd:element>
+			<xsd:element name="defaultCollection" type="tns:ObjectCollectionUseType" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>
+						Specifies the default object collections ("role catalog view") to display in role
+						catalog.
+					</xsd:documentation>
+					<xsd:appinfo>
+						<a:since>3.6</a:since>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:element>
 			<xsd:element name="defaultAssignmentConstraints" type="tns:AssignmentConstraintsType" minOccurs="0">
 				<xsd:annotation>
 					<xsd:documentation>
@@ -11202,13 +11217,13 @@
         </xsd:annotation>
         <xsd:sequence>
         	<xsd:element name="description" type="xsd:string" minOccurs="0"/>
-        	<xsd:element name="prohibitSameTarget" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false">
+        	<xsd:element name="allowSameTarget" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="true">
 			    <xsd:annotation>
 			        <xsd:documentation>
 			            Constraint all assignments that have the same target. I.e. multiple assignments
 			            of the same (abstract) role.
-			            If prohibitSameTarget=false then multiple assignments of the same role are allowed.
-			            If prohibitSameTarget=true then multiple assignments of the same role are prohibited.
+			            If allowSameTarget=true then multiple assignments of the same role are allowed.
+			            If allowSameTarget=false then multiple assignments of the same role are prohibited.
 			            (but see also other constraints in this type)
 			        </xsd:documentation>
 			        <xsd:appinfo>
@@ -11216,13 +11231,12 @@
 					</xsd:appinfo>
 			    </xsd:annotation>
 			</xsd:element>
-			<xsd:element name="prohibitSameRelation" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="false">
+			<xsd:element name="allowSameRelation" type="xsd:boolean" minOccurs="0" maxOccurs="1" default="true">
 			    <xsd:annotation>
 			        <xsd:documentation>
 			            Constraint all assignments that have the same relation.
-			            E.g. if prohibitSameTarget=true and prohibitSameRelation=false then multiple assignments
+			            E.g. if allowSameTarget=true and allowSameRelation=false then multiple assignments
 			            of the same role are allowed as long as they have different relation.
-			            If prohibitSameTarget=true and prohibitSameRelation=false
 			        </xsd:documentation>
 			        <xsd:appinfo>
 						<a:since>3.6</a:since>
@@ -12070,8 +12084,8 @@
             <xsd:enumeration value="encryption">
                 <xsd:annotation>
                 	<xsd:documentation>
-                		Credential will be stored in an ecrypted form.
-                		This is a symetric (reversible) encryption.
+                		Credential will be stored in an encrypted form.
+                		This is a symmetric (reversible) encryption.
                 		MidPoint will be able to get a cleartext form of
                 		the credential if needed.
                 	</xsd:documentation>
@@ -12084,7 +12098,7 @@
                 <xsd:annotation>
                 	<xsd:documentation>
                 		Credential will be stored in a hashed form.
-                		One-way (ireversible) cryptographic hash or key derivation function
+                		One-way (irreversible) cryptographic hash or key derivation function
                 		will be used to transform the credential before storage.
                 		MidPoint will NOT be able to get a cleartext form of
                 		the credential, but it can still compare credential values.
@@ -12098,14 +12112,15 @@
                 <xsd:annotation>
                 	<xsd:documentation>
                 		MidPoint will not store the credential at all.
-                		MidPoitn will only work with credential in the memory
+                		MidPoint will only work with credential in the memory
                 		while it is needed to complete current operation.
                 		The credential will be discarded after the operation.
                 		
                 		THIS IS ONLY PARTIALLY SUPPORTED
                 		
                 		MidPoint should be able not to store the credentials when
-                		this setting is used. But there may be side effects.
+                		this setting is used. But there may be side effects
+                		that are not completely addressed yet.
                 		This is not entirelly tests and not supported.
                 		Use at your own risk.
                 	</xsd:documentation>
@@ -14861,7 +14876,7 @@
 				<xsd:annotation>
 					<xsd:documentation>
 						Free form description that specifies the details of this deployment.
-						It may be significantly long (few paragraps). It has no special purpose
+						It may be significantly long (few paragraps). It has no special purpose	
 						other then a form of "on-line" documentation for the deployment. It will
 						NOT be displayed on every page. It will most likely be displayed on a system
 						configuration pages or in configuration summaries.

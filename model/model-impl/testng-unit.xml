@@ -77,7 +77,9 @@
     <test name="Misc" preserve-order="true" parallel="false" verbose="10">
         <classes>
             <class name="com.evolveum.midpoint.model.impl.ModelWebServiceTest"/>
-            <class name="com.evolveum.midpoint.model.impl.security.TestAuthenticationEvaluator"/>
+            <class name="com.evolveum.midpoint.model.impl.security.TestPasswordAuthenticationEvaluator"/>
+            <class name="com.evolveum.midpoint.model.impl.security.TestNonceAuthenticationEvaluator"/>
+            <class name="com.evolveum.midpoint.model.impl.security.TestSecurityQuestionsAuthenticationEvaluator"/>
         </classes>
     </test>
 </suite>

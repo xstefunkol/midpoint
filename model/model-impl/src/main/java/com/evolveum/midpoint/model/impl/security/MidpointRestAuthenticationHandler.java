@@ -24,36 +24,15 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.evolveum.midpoint.model.impl.util.RestServiceUtil;
+import org.apache.commons.lang.StringUtils;
+import org.apache.cxf.common.util.Base64Exception;
+import org.apache.cxf.common.util.Base64Utility;
 import org.apache.cxf.configuration.security.AuthorizationPolicy;
 import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.apache.cxf.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.CredentialsExpiredException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.evolveum.midpoint.model.api.AuthenticationEvaluator;
-import com.evolveum.midpoint.model.impl.ModelRestService;
-import com.evolveum.midpoint.schema.constants.SchemaConstants;
-import com.evolveum.midpoint.schema.result.OperationResult;
-import com.evolveum.midpoint.security.api.AuthorizationConstants;
-import com.evolveum.midpoint.security.api.ConnectionEnvironment;
-import com.evolveum.midpoint.security.api.MidPointPrincipal;
-import com.evolveum.midpoint.security.api.SecurityEnforcer;
-import com.evolveum.midpoint.task.api.Task;
-import com.evolveum.midpoint.task.api.TaskManager;
-import com.evolveum.midpoint.util.exception.SchemaException;
-import com.evolveum.midpoint.util.exception.SecurityViolationException;
-import com.evolveum.midpoint.util.logging.Trace;
-import com.evolveum.midpoint.util.logging.TraceManager;
-import com.evolveum.midpoint.xml.ns._public.common.common_3.UserType;
+import com.evolveum.midpoint.model.impl.util.RestServiceUtil;
 
 /**
  * @author Katka Valalikova
@@ -61,90 +40,14 @@ import com.evolveum.midpoint.xml.ns._public.common.common_3.UserType;
  */
 public class MidpointRestAuthenticationHandler implements ContainerRequestFilter, ContainerResponseFilter {
 	
-	private static final Trace LOGGER = TraceManager.getTrace(MidpointRestAuthenticationHandler.class);
-	 
-	@Autowired(required=true)
-	private AuthenticationEvaluator authenticationEvaluator;
-	
-	@Autowired(required = true)
-	private SecurityEnforcer securityEnforcer;
-			
-	@Autowired(required = true)
-	private SecurityHelper securityHelper;
+//	private static final Trace LOGGER = TraceManager.getTrace(MidpointRestAuthenticationHandler.class);
 	
 	@Autowired(required=true)
-	private TaskManager taskManager;
-		
-    public void handleRequest(Message m, ContainerRequestContext requestCtx) {
-        AuthorizationPolicy policy = (AuthorizationPolicy)m.get(AuthorizationPolicy.class);
-        
-        if (policy == null){
-        	requestCtx.abortWith(Response.status(Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic").build());
-        	return;
-        }
-        
-        String enteredUsername = policy.getUserName();
-        
-        if (enteredUsername == null){
-        	requestCtx.abortWith(Response.status(Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic").build());
-        	return;
-        }
-        
-        LOGGER.trace("Authenticating username '{}' to REST service", enteredUsername);
-        
-        // We need to create task before attempting authentication. Task ID is also a session ID.
-        Task task = taskManager.createTaskInstance(ModelRestService.OPERATION_REST_SERVICE);
-        task.setChannel(SchemaConstants.CHANNEL_REST_URI);
-        
-        ConnectionEnvironment connEnv = createConnectionEnvironment();
-        connEnv.setSessionId(task.getTaskIdentifier());
-        String enteredPassword = policy.getPassword();
-        UsernamePasswordAuthenticationToken token;
-        try {
-        	token = authenticationEvaluator.authenticateUserPassword(connEnv, enteredUsername, enteredPassword);
-        } catch (UsernameNotFoundException | BadCredentialsException e) {
-        	LOGGER.trace("Exception while authenticating username '{}' to REST service: {}", enteredUsername, e.getMessage(), e);
-        	requestCtx.abortWith(Response.status(Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic authentication failed. Cannot authenticate user.").build());
-			return;
-        } catch (DisabledException | LockedException | CredentialsExpiredException | AccessDeniedException
-        		| AuthenticationCredentialsNotFoundException | AuthenticationServiceException e) {
-        	LOGGER.trace("Exception while authenticating username '{}' to REST service: {}", enteredUsername, e.getMessage(), e);
-        	requestCtx.abortWith(Response.status(Status.FORBIDDEN).build());
-			return;
-        }
-        
-        UserType user = ((MidPointPrincipal)token.getPrincipal()).getUser();
-        task.setOwner(user.asPrismObject());
-        
-        m.put(RestServiceUtil.MESSAGE_PROPERTY_TASK_NAME, task);
-        try {
-        	securityEnforcer.setupPreAuthenticatedSecurityContext(user.asPrismObject());
-        } catch (SchemaException e) {
-			securityHelper.auditLoginFailure(enteredUsername, user, connEnv, "Schema error: "+e.getMessage());
-			requestCtx.abortWith(Response.status(Status.BAD_REQUEST).build());
-			return;
-		}
-        
-        LOGGER.trace("Authenticated to REST service as {}", user);
-           
-        OperationResult authorizeResult = new OperationResult("Rest authentication/authorization operation.");
-        
-        
-        try {
-			securityEnforcer.authorize(AuthorizationConstants.AUTZ_REST_ALL_URL, null, null, null, null, null, authorizeResult);
-		} catch (SecurityViolationException e){
-			securityHelper.auditLoginFailure(enteredUsername, user, connEnv, "Not authorized");
-			requestCtx.abortWith(Response.status(Status.FORBIDDEN).build());
-			return;
-		} catch (SchemaException e) {
-			securityHelper.auditLoginFailure(enteredUsername, user, connEnv, "Schema error: "+e.getMessage());
-			requestCtx.abortWith(Response.status(Status.BAD_REQUEST).build());
-			return;
-		}
-        
-        LOGGER.trace("Authorized to use REST service ({})", user);
-        
-    }
+	private MidpointRestPasswordAuthenticator passwordAuthenticator;
+	
+	@Autowired(required=true)
+	private MidpointRestSecurityQuestionsAuthenticator securityQuestionAuthenticator;
+
 
 	@Override
 	public void filter(ContainerRequestContext request, ContainerResponseContext response) throws IOException {
@@ -154,13 +57,58 @@ public class MidpointRestAuthenticationHandler implements ContainerRequestFilter
 	@Override
 	public void filter(ContainerRequestContext requestCtx) throws IOException {
 		Message m = JAXRSUtils.getCurrentMessage();
-		handleRequest(m, requestCtx);
-	}
+		
+		AuthorizationPolicy policy = (AuthorizationPolicy) m.get(AuthorizationPolicy.class);
+		if (policy != null) {
+			passwordAuthenticator.handleRequest(policy, m, requestCtx);
+			return;
+		}
+		
+		String authorization = requestCtx.getHeaderString("Authorization");
+		
+		if (StringUtils.isBlank(authorization)){
+			RestServiceUtil.createAbortMessage(requestCtx);
+			return;
+		}
+		
+		String[] parts = authorization.split(" ");
+		String authenticationType = parts[0];
 
-	private ConnectionEnvironment createConnectionEnvironment() {
-		ConnectionEnvironment connEnv = new ConnectionEnvironment();
-		connEnv.setChannel(SchemaConstants.CHANNEL_REST_URI);
-		// TODO: remote host
-		return connEnv;
+		if (parts.length == 1) {
+			if (RestAuthenticationMethod.SECURITY_QUESTIONS.equals(authenticationType)) {
+				RestServiceUtil.createAbortMessage(requestCtx);
+				return;
+			}
+		}
+
+		if (parts.length != 2 || (!RestAuthenticationMethod.SECURITY_QUESTIONS.equals(authenticationType))) {
+			RestServiceUtil.createAbortMessage(requestCtx);
+			return;
+		}
+		String base64Credentials = (parts.length == 2) ? parts[1] : null;
+		try {
+			String decodedCredentials = new String(Base64Utility.decode(base64Credentials));
+			if (RestAuthenticationMethod.SECURITY_QUESTIONS.equals(authenticationType)) {
+
+				policy = new AuthorizationPolicy();
+				policy.setAuthorizationType(RestAuthenticationMethod.SECURITY_QUESTIONS.getMethod());
+				policy.setAuthorization(decodedCredentials);
+			}
+			securityQuestionAuthenticator.handleRequest(policy, m, requestCtx);
+		} catch (Base64Exception e) {
+			RestServiceUtil.createAbortMessage(requestCtx);
+			return;
+
+		}
+
 	}
+	
+
+
+//	protected void createAbortMessage(ContainerRequestContext requestCtx){
+//		requestCtx.abortWith(Response.status(Status.UNAUTHORIZED)
+//				.header("WWW-Authenticate", AuthenticationType.BASIC.getAuthenticationType() + " realm=\"midpoint\", " + AuthenticationType.SECURITY_QUESTIONS.getAuthenticationType()).build());
+//	}
+//	
+
 }

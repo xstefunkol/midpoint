@@ -56,6 +56,7 @@ public abstract class SchemaConstants {
 	public static final String NS_MATCHING_RULE = NS_MIDPOINT_PUBLIC + "/common/matching-rule-3";
 	public static final String NS_FAULT = "http://midpoint.evolveum.com/xml/ns/public/common/fault-3";
 	public static final String NS_SAMPLES_EXTENSION = "http://midpoint.evolveum.com/xml/ns/samples/extension-3";
+	public static final String NS_CASE = "http://midpoint.evolveum.com/xml/ns/public/common/case-3";
 	
 	/**
 	 * Namespace for default (bult-in) object collections, such as "all objects", "all roles", ...
@@ -196,6 +197,8 @@ public abstract class SchemaConstants {
 	public static final ItemPath PATH_PASSWORD = new ItemPath(C_CREDENTIALS, CredentialsType.F_PASSWORD);
 	public static final ItemPath PATH_PASSWORD_VALUE = new ItemPath(C_CREDENTIALS, CredentialsType.F_PASSWORD,
 			PasswordType.F_VALUE);
+	public static final ItemPath PATH_PASSWORD_METADATA = new ItemPath(C_CREDENTIALS, CredentialsType.F_PASSWORD,
+			PasswordType.F_METADATA);
 	public static final ItemPath PATH_NONCE = new ItemPath(C_CREDENTIALS, CredentialsType.F_NONCE);
 	public static final ItemPath PATH_NONCE_VALUE = new ItemPath(C_CREDENTIALS, CredentialsType.F_NONCE,
 			NonceType.F_VALUE);
@@ -300,7 +303,28 @@ public abstract class SchemaConstants {
 	public static final String MODEL_POLICY_SITUATION_ASSIGNED = 
 			QNameUtil.qNameToUri(new QName(NS_MODEL_POLICY_SITUATION, "assigned"));
 
-	
+	public static final String NS_MODEL_APPROVAL = NS_MODEL + "/approval";
+	public static final String NS_MODEL_APPROVAL_OUTCOME = NS_MODEL_APPROVAL + "/outcome";
+	public static final String MODEL_APPROVAL_OUTCOME_APPROVE =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_APPROVAL_OUTCOME, "approve"));
+	public static final String MODEL_APPROVAL_OUTCOME_REJECT =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_APPROVAL_OUTCOME, "reject"));
+	public static final String MODEL_APPROVAL_OUTCOME_SKIP =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_APPROVAL_OUTCOME, "skip"));
+
+	public static final String NS_MODEL_CERTIFICATION = NS_MODEL + "/certification";
+	public static final String NS_MODEL_CERTIFICATION_OUTCOME = NS_MODEL_CERTIFICATION + "/outcome";
+	public static final String MODEL_CERTIFICATION_OUTCOME_ACCEPT =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_CERTIFICATION_OUTCOME, "accept"));
+	public static final String MODEL_CERTIFICATION_OUTCOME_REVOKE =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_CERTIFICATION_OUTCOME, "revoke"));
+	public static final String MODEL_CERTIFICATION_OUTCOME_REDUCE =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_CERTIFICATION_OUTCOME, "reduce"));
+	public static final String MODEL_CERTIFICATION_OUTCOME_NOT_DECIDED =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_CERTIFICATION_OUTCOME, "notDecided"));
+	public static final String MODEL_CERTIFICATION_OUTCOME_NO_RESPONSE =
+			QNameUtil.qNameToUri(new QName(NS_MODEL_CERTIFICATION_OUTCOME, "noResponse"));		// only for aggregated decisions
+
 	public static final QName MODEL_EXTENSION_OBJECT_TYPE = new QName(NS_MODEL_EXTENSION, "objectType");
 	public static final QName MODEL_EXTENSION_OBJECT_QUERY = new QName(NS_MODEL_EXTENSION, "objectQuery");
 	public static final QName MODEL_EXTENSION_OBJECT_DELTA = new QName(NS_MODEL_EXTENSION, "objectDelta");
@@ -347,6 +371,10 @@ public abstract class SchemaConstants {
 	public static final QName CHANNEL_GUI_USER_QNAME = new QName(NS_GUI_CHANNEL, "user");
 	public static final String CHANNEL_GUI_USER_URI = QNameUtil.qNameToUri(CHANNEL_GUI_USER_QNAME);
 
+	//GUI constants which are also used in the notificators
+	public static final String REGISTRATION_CONFIRAMTION_PREFIX = "/confirm/registration";
+	public static final String PASSWORD_RESET_CONFIRMATION_PREFIX = "/confirm/reset";
+	
 	public static final String INTENT_DEFAULT = "default";
 
 	public static final String CONNECTOR_SCHEMA_CONFIGURATION_TYPE_LOCAL_NAME = "ConfigurationType";
@@ -423,6 +451,12 @@ public abstract class SchemaConstants {
 	public static final String LIFECYCLE_ARCHIVED = "archived";
 	public static final String LIFECYCLE_FAILED = "failed";
 
+	// Case: generic reusable case states
+	
+	public static final String CASE_STATE_OPEN = "open";
+	public static final QName CASE_STATE_OPEN_QNAME = new QName(NS_CASE, CASE_STATE_OPEN);
+	public static final String CASE_STATE_CLOSED = "closed";
+	public static final QName CASE_STATE_CLOSED_QNAME = new QName(NS_CASE, CASE_STATE_CLOSED);
 	
 	// Object collections
 	
@@ -469,10 +503,10 @@ public abstract class SchemaConstants {
 	public static final QName APPROVAL_LEVEL_OUTCOME_TYPE_COMPLEX_TYPE = new QName(SchemaConstants.NS_C, ApprovalLevelOutcomeType.class.getSimpleName());
 
 	// registration
-	public static final String REGISTRATION_ID = "registrationId";
-	public static final String REGISTRATION_TOKEN = "token";
+	public static final String USER_ID = "user";
+	public static final String TOKEN = "token";
 	
-	// resetPassword
-	public static final String RESET_PASSWORD_ID = "user";
-	public static final String RESET_PASSWORD_TOKEN = "token";
+//	// resetPassword
+//	public static final String RESET_PASSWORD_ID = "user";
+//	public static final String RESET_PASSWORD_TOKEN = "token";
 }

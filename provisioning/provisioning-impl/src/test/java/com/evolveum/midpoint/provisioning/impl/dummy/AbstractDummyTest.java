@@ -63,9 +63,11 @@ import com.evolveum.midpoint.prism.util.PrismAsserts;
 import com.evolveum.midpoint.prism.util.PrismTestUtil;
 import com.evolveum.midpoint.prism.xml.XmlTypeConverter;
 import com.evolveum.midpoint.provisioning.api.ProvisioningService;
+import com.evolveum.midpoint.provisioning.impl.AbstractProvisioningIntegrationTest;
 import com.evolveum.midpoint.provisioning.impl.ConnectorManager;
 import com.evolveum.midpoint.provisioning.impl.ProvisioningContextFactory;
 import com.evolveum.midpoint.provisioning.impl.ProvisioningTestUtil;
+import com.evolveum.midpoint.provisioning.impl.ResourceManager;
 import com.evolveum.midpoint.provisioning.impl.mock.SynchornizationServiceMock;
 import com.evolveum.midpoint.provisioning.ucf.api.ConnectorInstance;
 import com.evolveum.midpoint.schema.constants.SchemaConstants;
@@ -96,12 +98,13 @@ import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowAssociationTyp
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowKindType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.XmlSchemaType;
+import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ReadCapabilityType;
 
 /**
  * @author semancik
  *
  */
-public abstract class AbstractDummyTest extends AbstractIntegrationTest {
+public abstract class AbstractDummyTest extends AbstractProvisioningIntegrationTest {
 	
 	protected static final String TEST_DIR = "src/test/resources/impl/dummy/";
 	
@@ -167,21 +170,13 @@ public abstract class AbstractDummyTest extends AbstractIntegrationTest {
 	protected static DummyResource dummyResource;
 	protected static DummyResourceContoller dummyResourceCtl;
 	
-	@Autowired(required = true)
-	protected ProvisioningService provisioningService;
-
-	// Used to make sure that the connector is cached
+	// Testing connector discovery
 	@Autowired(required = true)
 	protected ConnectorManager connectorManager;
-
-	@Autowired(required = true)
-	protected SynchornizationServiceMock syncServiceMock;
 	
-	@Autowired(required = true) 
-	protected TaskManager taskManager;
-	
+	// Used to make sure that the connector is cached
 	@Autowired(required = true)
-	protected MatchingRuleRegistry matchingRuleRegistry;
+	protected ResourceManager resourceManager;
 	
 	@Autowired(required = true)
 	protected ProvisioningContextFactory provisioningContextFactory;
@@ -257,14 +252,6 @@ public abstract class AbstractDummyTest extends AbstractIntegrationTest {
 		return origName;
 	}
 	
-	protected void assertShadowName(PrismObject<ShadowType> shadow, String expectedName) {
-		PrismAsserts.assertEqualsPolyString("Shadow name is wrong in "+shadow, expectedName, shadow.asObjectable().getName());
-	}
-
-	protected void assertShadowName(ShadowType shadowType, String expectedName) {
-		assertShadowName(shadowType.asPrismObject(), expectedName);
-	}
-
 	protected boolean supportsActivation() {
 		return true;
 	}
@@ -516,7 +503,7 @@ public abstract class AbstractDummyTest extends AbstractIntegrationTest {
 	protected void rememberConnectorInstance(PrismObject<ResourceType> resource) throws ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException {
 		OperationResult result = new OperationResult(TestDummyResourceAndSchemaCaching.class.getName()
 				+ ".rememberConnectorInstance");
-		rememberConnectorInstance(connectorManager.getConfiguredConnectorInstance(resource, false, result));
+		rememberConnectorInstance(resourceManager.getConfiguredConnectorInstance(resource, ReadCapabilityType.class, false, result));
 	}
 	
 	protected void rememberConnectorInstance(ConnectorInstance currentConnectorInstance) throws ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException {
@@ -526,16 +513,16 @@ public abstract class AbstractDummyTest extends AbstractIntegrationTest {
 	protected void assertConnectorInstanceUnchanged(PrismObject<ResourceType> resource) throws ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException {
 		OperationResult result = new OperationResult(TestDummyResourceAndSchemaCaching.class.getName()
 				+ ".rememberConnectorInstance");
-		ConnectorInstance currentConfiguredConnectorInstance = connectorManager.getConfiguredConnectorInstance(
-				resource, false, result);
+		ConnectorInstance currentConfiguredConnectorInstance = resourceManager.getConfiguredConnectorInstance(
+				resource, ReadCapabilityType.class, false, result);
 		assertTrue("Connector instance has changed", lastConfiguredConnectorInstance == currentConfiguredConnectorInstance);
 	}
 	
 	protected void assertConnectorInstanceChanged(PrismObject<ResourceType> resource) throws ObjectNotFoundException, SchemaException, CommunicationException, ConfigurationException {
 		OperationResult result = new OperationResult(TestDummyResourceAndSchemaCaching.class.getName()
 				+ ".rememberConnectorInstance");
-		ConnectorInstance currentConfiguredConnectorInstance = connectorManager.getConfiguredConnectorInstance(
-				resource, false, result);
+		ConnectorInstance currentConfiguredConnectorInstance = resourceManager.getConfiguredConnectorInstance(
+				resource, ReadCapabilityType.class, false, result);
 		assertTrue("Connector instance has NOT changed", lastConfiguredConnectorInstance != currentConfiguredConnectorInstance);
 		lastConfiguredConnectorInstance = currentConfiguredConnectorInstance;
 	}

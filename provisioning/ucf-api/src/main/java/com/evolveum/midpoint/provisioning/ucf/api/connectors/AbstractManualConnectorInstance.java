@@ -26,8 +26,6 @@ import com.evolveum.midpoint.prism.PrismProperty;
 import com.evolveum.midpoint.prism.query.ObjectQuery;
 import com.evolveum.midpoint.provisioning.ucf.api.AttributesToReturn;
 import com.evolveum.midpoint.provisioning.ucf.api.Change;
-import com.evolveum.midpoint.provisioning.ucf.api.ConnectorOperationResult;
-import com.evolveum.midpoint.provisioning.ucf.api.ConnectorOperationReturnValue;
 import com.evolveum.midpoint.provisioning.ucf.api.ExecuteProvisioningScriptOperation;
 import com.evolveum.midpoint.provisioning.ucf.api.GenericFrameworkException;
 import com.evolveum.midpoint.provisioning.ucf.api.ManagedConnector;
@@ -40,6 +38,9 @@ import com.evolveum.midpoint.schema.processor.ResourceAttribute;
 import com.evolveum.midpoint.schema.processor.ResourceObjectIdentification;
 import com.evolveum.midpoint.schema.processor.ResourceSchema;
 import com.evolveum.midpoint.schema.processor.SearchHierarchyConstraints;
+import com.evolveum.midpoint.schema.result.AsynchronousOperationQueryable;
+import com.evolveum.midpoint.schema.result.AsynchronousOperationResult;
+import com.evolveum.midpoint.schema.result.AsynchronousOperationReturnValue;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.statistics.ConnectorOperationalStatus;
 import com.evolveum.midpoint.task.api.StateReporter;
@@ -52,6 +53,7 @@ import com.evolveum.midpoint.util.exception.SecurityViolationException;
 import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ShadowType;
+import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.AbstractWriteCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ActivationCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ActivationStatusCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.CreateCapabilityType;
@@ -59,6 +61,7 @@ import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.CredentialsC
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.DeleteCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.PagedSearchCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.PasswordCapabilityType;
+import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ReadCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.UpdateCapabilityType;
 
 /**
@@ -69,7 +72,7 @@ import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.UpdateCapabi
  * @author Radovan Semancik
  */
 @ManagedConnector
-public abstract class AbstractManualConnectorInstance extends AbstractConnectorInstance {
+public abstract class AbstractManualConnectorInstance extends AbstractManagedConnectorInstance implements AsynchronousOperationQueryable {
 	
 	private static final String OPERATION_ADD = AbstractManualConnectorInstance.class.getName() + ".addObject";
 	private static final String OPERATION_MODIFY = AbstractManualConnectorInstance.class.getName() + ".modifyObject";
@@ -101,7 +104,7 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 	// TODO: operations to check ticket state
 	
 	@Override
-	public ConnectorOperationReturnValue<Collection<ResourceAttribute<?>>> addObject(
+	public AsynchronousOperationReturnValue<Collection<ResourceAttribute<?>>> addObject(
 			PrismObject<? extends ShadowType> object, Collection<Operation> additionalOperations,
 			StateReporter reporter, OperationResult parentResult) throws CommunicationException,
 			GenericFrameworkException, SchemaException, ObjectAlreadyExistsException, ConfigurationException {
@@ -120,16 +123,17 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 			throw e;
 		}
 		
-		result.setAsyncronousOperationReference(ticketIdentifier);
+		result.recordInProgress();
+		result.setAsynchronousOperationReference(ticketIdentifier);
 		
-		ConnectorOperationReturnValue<Collection<ResourceAttribute<?>>> ret = new ConnectorOperationReturnValue<>();
+		AsynchronousOperationReturnValue<Collection<ResourceAttribute<?>>> ret = new AsynchronousOperationReturnValue<>();
 		ret.setOperationResult(result);
 		return ret;
 	}
 	
 
 	@Override
-	public ConnectorOperationReturnValue<Collection<PropertyModificationOperation>> modifyObject(
+	public AsynchronousOperationReturnValue<Collection<PropertyModificationOperation>> modifyObject(
 			ObjectClassComplexTypeDefinition objectClass,
 			Collection<? extends ResourceAttribute<?>> identifiers, Collection<Operation> changes,
 			StateReporter reporter, OperationResult parentResult)
@@ -150,16 +154,17 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 			throw e;
 		}
 		
-		result.setAsyncronousOperationReference(ticketIdentifier);
+		result.recordInProgress();
+		result.setAsynchronousOperationReference(ticketIdentifier);
 		
-		ConnectorOperationReturnValue<Collection<PropertyModificationOperation>> ret = new ConnectorOperationReturnValue<>();
+		AsynchronousOperationReturnValue<Collection<PropertyModificationOperation>> ret = new AsynchronousOperationReturnValue<>();
 		ret.setOperationResult(result);
 		return ret;
 	}
 
 	
 	@Override
-	public ConnectorOperationResult deleteObject(ObjectClassComplexTypeDefinition objectClass,
+	public AsynchronousOperationResult deleteObject(ObjectClassComplexTypeDefinition objectClass,
 			Collection<Operation> additionalOperations,
 			Collection<? extends ResourceAttribute<?>> identifiers, StateReporter reporter,
 			OperationResult parentResult) throws ObjectNotFoundException, CommunicationException,
@@ -179,11 +184,10 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 			throw e;
 		}
 		
-		result.setAsyncronousOperationReference(ticketIdentifier);
+		result.recordInProgress();
+		result.setAsynchronousOperationReference(ticketIdentifier);
 		
-		ConnectorOperationResult ret = new ConnectorOperationResult();
-		ret.setOperationResult(result);
-		return ret;
+		return AsynchronousOperationResult.wrap(result);
 	}
 
 	@Override
@@ -191,15 +195,21 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 			throws CommunicationException, GenericFrameworkException, ConfigurationException {
 		Collection<Object> capabilities = new ArrayList<>();
 		
-		// make sure there are no read capabilities
+		// caching-only read capabilities
+		ReadCapabilityType readCap = new ReadCapabilityType();
+		readCap.setCachingOnly(true);
+		capabilities.add(CAPABILITY_OBJECT_FACTORY.createRead(readCap));
 		
 		CreateCapabilityType createCap = new CreateCapabilityType();
+		setManual(createCap);
 		capabilities.add(CAPABILITY_OBJECT_FACTORY.createCreate(createCap));
 		
 		UpdateCapabilityType updateCap = new UpdateCapabilityType();
+		setManual(updateCap);
 		capabilities.add(CAPABILITY_OBJECT_FACTORY.createUpdate(updateCap));
 		
 		DeleteCapabilityType deleteCap = new DeleteCapabilityType();
+		setManual(deleteCap);
 		capabilities.add(CAPABILITY_OBJECT_FACTORY.createDelete(deleteCap));
 		
 		ActivationCapabilityType activationCap = new ActivationCapabilityType();
@@ -215,6 +225,10 @@ public abstract class AbstractManualConnectorInstance extends AbstractConnectorI
 		return capabilities;
 	}
 	
+	private void setManual(AbstractWriteCapabilityType cap) {
+		cap.setManual(true);
+	}
+
 	@Override
 	public <T extends ShadowType> PrismObject<T> fetchObject(Class<T> type,
 			ResourceObjectIdentification resourceObjectIdentification, AttributesToReturn attributesToReturn,

@@ -47,6 +47,7 @@ import org.identityconnectors.framework.api.operations.APIOperation;
 import org.identityconnectors.framework.api.operations.CreateApiOp;
 import org.identityconnectors.framework.api.operations.DeleteApiOp;
 import org.identityconnectors.framework.api.operations.GetApiOp;
+import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
 import org.identityconnectors.framework.api.operations.ScriptOnResourceApiOp;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -103,8 +104,6 @@ import com.evolveum.midpoint.prism.xml.XsdTypeMapper;
 import com.evolveum.midpoint.provisioning.ucf.api.AttributesToReturn;
 import com.evolveum.midpoint.provisioning.ucf.api.Change;
 import com.evolveum.midpoint.provisioning.ucf.api.ConnectorInstance;
-import com.evolveum.midpoint.provisioning.ucf.api.ConnectorOperationResult;
-import com.evolveum.midpoint.provisioning.ucf.api.ConnectorOperationReturnValue;
 import com.evolveum.midpoint.provisioning.ucf.api.ExecuteProvisioningScriptOperation;
 import com.evolveum.midpoint.provisioning.ucf.api.ExecuteScriptArgument;
 import com.evolveum.midpoint.provisioning.ucf.api.GenericFrameworkException;
@@ -118,6 +117,8 @@ import com.evolveum.midpoint.schema.CapabilityUtil;
 import com.evolveum.midpoint.schema.constants.ConnectorTestOperation;
 import com.evolveum.midpoint.schema.constants.SchemaConstants;
 import com.evolveum.midpoint.schema.internals.InternalMonitor;
+import com.evolveum.midpoint.schema.result.AsynchronousOperationResult;
+import com.evolveum.midpoint.schema.result.AsynchronousOperationReturnValue;
 import com.evolveum.midpoint.schema.result.OperationResult;
 import com.evolveum.midpoint.schema.result.OperationResultStatus;
 import com.evolveum.midpoint.schema.util.ActivationUtil;
@@ -160,6 +161,7 @@ import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.DeleteCapabi
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.LiveSyncCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.PasswordCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ReadCapabilityType;
+import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.SchemaCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ScriptCapabilityType;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.ScriptCapabilityType.Host;
 import com.evolveum.midpoint.xml.ns._public.resource.capabilities_3.TestConnectionCapabilityType;
@@ -415,7 +417,10 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 
 		if (resourceSchema == null || capabilities == null) {
 			try {
-				retrieveResourceSchema(null, result);
+				boolean supportsSchema = processOperationCapabilities(result);
+				if (supportsSchema) {
+					retrieveResourceSchema(null, result);
+				}
 			} catch (CommunicationException ex) {
 				// This is in fact fatal. There is not schema. Not even the pre-cached one. 
 				// The connector will not be able to work.
@@ -443,6 +448,12 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		result.addContext("connector", connectorType);
 
 		try {
+			boolean supportsSchema = processOperationCapabilities(result);
+			if (!supportsSchema) {
+				result.recordStatus(OperationResultStatus.NOT_APPLICABLE, "Connector does not support schema");
+				LOGGER.trace("Connector instance {} does not support schema, skipping", this);
+				return null;
+			}
 			retrieveResourceSchema(generateObjectClasses, result);
 		} catch (CommunicationException ex) {
 			result.recordFatalError(ex);
@@ -474,7 +485,12 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		result.addContext("connector", connectorType);
 
 		try {
-			retrieveResourceSchema(null, result);
+			boolean supportsSchema = processOperationCapabilities(result);
+			if (supportsSchema) {
+				LOGGER.trace("Connector instance {} does not support schema, skipping", this);
+				// we need to get schema to figure out all the capabilities
+				retrieveResourceSchema(null, result);
+			}
 		} catch (CommunicationException ex) {
 			result.recordFatalError(ex);
 			throw ex;
@@ -489,6 +505,74 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		result.recordSuccess();
 
 		return capabilities;
+	}
+	
+	private boolean processOperationCapabilities(OperationResult parentResult) {
+		capabilities = new ArrayList<>();
+
+		// Create capabilities from supported connector operations
+		
+		InternalMonitor.recordConnectorOperation("getSupportedOperations");
+		Set<Class<? extends APIOperation>> supportedOperations = connIdConnectorFacade.getSupportedOperations();
+		
+		LOGGER.trace("Connector supported operations: {}", supportedOperations);
+
+		boolean supportsSchema = false;
+		if (supportedOperations.contains(SchemaApiOp.class)) {
+			SchemaCapabilityType capSchema = new SchemaCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createSchema(capSchema));
+			supportsSchema = true;
+		}
+		
+		if (supportedOperations.contains(SyncApiOp.class)) {
+			LiveSyncCapabilityType capSync = new LiveSyncCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createLiveSync(capSync));
+		}
+
+		if (supportedOperations.contains(TestApiOp.class)) {
+			TestConnectionCapabilityType capTest = new TestConnectionCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createTestConnection(capTest));
+		}
+		
+		if (supportedOperations.contains(CreateApiOp.class)){
+			CreateCapabilityType capCreate = new CreateCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createCreate(capCreate));
+		}
+		
+		if (supportedOperations.contains(GetApiOp.class) || supportedOperations.contains(SearchApiOp.class)){
+			ReadCapabilityType capRead = new ReadCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createRead(capRead));
+		}
+		
+		if (supportedOperations.contains(UpdateApiOp.class)){
+			UpdateCapabilityType capUpdate = new UpdateCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createUpdate(capUpdate));
+		}
+		
+		if (supportedOperations.contains(DeleteApiOp.class)){
+			DeleteCapabilityType capDelete = new DeleteCapabilityType();
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createDelete(capDelete));
+		}
+
+		if (supportedOperations.contains(ScriptOnResourceApiOp.class)
+				|| supportedOperations.contains(ScriptOnConnectorApiOp.class)) {
+			ScriptCapabilityType capScript = new ScriptCapabilityType();
+			if (supportedOperations.contains(ScriptOnResourceApiOp.class)) {
+				Host host = new Host();
+				host.setType(ProvisioningScriptHostType.RESOURCE);
+				capScript.getHost().add(host);
+				// language is unknown here
+			}
+			if (supportedOperations.contains(ScriptOnConnectorApiOp.class)) {
+				Host host = new Host();
+				host.setType(ProvisioningScriptHostType.CONNECTOR);
+				capScript.getHost().add(host);
+				// language is unknown here
+			}
+			capabilities.add(CAPABILITY_OBJECT_FACTORY.createScript(capScript));
+		}
+		
+		return supportsSchema;
 	}
 	
 	private void retrieveResourceSchema(List<QName> generateObjectClasses, OperationResult parentResult) throws CommunicationException, ConfigurationException, GenericFrameworkException {
@@ -787,9 +871,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 			((ObjectClassComplexTypeDefinitionImpl) ocDef).setAuxiliary(objectClassInfo.isAuxiliary());
 
 		}
-
-		capabilities = new ArrayList<>();
-
+		
 		// This is the default for all resources.
 		// (Currently there is no way how to obtain it from the connector.)
 		// It can be disabled manually.
@@ -864,61 +946,6 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 			capabilities.add(CAPABILITY_OBJECT_FACTORY.createAuxiliaryObjectClasses(capAux));
 		}
 
-		// Create capabilities from supported connector operations
-
-		InternalMonitor.recordConnectorOperation("getSupportedOperations");
-		Set<Class<? extends APIOperation>> supportedOperations = connIdConnectorFacade.getSupportedOperations();
-		
-		LOGGER.trace("Connector supported operations: {}", supportedOperations);
-
-		if (supportedOperations.contains(SyncApiOp.class)) {
-			LiveSyncCapabilityType capSync = new LiveSyncCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createLiveSync(capSync));
-		}
-
-		if (supportedOperations.contains(TestApiOp.class)) {
-			TestConnectionCapabilityType capTest = new TestConnectionCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createTestConnection(capTest));
-		}
-		
-		if (supportedOperations.contains(CreateApiOp.class)){
-			CreateCapabilityType capCreate = new CreateCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createCreate(capCreate));
-		}
-		
-		if (supportedOperations.contains(GetApiOp.class) || supportedOperations.contains(SearchApiOp.class)){
-			ReadCapabilityType capRead = new ReadCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createRead(capRead));
-		}
-		
-		if (supportedOperations.contains(UpdateApiOp.class)){
-			UpdateCapabilityType capUpdate = new UpdateCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createUpdate(capUpdate));
-		}
-		
-		if (supportedOperations.contains(DeleteApiOp.class)){
-			DeleteCapabilityType capDelete = new DeleteCapabilityType();
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createDelete(capDelete));
-		}
-
-		if (supportedOperations.contains(ScriptOnResourceApiOp.class)
-				|| supportedOperations.contains(ScriptOnConnectorApiOp.class)) {
-			ScriptCapabilityType capScript = new ScriptCapabilityType();
-			if (supportedOperations.contains(ScriptOnResourceApiOp.class)) {
-				Host host = new Host();
-				host.setType(ProvisioningScriptHostType.RESOURCE);
-				capScript.getHost().add(host);
-				// language is unknown here
-			}
-			if (supportedOperations.contains(ScriptOnConnectorApiOp.class)) {
-				Host host = new Host();
-				host.setType(ProvisioningScriptHostType.CONNECTOR);
-				capScript.getHost().add(host);
-				// language is unknown here
-			}
-			capabilities.add(CAPABILITY_OBJECT_FACTORY.createScript(capScript));
-		}
-		
 		boolean canPageSize = false;
 		boolean canPageOffset = false;
 		boolean canSort = false;
@@ -1250,7 +1277,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 	}
 
 	@Override
-	public ConnectorOperationReturnValue<Collection<ResourceAttribute<?>>> addObject(PrismObject<? extends ShadowType> shadow, Collection<Operation> additionalOperations, StateReporter reporter,
+	public AsynchronousOperationReturnValue<Collection<ResourceAttribute<?>>> addObject(PrismObject<? extends ShadowType> shadow, Collection<Operation> additionalOperations, StateReporter reporter,
 													  OperationResult parentResult) throws CommunicationException,
 			GenericFrameworkException, SchemaException, ObjectAlreadyExistsException, ConfigurationException {
 		validateShadow(shadow, "add", false);
@@ -1409,7 +1436,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		connIdResult.recordSuccess();
 
 		result.recordSuccess();
-		return ConnectorOperationReturnValue.wrap(attributesContainer.getAttributes(), result);
+		return AsynchronousOperationReturnValue.wrap(attributesContainer.getAttributes(), result);
 	}
 
 	private void validateShadow(PrismObject<? extends ShadowType> shadow, String operation,
@@ -1443,7 +1470,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 	//     (other identifiers are ignored on input and output of this method)
 
 	@Override
-	public ConnectorOperationReturnValue<Collection<PropertyModificationOperation>> modifyObject(ObjectClassComplexTypeDefinition objectClassDef, Collection<? extends ResourceAttribute<?>> identifiers, Collection<Operation> changes, StateReporter reporter,
+	public AsynchronousOperationReturnValue<Collection<PropertyModificationOperation>> modifyObject(ObjectClassComplexTypeDefinition objectClassDef, Collection<? extends ResourceAttribute<?>> identifiers, Collection<Operation> changes, StateReporter reporter,
 														   OperationResult parentResult) throws ObjectNotFoundException, CommunicationException,
 			GenericFrameworkException, SchemaException, SecurityViolationException, ObjectAlreadyExistsException {
 
@@ -1456,7 +1483,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		if (changes.isEmpty()){
 			LOGGER.info("No modifications for connector object specified. Skipping processing.");
 			result.recordNotApplicableIfUnknown();
-			return ConnectorOperationReturnValue.wrap(new ArrayList<PropertyModificationOperation>(0), result);
+			return AsynchronousOperationReturnValue.wrap(new ArrayList<PropertyModificationOperation>(0), result);
 		}
 
 		ObjectClass objClass = connIdNameMapper.objectClassToIcf(objectClassDef, getSchemaNamespace(), connectorType, legacySchema);
@@ -1860,7 +1887,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 
 			replaceUidValue(objectClassDef, identifiers, uid);
 		}
-		return ConnectorOperationReturnValue.wrap(sideEffectChanges, result);
+		return AsynchronousOperationReturnValue.wrap(sideEffectChanges, result);
 	}
 
 	private PropertyDelta<String> createUidDelta(Uid uid, ResourceAttributeDefinition uidDefinition) {
@@ -1895,7 +1922,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 	}
 
 	@Override
-	public ConnectorOperationResult deleteObject(ObjectClassComplexTypeDefinition objectClass, Collection<Operation> additionalOperations, Collection<? extends ResourceAttribute<?>> identifiers, StateReporter reporter,
+	public AsynchronousOperationResult deleteObject(ObjectClassComplexTypeDefinition objectClass, Collection<Operation> additionalOperations, Collection<? extends ResourceAttribute<?>> identifiers, StateReporter reporter,
 							 OperationResult parentResult) 
 			throws ObjectNotFoundException, CommunicationException, GenericFrameworkException, SchemaException {
 		Validate.notNull(objectClass, "No objectclass");
@@ -1957,7 +1984,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		checkAndExecuteAdditionalOperation(reporter, additionalOperations, BeforeAfterType.AFTER, result);
 
 		result.computeStatus();
-		return ConnectorOperationResult.wrap(result);
+		return AsynchronousOperationResult.wrap(result);
 	}
 	
 	@Override
@@ -2797,13 +2824,23 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		if (tokenProperty == null){
 			return null;
 		}
-		if (tokenProperty.getValue() == null) {
+		if (tokenProperty.getValues() == null) {
 			return null;
 		}
-		Object tokenValue = tokenProperty.getValue().getValue();
+		
+		if (tokenProperty.getValues().isEmpty()) {
+			return null;
+		}
+		
+		if (tokenProperty.getValues().size() > 1) {
+			throw new SchemaException("Unexpected number of attributes in SyncToken. SyncToken is single-value attribute and can contain only one value.");
+		}
+		
+		Object tokenValue = tokenProperty.getAnyRealValue();
 		if (tokenValue == null) {
 			return null;
 		}
+		
 		SyncToken syncToken = new SyncToken(tokenValue);
 		return syncToken;
 	}
@@ -2821,6 +2858,7 @@ public class ConnectorInstanceConnIdImpl implements ConnectorInstance {
 		PrismPropertyDefinitionImpl propDef = new PrismPropertyDefinitionImpl(SchemaConstants.SYNC_TOKEN,
 				type, prismContext);
 		propDef.setDynamic(true);
+		propDef.setMaxOccurs(1);
 		PrismProperty<T> property = propDef.instantiate();
 		property.addValues(syncTokenValues);
 		return property;

@@ -24,6 +24,7 @@ import com.evolveum.midpoint.model.api.RoleSelectionSpecification;
 import com.evolveum.midpoint.prism.PrismObject;
 import com.evolveum.midpoint.prism.query.*;
 import com.evolveum.midpoint.schema.result.OperationResult;
+import com.evolveum.midpoint.schema.util.ObjectQueryUtil;
 import com.evolveum.midpoint.util.exception.ObjectNotFoundException;
 import com.evolveum.midpoint.util.exception.SchemaException;
 import com.evolveum.midpoint.util.logging.LoggingUtils;
@@ -435,15 +436,15 @@ public class AssignmentCatalogPanel<F extends AbstractRoleType> extends BasePane
     }
 
     protected ObjectQuery createContentQuery(ObjectQuery searchQuery) {
-        ObjectQuery memberQuery = null;
+        ObjectQuery memberQuery = new ObjectQuery();
         if (AssignmentViewType.ROLE_CATALOG_VIEW.equals(AssignmentViewType.getViewTypeFromSession(pageBase))){
             String oid = selectedTreeItemOidModel.getObject();
             if (StringUtils.isNotEmpty(oid)) {
-                memberQuery = createMemberQuery(oid);
+                addOrgMembersFilter(oid, memberQuery);
             }
-        } else {
-            memberQuery = createMemberQuery(getViewTypeClass(AssignmentViewType.getViewTypeFromSession(pageBase)));
         }
+        addAssignableRolesFilter(memberQuery);
+        addViewTypeFilter(memberQuery);
         if (memberQuery == null) {
             memberQuery = new ObjectQuery();
         }
@@ -459,38 +460,50 @@ public class AssignmentCatalogPanel<F extends AbstractRoleType> extends BasePane
         return memberQuery;
     }
 
-    private ObjectQuery createMemberQuery(QName focusTypeClass) {
-        ObjectQuery query = new ObjectQuery();
-        ObjectFilter filter = null;
-        if (RoleType.COMPLEX_TYPE.equals(focusTypeClass)) {
-            LOGGER.debug("Loading roles which the current user has right to assign");
-            OperationResult result = new OperationResult(OPERATION_LOAD_ASSIGNABLE_ROLES);
-            try {
-                ModelInteractionService mis = pageBase.getModelInteractionService();
-                RoleSelectionSpecification roleSpec =
-                        mis.getAssignableRoleSpecification(SecurityUtils.getPrincipalUser().getUser().asPrismObject(), result);
-                filter = roleSpec.getFilter();
-            } catch (Exception ex) {
-                LoggingUtils.logUnexpectedException(LOGGER, "Couldn't load available roles", ex);
-                result.recordFatalError("Couldn't load available roles", ex);
-            } finally {
-                result.recomputeStatus();
-            }
-            if (!result.isSuccess() && !result.isHandledError()) {
-                pageBase.showResult(result);
-            }
+    private void addViewTypeFilter(ObjectQuery query) {
+        ObjectFilter prependedAndFilter = null;
+        if (AssignmentViewType.ORG_TYPE.equals(AssignmentViewType.getViewTypeFromSession(pageBase))){
+            prependedAndFilter = ObjectQueryUtil.filterAnd(TypeFilter.createType(OrgType.COMPLEX_TYPE, null), query.getFilter());
+            query.addFilter(prependedAndFilter);
+        } else if (AssignmentViewType.ROLE_TYPE.equals(AssignmentViewType.getViewTypeFromSession(pageBase))){
+            prependedAndFilter = ObjectQueryUtil.filterAnd(TypeFilter.createType(RoleType.COMPLEX_TYPE, null), query.getFilter());
+            query.addFilter(prependedAndFilter);
+        } else if (AssignmentViewType.SERVICE_TYPE.equals(AssignmentViewType.getViewTypeFromSession(pageBase))){
+            prependedAndFilter = ObjectQueryUtil.filterAnd(TypeFilter.createType(ServiceType.COMPLEX_TYPE, null), query.getFilter());
+            query.addFilter(prependedAndFilter);
         }
-        query.addFilter(TypeFilter.createType(focusTypeClass, filter));
-        return query;
-
     }
 
-    private ObjectQuery createMemberQuery(String oid) {
+    private void addAssignableRolesFilter(ObjectQuery query) {
+        ObjectFilter filter = null;
+        LOGGER.debug("Loading roles which the current user has right to assign");
+        OperationResult result = new OperationResult(OPERATION_LOAD_ASSIGNABLE_ROLES);
+        try {
+            ModelInteractionService mis = pageBase.getModelInteractionService();
+            RoleSelectionSpecification roleSpec =
+                    mis.getAssignableRoleSpecification(getTargetUser(), result);
+            filter = roleSpec.getFilter();
+        } catch (Exception ex) {
+            LoggingUtils.logUnexpectedException(LOGGER, "Couldn't load available roles", ex);
+            result.recordFatalError("Couldn't load available roles", ex);
+        } finally {
+            result.recomputeStatus();
+        }
+        if (!result.isSuccess() && !result.isHandledError()) {
+            pageBase.showResult(result);
+        }
+        if (query == null) {
+            query = new ObjectQuery();
+        }
+        query.addFilter(filter);
+    }
+
+    private ObjectQuery addOrgMembersFilter(String oid, ObjectQuery query) {
         ObjectFilter filter = OrgFilter.createOrg(oid, OrgFilter.Scope.ONE_LEVEL);
 
         TypeFilter roleTypeFilter = TypeFilter.createType(RoleType.COMPLEX_TYPE, filter);
         TypeFilter serviceTypeFilter = TypeFilter.createType(ServiceType.COMPLEX_TYPE, filter);
-        ObjectQuery query = ObjectQuery.createObjectQuery(OrFilter.createOr(roleTypeFilter, serviceTypeFilter));
+        query.addFilter(OrFilter.createOr(roleTypeFilter, serviceTypeFilter));
         return query;
 
     }

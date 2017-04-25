@@ -138,6 +138,7 @@ public class ResourceDataItem extends DataItem {
 				"resourceOid='" + resourceOid + '\'' +
 				", kind=" + kind +
 				", intent='" + intent + '\'' +
+				", objectClass='" + getRefinedObjectClassDefinition().getTypeName() + '\'' +
 				", path=" + itemPath +
 				'}';
 	}

@@ -18,6 +18,7 @@ package com.evolveum.midpoint.model.impl.dataModel;
 import com.evolveum.midpoint.common.refinery.*;
 import com.evolveum.midpoint.model.api.DataModelVisualizer;
 import com.evolveum.midpoint.model.api.ModelService;
+import com.evolveum.midpoint.model.impl.dataModel.cytoscapeJS.CJSFactory;
 import com.evolveum.midpoint.model.impl.dataModel.dot.DotModel;
 import com.evolveum.midpoint.model.impl.dataModel.model.AdHocDataItem;
 import com.evolveum.midpoint.model.impl.dataModel.model.DataItem;
@@ -45,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.xml.namespace.QName;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -93,6 +95,12 @@ public class DataModelVisualizerImpl implements DataModelVisualizer {
 		if (target == null || target == Target.DOT) {
 			return new DotModel(model).exportDot();
 		} else {
+			CJSFactory factory = new CJSFactory();
+			try {
+				factory.createGraph(model);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			throw new UnsupportedOperationException("Not implemented yet.");
 		}
 	}

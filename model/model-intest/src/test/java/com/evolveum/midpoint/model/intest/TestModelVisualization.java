@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.evolveum.midpoint.test.IntegrationTestTools.display;
@@ -44,7 +45,7 @@ public class TestModelVisualization extends AbstractInitializedModelIntegrationT
 		super.initSystem(initTask, initResult);
 	}
 
-	@Test
+	/*@Test
     public void test100VisualizeOneResource() throws Exception {
 		final String TEST_NAME = "test100VisualizeOneResource";
 
@@ -56,7 +57,27 @@ public class TestModelVisualization extends AbstractInitializedModelIntegrationT
 
 		// WHEN
 		String output = modelDiagnosticService.exportDataModel(Collections.singleton(RESOURCE_DUMMY_OID),
-				DataModelVisualizer.Target.DOT, task, result);
+				DataModelVisualizer.Target.CYTOSCAPE, task, result);
+
+		// THEN
+		display("Visualization output", output);
+		result.computeStatus();
+		TestUtil.assertSuccess(result);
+	}*/
+
+	@Test
+    public void test110VisualizeTwoResources() throws Exception {
+		final String TEST_NAME = "test110VisualizeTwoResources";
+
+		TestUtil.displayTestTile(this, TEST_NAME);
+
+		// GIVEN
+		Task task = taskManager.createTaskInstance(TestModelVisualization.class.getName() + "." + TEST_NAME);
+		OperationResult result = task.getResult();
+
+		// WHEN
+		String output = modelDiagnosticService.exportDataModel(Arrays.asList(RESOURCE_DUMMY_OID, RESOURCE_DUMMY_BLACK_OID),
+				DataModelVisualizer.Target.CYTOSCAPE, task, result);
 
 		// THEN
 		display("Visualization output", output);

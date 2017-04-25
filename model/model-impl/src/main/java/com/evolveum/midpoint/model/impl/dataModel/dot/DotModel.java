@@ -61,7 +61,7 @@ public class DotModel {
 			} else if (dataItem instanceof ResourceDataItem) {
 				ddi = new DotResourceDataItem((ResourceDataItem) dataItem, this);
 			} else if (dataItem instanceof AdHocDataItem) {
-				ddi = null;
+				ddi = new DotAdHocDataItem((AdHocDataItem) dataItem);
 			} else {
 				throw new AssertionError("Wrong data item: " + dataItem);
 			}
@@ -78,7 +78,7 @@ public class DotModel {
 		}
 	}
 
-	private boolean subgraphsForResources = false;
+	private boolean subgraphsForResources = true;
 	private boolean showUnusedItems = false;
 
 	public String exportDot() {

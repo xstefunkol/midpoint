@@ -5,19 +5,13 @@ import com.evolveum.midpoint.common.refinery.RefinedResourceSchema;
 import com.evolveum.midpoint.model.impl.dataModel.DataModel;
 import com.evolveum.midpoint.model.impl.dataModel.model.*;
 import com.evolveum.midpoint.prism.PrismObject;
-import com.evolveum.midpoint.prism.xnode.PrimitiveXNode;
-import com.evolveum.midpoint.prism.xnode.XNode;
-import com.evolveum.midpoint.schema.constants.SchemaConstants;
 import com.evolveum.midpoint.schema.util.ResourceTypeUtil;
 import com.evolveum.midpoint.util.QNameUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.*;
-import com.evolveum.prism.xml.ns._public.types_3.ItemPathType;
-import com.evolveum.prism.xml.ns._public.types_3.RawType;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.xml.bind.JAXBElement;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +28,7 @@ public class CJSFactory {
        JSONArray edgesJSON = new JSONArray();
 
        Map<DataItem, NodeCJS> nodes = initMap(dataModel);
-       ArrayList<ObjectTNodeCJS> objectDeffs = new ArrayList<>();
+       ArrayList<ObjectTNodeCJS> objectDefinitions = new ArrayList<>();
 
        int resourceCluster = 1;
        int counter = 1;
@@ -57,7 +51,7 @@ public class CJSFactory {
                ObjectTNodeCJS objectClass = new ObjectTNodeCJS();
                objectClass.initializeOTN(def, "o" + Integer.toString(counter), "r" +
                        Integer.toString(resourceCluster), resource.getOid());
-               objectDeffs.add(objectClass);
+               objectDefinitions.add(objectClass);
                JSONObject objectCNode = new JSONObject();
                JSONObject objectCData = new JSONObject();
 
@@ -76,7 +70,8 @@ public class CJSFactory {
            resourceCluster++;
        }
 
-       setParents(nodes, objectDeffs);
+       ArrayList<String> createdNodes = new ArrayList<>();
+       setParents(nodes, objectDefinitions);
 
        int mapC = 1;
        int edgeC = 1;
@@ -124,20 +119,18 @@ public class CJSFactory {
            }
            else {
                for (DataItem item : relation.getSources()) {
-                   // opravit duplicate
-                   System.out.println("Spracovavam relation: " + relation);
-                   createNodeRel(item, nodesJSON, nodes);
-                   createNodeRel(relation.getTarget(), nodesJSON, nodes);
+                   if (!(isNodeCreated(nodes, item, createdNodes))) {
+                       createNodeRel(item, nodesJSON, nodes);
+                   }
+                   if (!(isNodeCreated(nodes, relation.getTarget(), createdNodes))) {
+                       createNodeRel(relation.getTarget(), nodesJSON, nodes);
+                   }
 
                    JSONObject edgeJSON = new JSONObject();
                    JSONObject edgeDataJSON = new JSONObject();
 
                    String sourceId = getDataItemNode(nodes, item).getId();
                    String targetId = getDataItemNode(nodes, relation.getTarget()).getId();
-                   if (item instanceof ResourceDataItem) {
-                       System.out.println("Spracovavam node s id: " + getDataItemNode(nodes, item).getId() + " node name: " + getDataItemNode(nodes, item).getName() + " node parent: " + getDataItemNode(nodes, item).getParent() + " Objectclass: " + ((DataItemCJS)getDataItemNode(nodes, item)).getTypeName());
-                       System.out.println("Spracovavam node s id: " + getDataItemNode(nodes, relation.getTarget()).getId() + " node name: " + getDataItemNode(nodes, relation.getTarget()).getName() + " node parent: " + getDataItemNode(nodes, relation.getTarget()).getParent());
-                   }
 
                    ComplexEdgeCJS edge = new ComplexEdgeCJS();
                    edge.setId("e" + Integer.toString(edgeC));
@@ -165,6 +158,16 @@ public class CJSFactory {
        createJSONFile(finalFile);
    }
 
+   private boolean isNodeCreated(Map<DataItem, NodeCJS> array, DataItem item, ArrayList<String> createdNodes) {
+       for (String id : createdNodes) {
+           if (id.equals(getDataItemNode(array, item).getId())) {
+               return true;
+           }
+       }
+       createdNodes.add(getDataItemNode(array, item).getId());
+       return false;
+   }
+
    private void createNodeRel(DataItem item, JSONArray nodesJSON, Map<DataItem, NodeCJS> nodes) {
        JSONObject node = new JSONObject();
        JSONObject nodeData = new JSONObject();
@@ -173,9 +176,9 @@ public class CJSFactory {
            nodeData.put("id", getDataItemNode(nodes, item).getId());
            nodeData.put("name", getDataItemNode(nodes, item).getName());
            nodeData.put("parent", getDataItemNode(nodes, item).getParent());
-           nodeData.put("kind", ((DataItemCJS)getDataItemNode(nodes, item)).getKind());
-           nodeData.put("intent", ((DataItemCJS)getDataItemNode(nodes, item)).getIntent());
-           nodeData.put("typeName", ((DataItemCJS)getDataItemNode(nodes, item)).getTypeName());
+           nodeData.put("kind", ((ResourceDataItemCJS)getDataItemNode(nodes, item)).getKind());
+           nodeData.put("intent", ((ResourceDataItemCJS)getDataItemNode(nodes, item)).getIntent());
+           nodeData.put("typeName", ((ResourceDataItemCJS)getDataItemNode(nodes, item)).getTypeName());
            node.put("data", nodeData);
            node.put("classes", getDataItemNode(nodes, item).getClasses());
        } else if (item instanceof RepositoryDataItem) {
@@ -191,7 +194,7 @@ public class CJSFactory {
            node.put("data", nodeData);
            node.put("classes", getDataItemNode(nodes, item).getClasses());
        } else {
-
+           throw new AssertionError("Unsupported dataItem for visualization" + item);
        }
        nodesJSON.add(node);
    }
@@ -213,22 +216,12 @@ public class CJSFactory {
             DataItem dataItem = o.getKey();
             NodeCJS node = o.getValue();
             if (dataItem instanceof ResourceDataItem) {
-                if (node.getName().equals("name")) {
-                    System.out.println("Spracovava sa node s atributmi: " + ((ResourceDataItem) dataItem).getResourceOid() + "   " + node.getName() + "   " + ((DataItemCJS)node).getIntent() + "   " + ((DataItemCJS)node).getKind() + "   " + ((DataItemCJS)node).getTypeName());
-                }
                 ObjectTNodeCJS oNode = new ObjectTNodeCJS();
                 oNode.initializeOTN(((ResourceDataItem) dataItem).getRefinedObjectClassDefinition(), "", "", ((ResourceDataItem) dataItem).getResourceOid());
-              /*  System.out.println(oNode.getResourceOid() + "   " + oNode.getName() + "   " + oNode.getTypeName() + "   " + oNode.getKind() + "   " + oNode.getIntent());
-                System.out.println("/////////////////////////////////////////////////////////////////////////////////////////");*/
-                int i = 1;
                 for (ObjectTNodeCJS n : objNodes) {
-                    i++;
                     if (n.getResourceOid().equals(oNode.getResourceOid()) && n.getName().equals(oNode.getName())
                             && n.getTypeName().equals(oNode.getTypeName()) && n.getIntent().equals(oNode.getIntent())
                             && n.getKind().equals(oNode.getKind())) {
-                        if (node.getName().equals("name")) {
-                            System.out.println("Nasiel sa parent s resource oid: " + n.getResourceOid() + "   parentom: " + n.getId() + " ObjectClass:" + n.getTypeName());
-                        }
                         node.setParent(n.getId());
                         break;
                     }
@@ -250,7 +243,7 @@ public class CJSFactory {
                 String name = entity + "\n" + pathString;
                 node = new NodeCJS(Integer.toString(counter), name, "", classes);
             } else if (dataItem instanceof ResourceDataItem) {
-                node = new DataItemCJS(Integer.toString(counter),
+                node = new ResourceDataItemCJS(Integer.toString(counter),
                         ((ResourceDataItem)dataItem).getLastItemName().getLocalPart(), "", "ResourceDataItem",
                         ResourceTypeUtil.fillDefault(((ResourceDataItem)dataItem).getRefinedObjectClassDefinition().getKind()).toString(),
                         ((ResourceDataItem)dataItem).getRefinedObjectClassDefinition().getIntent(),
@@ -284,7 +277,7 @@ public class CJSFactory {
         if (node != null) {
             return node;
         } else {
-            throw new IllegalStateException("No match");
+            throw new IllegalStateException("No match     " + item);
         }
     }
 }

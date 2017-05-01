@@ -101,7 +101,7 @@ public class DataModelVisualizerImpl implements DataModelVisualizer {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			throw new UnsupportedOperationException("Not implemented yet.");
+			return "";
 		}
 	}
 

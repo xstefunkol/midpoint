@@ -3,12 +3,12 @@ package com.evolveum.midpoint.model.impl.dataModel.cytoscapeJS;
 /**
  * Created by Lubos on 22. 4. 2017.
  */
-public class DataItemCJS extends NodeCJS {
+public class ResourceDataItemCJS extends NodeCJS {
     private String kind;
     private String intent;
     private String typeName;
 
-    public DataItemCJS(String id, String name, String parent, String classes, String kind, String intent, String typeName) {
+    public ResourceDataItemCJS(String id, String name, String parent, String classes, String kind, String intent, String typeName) {
         super(id, name, parent, classes);
         this.kind = kind;
         this.intent = intent;

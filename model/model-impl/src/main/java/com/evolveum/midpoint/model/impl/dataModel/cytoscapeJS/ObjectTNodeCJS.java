@@ -17,14 +17,6 @@ public class ObjectTNodeCJS extends NodeCJS {
 
     }
 
-    public ObjectTNodeCJS(String id, String name, String parent, String classes, String resourceOid, String kind, String intent, String typeName) {
-        super(id, name, parent, classes);
-        this.resourceOid = resourceOid;
-        this.kind = kind;
-        this.intent = intent;
-        this.typeName = typeName;
-    }
-
     public String getResourceOid() {
         return resourceOid;
     }
@@ -72,12 +64,7 @@ public class ObjectTNodeCJS extends NodeCJS {
             setResourceOid(resourceOid);
             setParent(parent);
             setKind(String.valueOf(ResourceTypeUtil.fillDefault(refinedObjectClassDefinition.getKind())));
-            if (ResourceTypeUtil.fillDefault(refinedObjectClassDefinition.getIntent()) != null) {
-                setIntent(ResourceTypeUtil.fillDefault(refinedObjectClassDefinition.getIntent()));
-            }
-            else {
-                setIntent("");
-            }
+            setIntent(ResourceTypeUtil.fillDefault(refinedObjectClassDefinition.getIntent()));
             setTypeName(refinedObjectClassDefinition.getObjectClassDefinition().getTypeName().getLocalPart());
         }
     }

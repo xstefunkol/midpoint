@@ -8,6 +8,7 @@ import com.evolveum.midpoint.util.QNameUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.AsIsExpressionEvaluatorType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ExpressionType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ScriptExpressionEvaluatorType;
+import com.evolveum.midpoint.xml.ns._public.common.common_3.SearchObjectRefExpressionEvaluatorType;
 import com.evolveum.prism.xml.ns._public.types_3.ItemPathType;
 import com.evolveum.prism.xml.ns._public.types_3.RawType;
 import org.apache.commons.lang.StringUtils;
@@ -64,6 +65,10 @@ public class ExpNodeCJS extends NodeCJS {
                     setName(evalElement.getName().getLocalPart());
                     setMapping(String.valueOf(((ItemPathType) eval).getItemPath()));
                     setClasses("ItemPathEXP");
+                } else if (eval instanceof SearchObjectRefExpressionEvaluatorType){
+                    setName("assignmentTargetSearch");
+                    setMapping(((SearchObjectRefExpressionEvaluatorType) eval).getDescription());
+                    setClasses("AssignmentEXP");
                 } else {
                     setName(evalElement.getName().getLocalPart());
                     setMapping("");

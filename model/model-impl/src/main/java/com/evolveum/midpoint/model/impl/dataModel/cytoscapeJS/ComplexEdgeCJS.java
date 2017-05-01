@@ -8,6 +8,7 @@ import com.evolveum.midpoint.util.QNameUtil;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.AsIsExpressionEvaluatorType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ExpressionType;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ScriptExpressionEvaluatorType;
+import com.evolveum.midpoint.xml.ns._public.common.common_3.SearchObjectRefExpressionEvaluatorType;
 import com.evolveum.prism.xml.ns._public.types_3.ItemPathType;
 import com.evolveum.prism.xml.ns._public.types_3.RawType;
 import org.apache.commons.lang.StringUtils;
@@ -89,9 +90,6 @@ public class ComplexEdgeCJS extends EdgeCJS {
                     String str = getStringConstant(eval);
                     setLabel("constant");
                     setMapping(str);
-                } else if (eval instanceof AsIsExpressionEvaluatorType) {
-                    setLabel("");
-                    setMapping("asIs");
                 } else if (eval instanceof ScriptExpressionEvaluatorType) {
                     ScriptExpressionEvaluatorType script = (ScriptExpressionEvaluatorType) eval;
                     if (script.getLanguage() == null) {
@@ -100,9 +98,15 @@ public class ComplexEdgeCJS extends EdgeCJS {
                         setLabel(StringUtils.substringAfter(script.getLanguage(), "#"));
                     }
                     setMapping(((ScriptExpressionEvaluatorType) eval).getCode());
+                } else if (eval instanceof AsIsExpressionEvaluatorType) {
+                    setLabel("");
+                    setMapping("asIs");
                 } else if (eval instanceof ItemPathType){
                     setLabel(evalElement.getName().getLocalPart());
                     setMapping(String.valueOf(((ItemPathType) eval).getItemPath()));
+                } else if (eval instanceof SearchObjectRefExpressionEvaluatorType){
+                    setLabel("assignmentTargetSearch");
+                    setMapping(((SearchObjectRefExpressionEvaluatorType) eval).getDescription());
                 } else {
                     setLabel(evalElement.getName().getLocalPart());
                     setMapping("");

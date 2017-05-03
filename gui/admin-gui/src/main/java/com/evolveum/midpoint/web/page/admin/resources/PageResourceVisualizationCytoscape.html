@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2010-2016 Evolveum
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src='cytoscape.js'></script>
+    <script src="cola.js"></script>
+    <script src="cytoscape-cola.js"></script>
+    <script>
+        function process_cytoscape_data(text) {
+                    var data = JSON.parse(text);
+                    var cy = window.cy = cytoscape({
+                        container: document.getElementById('cy'),
+                        elements: data,
+                        wheelSensitivity: 0.5,
+                        style: [
+                            {
+                                selector: 'node',
+                                style: {
+                                    shape: 'rectangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'white',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.Resource',
+                                style: {
+                                    shape: 'rectangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'white',
+                                    'border-width': 4,
+                                    'border-color': 'black',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.ObjectTNode',
+                                style: {
+                                    shape: 'rectangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'white',
+                                    'border-width': 3,
+                                    'border-color': 'black',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.UserRep',
+                                style: {
+                                    shape: 'hexagon',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'red',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.ResourceDataItem',
+                                style: {
+                                    shape: 'ellipse',
+                                    'background-color': 'blue',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.RoleRep',
+                                style: {
+                                    shape: 'hexagon',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'green',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.OrgRep',
+                                style: {
+                                    shape: 'hexagon',
+                                    'text-wrap': 'wrap',
+                                    'background-color': 'orange',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.ConstantEXP',
+                                style: {
+                                    shape: 'triangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': '#6ca9ad',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.AsIsEXP',
+                                style: {
+                                    shape: 'triangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': '#f7ebdc',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.ScriptEXP',
+                                style: {
+                                    shape: 'triangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': '#935b3a',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.ItemPathEXP',
+                                style: {
+                                    shape: 'triangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': '#b68d96',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: '.AssignmentEXP',
+                                style: {
+                                    shape: 'triangle',
+                                    'text-wrap': 'wrap',
+                                    'background-color': '#dcfbcc',
+                                    label: 'data(name)'
+                                }
+                            },
+                            {
+                                selector: 'edge',
+                                style: {
+                                    'background-color': 'black',
+                                    label: 'data(label)',
+                                    'curve-style': 'bezier',
+                                    'target-arrow-shape': 'triangle',
+                                    'target-arrow-color': 'black',
+                                    'line-style': function( ele ){ return ele.data('style') }
+                                }
+                            }]
+                    });
+
+                    cy.layout({ name: 'cola', nodeSpacing: function( node ){ return 50; }, allConstIter: 10 });
+
+                    cy.on('tap', '.Resource', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "RESOURCE: " + this.data('id') + "<br />" + "name: " + this.data('name') + "<br />" + "oid: " + this.data('oid');
+                    });
+
+                    cy.on('tap', '.ObjectTNode', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "OBJECTTYPE: " + this.data('id') + "<br />" + "name: " + this.data('name') + "<br />" + "kind: " + this.data('kind') + "<br />" + "intent: " + this.data('intent') + "<br />" + "typeName: " + this.data('typeName') + "<br />" + "resource oid: " + this.data('resourceOid');
+                    });
+
+                    cy.on('tap', '.UserRep, .RoleRep, .OrgRep', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "REPOSITORY-ITEM: " + this.data('id') + "<br />" + "name: " + this.data('name');
+                    });
+
+                    cy.on('tap', '.ResourceDataItem', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "RESOURCE-ITEM: " + this.data('id') + "<br />" + "name: " + this.data('name') + "<br />" + "kind: " + this.data('kind') + "<br />" + "intent: " + this.data('intent') + "<br />" + "typeName: " + this.data('typeName') + "<br />" + "parent objectType: " + this.data('parent');
+                    });
+
+                    cy.on('tap', '.ConstantEXP, .AsIsEXP, .ScriptEXP, .ItemPathEXP, .AssignmentEXP', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "MAPPING-NODE: " + this.data('id') + "<br />" + "name: " + this.data('name') + "<br />" + "mapping: " + this.data('mapping');
+                    });
+
+                    cy.on('tap', 'edge', function(evt){
+                        var e = document.getElementById("menu");
+                        e.style.display = 'block';
+                        document.getElementById("menu").innerHTML = "EDGE: " + this.data('id') + "<br />" + "sourceId: " + this.data('source') + "<br />" + "targetId: " + this.data('target') + "<br />" + "label: " + this.data('label') + "<br />" + "strength: " + this.data('strength') + "<br />" + "mapping: " + this.data('mapping');
+                    });
+        }
+    </script>
+    <script>
+        function hideMenu(){
+            document.getElementById("menu").style.display = 'none';
+        }
+    </script>
+</head>
+<style>
+    #cy {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 30px;
+        left: 0px;
+    }
+
+    #menu {
+        margin-right: 800px;
+        border:2px solid black;
+        display:none;
+    }
+</style>
+
+<body>
+    <wicket:extend>
+        <div id="cy"></div>
+        <script>getAndProcessCytoscapeData();</script>
+        <p>test test test 123</p>
+        <button onclick="hideMenu()">Hide information</button>
+        <div id="menu"></div>
+    </wicket:extend>
+</body>
+</html>

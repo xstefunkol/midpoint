@@ -310,6 +310,10 @@ public class PageResourceWizard extends PageAdminResources {
 		setResponsePage(new PageResourceVisualization(modelFull.getObject()));
 	}
 
+	public void visualizeCytoscape(AjaxRequestTarget target) {
+		setResponsePage(new PageResourceVisualizationCytoscape(modelFull.getObject()));
+	}
+
 	public boolean showSaveResultInPage(boolean saved, OperationResult result) {
 		return saved || WebComponentUtil.showResultInPage(result);
 	}

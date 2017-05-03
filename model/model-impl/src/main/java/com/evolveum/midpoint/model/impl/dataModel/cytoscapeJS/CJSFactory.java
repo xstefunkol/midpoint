@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by Lubos on 10. 4. 2017.
  */
 public class CJSFactory {
-   public void createGraph(DataModel dataModel) throws IOException {
+   public String createGraph(DataModel dataModel) throws IOException {
        JSONObject finalFile = new JSONObject();
        JSONArray nodesJSON = new JSONArray();
        JSONArray edgesJSON = new JSONArray();
@@ -155,7 +155,7 @@ public class CJSFactory {
 
        finalFile.put("nodes", nodesJSON);
        finalFile.put("edges", edgesJSON);
-       createJSONFile(finalFile);
+       return createJSONFile(finalFile);
    }
 
    private boolean isNodeCreated(Map<DataItem, NodeCJS> array, DataItem item, ArrayList<String> createdNodes) {
@@ -199,12 +199,15 @@ public class CJSFactory {
        nodesJSON.add(node);
    }
 
-    private void createJSONFile(JSONObject object) throws IOException {
+    private String createJSONFile(JSONObject object) throws IOException {
         FileWriter file = new FileWriter(System.getProperty("user.home") + "/Desktop" + "/elements.json");
         try {
-            file.write(object.toJSONString());
+            String str = object.toJSONString();
+            file.write(str);
+            return str;
         } catch (IOException e) {
             e.printStackTrace();
+            return "";
         } finally {
             file.flush();
             file.close();

@@ -43,6 +43,8 @@ public class WizardButtonBar extends Panel implements IDefaultButtonProvider {
 	private static final String ID_SAVE = "save";
 	private static final String ID_VISUALIZE = "visualize";
 	private static final String ID_VISUALIZE_LABEL = "visualizeLabel";
+	private static final String ID_VISUALIZE_CYTOSCAPE = "visualizeCytoscape";
+	private static final String ID_VISUALIZE_CYTOSCAPE_LABEL = "visualizeCytoscapeLabel";
 
     public WizardButtonBar(String id, final Wizard wizard) {
         super(id);
@@ -182,6 +184,39 @@ public class WizardButtonBar extends Panel implements IDefaultButtonProvider {
 			}
 		});
 		visualize.add(visualizeLabel);
+
+		final AjaxSubmitButton visualizeCS = new AjaxSubmitButton(ID_VISUALIZE_CYTOSCAPE) {
+			@Override
+			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
+				IWizardStep activeStep = wizard.getModelObject().getActiveStep();
+				PageResourceWizard wizardPage = (PageResourceWizard) getPage();
+				if (!wizardPage.isReadOnly()) {
+					if (activeStep != null) {
+						activeStep.applyState();
+						if (!activeStep.isComplete()) {
+							return;
+						}
+					}
+				}
+				((PageResourceWizard) getPage()).visualizeCytoscape(target);
+			}
+
+			@Override
+			protected void onError(AjaxRequestTarget target, Form<?> form) {
+				target.add(((PageBase) getPage()).getFeedbackPanel());
+			}
+		};
+		visualizeCS.setVisible(moreSteps);
+		add(visualizeCS);
+
+		Label visualizeCSLabel = new Label(ID_VISUALIZE_CYTOSCAPE_LABEL, new AbstractReadOnlyModel<String>() {
+			@Override
+			public String getObject() {
+				PageResourceWizard wizardPage = (PageResourceWizard) getPage();
+				return wizardPage.isReadOnly() ? getString("ResourceWizard.visualizeCytoscape") : getString("ResourceWizard.saveAndVisualizeCytoscape");
+			}
+		});
+		visualizeCS.add(visualizeCSLabel);
 	}
 
 	private void couldntSave() {

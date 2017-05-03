@@ -97,11 +97,11 @@ public class DataModelVisualizerImpl implements DataModelVisualizer {
 		} else {
 			CJSFactory factory = new CJSFactory();
 			try {
-				factory.createGraph(model);
+				return factory.createGraph(model);
 			} catch (IOException e) {
 				e.printStackTrace();
+				return "";
 			}
-			return "";
 		}
 	}
 

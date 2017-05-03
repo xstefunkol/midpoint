@@ -596,7 +596,7 @@ public class ModelDiagController implements ModelDiagnosticService {
 			throws SchemaException, ConfigurationException, ObjectNotFoundException, CommunicationException, SecurityViolationException {
 		OperationResult result = parentResult.createSubresult(EXPORT_DATA_MODEL);
 		try {
-			String rv = dataModelVisualizer.visualize(resource, DataModelVisualizer.Target.DOT, task, result);
+			String rv = dataModelVisualizer.visualize(resource, target, task, result);
 			result.computeStatusIfUnknown();
 			return rv;
 		} catch (Throwable t) {

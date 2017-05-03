@@ -40,6 +40,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
+import com.evolveum.midpoint.model.api.*;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
@@ -48,13 +49,6 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.evolveum.midpoint.model.api.ModelCompareOptions;
-import com.evolveum.midpoint.model.api.ModelDiagnosticService;
-import com.evolveum.midpoint.model.api.ModelExecuteOptions;
-import com.evolveum.midpoint.model.api.ModelInteractionService;
-import com.evolveum.midpoint.model.api.ModelService;
-import com.evolveum.midpoint.model.api.ScriptExecutionResult;
-import com.evolveum.midpoint.model.api.ScriptingService;
 import com.evolveum.midpoint.model.api.validator.ResourceValidator;
 import com.evolveum.midpoint.model.api.validator.Scope;
 import com.evolveum.midpoint.model.api.validator.ValidationResult;
@@ -155,6 +149,7 @@ public class ModelRestService {
 	public static final String OPERATION_EXECUTE_SCRIPT = CLASS_DOT + "executeScript";
 	public static final String OPERATION_COMPARE = CLASS_DOT + "compare";
 	public static final String OPERATION_GET_LOG_FILE_CONTENT = CLASS_DOT + "getLogFileContent";
+	public static final String OPERATION_VISUALIZE_RESOURCES = CLASS_DOT + "visualizeResources";
 	public static final String OPERATION_GET_LOG_FILE_SIZE = CLASS_DOT + "getLogFileSize";
 	public static final String OPERATION_VALIDATE_VALUE = CLASS_DOT +  "validateValue";
 	public static final String OPERATION_GENERATE_VALUE = CLASS_DOT +  "generateValue";
@@ -1196,6 +1191,30 @@ private <T, O extends ObjectType> boolean validateValue(PrismObject<O> object, P
 			response = builder.build();
 		} catch (Exception ex) {
 			LoggingUtils.logUnexpectedException(LOGGER, "Cannot get log file content: fromPosition={}, maxSize={}", ex, fromPosition, maxSize);
+			response = RestServiceUtil.handleException(result, ex);
+		}
+
+		result.computeStatus();
+		finishRequest(task);
+		return response;
+	}
+
+	@GET
+	@Path("/visualizedResources")
+	@Produces({"application/json"})
+	public Response getVisualizedResources(@QueryParam("oid") List<String> oids, @Context MessageContext mc) {
+
+		Task task = RestServiceUtil.initRequest(mc);
+		OperationResult result = task.getResult().createSubresult(OPERATION_VISUALIZE_RESOURCES);
+
+		Response response;
+		try {
+			String data = modelDiagnosticService.exportDataModel(oids, DataModelVisualizer.Target.CYTOSCAPE, task, result);
+			ResponseBuilder builder = Response.ok();
+			builder.entity(data);
+			response = builder.build();
+		} catch (Exception ex) {
+			LoggingUtils.logUnexpectedException(LOGGER, "Cannot visualize the resources: {}", ex, oids);
 			response = RestServiceUtil.handleException(result, ex);
 		}
 

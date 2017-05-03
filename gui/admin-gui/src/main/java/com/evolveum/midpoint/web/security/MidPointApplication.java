@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.evolveum.midpoint.audit.api.AuditService;
+import com.evolveum.midpoint.model.api.*;
 import com.evolveum.midpoint.model.common.expression.ExpressionFactory;
 import com.evolveum.midpoint.prism.match.MatchingRuleRegistry;
 import com.evolveum.midpoint.repo.api.RepositoryService;
@@ -66,11 +66,6 @@ import org.springframework.stereotype.Component;
 import com.evolveum.midpoint.common.configuration.api.MidpointConfiguration;
 import com.evolveum.midpoint.gui.api.page.PageBase;
 import com.evolveum.midpoint.gui.api.util.WebComponentUtil;
-import com.evolveum.midpoint.model.api.ModelAuditService;
-import com.evolveum.midpoint.model.api.ModelInteractionService;
-import com.evolveum.midpoint.model.api.ModelService;
-import com.evolveum.midpoint.model.api.TaskService;
-import com.evolveum.midpoint.model.api.WorkflowService;
 import com.evolveum.midpoint.prism.PrismContext;
 import com.evolveum.midpoint.prism.crypto.Protector;
 import com.evolveum.midpoint.security.api.AuthorizationConstants;
@@ -176,6 +171,8 @@ public class MidPointApplication extends AuthenticatedWebApplication {
     transient ModelService model;
     @Autowired
     transient ModelInteractionService modelInteractionService;
+    @Autowired
+    transient ModelDiagnosticService modelDiagnosticService;
     @Autowired
     transient TaskService taskService;
     @Autowired
@@ -362,6 +359,10 @@ public class MidPointApplication extends AuthenticatedWebApplication {
 
 	public ModelInteractionService getModelInteractionService() {
         return modelInteractionService;
+    }
+
+    public ModelDiagnosticService getModelDiagnosticService() {
+        return modelDiagnosticService;
     }
 
     public static boolean containsLocale(Locale locale) {

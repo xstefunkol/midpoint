@@ -16,11 +16,11 @@
 
 package com.evolveum.midpoint.web.page.admin.resources;
 
-import com.evolveum.midpoint.gui.api.model.NonEmptyLoadableModel;
 import com.evolveum.midpoint.model.api.DataModelVisualizer;
 import com.evolveum.midpoint.prism.PrismObject;
 import com.evolveum.midpoint.security.api.AuthorizationConstants;
 import com.evolveum.midpoint.task.api.Task;
+import com.evolveum.midpoint.task.api.TaskManager;
 import com.evolveum.midpoint.util.exception.CommonException;
 import com.evolveum.midpoint.util.logging.LoggingUtils;
 import com.evolveum.midpoint.util.logging.Trace;
@@ -28,24 +28,20 @@ import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.application.AuthorizationAction;
 import com.evolveum.midpoint.web.application.PageDescriptor;
 import com.evolveum.midpoint.web.page.admin.PageAdmin;
-import com.evolveum.midpoint.web.page.admin.resources.dto.ResourceVisualizationDto;
+import com.evolveum.midpoint.web.security.MidPointApplication;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ResourceType;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceRequestHandler;
-import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.ByteArrayResource;
 import org.apache.wicket.request.resource.IResource;
 import org.apache.wicket.util.template.PackageTextTemplate;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +55,8 @@ import java.util.Map;
 		@AuthorizationAction(actionUri = AuthorizationConstants.AUTZ_UI_RESOURCE_EDIT_URL,
 				label = "PageResourceWizard.auth.resource.label",
 				description = "PageResourceWizard.auth.resource.description")})
-public class PageResourceVisualizationCytoscape extends PageAdmin {
+//public class PageResourceVisualizationCytoscape extends PageAdmin {
+public class PageResourceVisualizationCytoscape extends WebPage {
 
 	private static final Trace LOGGER = TraceManager.getTrace(PageResourceVisualizationCytoscape.class);
 
@@ -78,7 +75,7 @@ public class PageResourceVisualizationCytoscape extends PageAdmin {
 
 		Map<String, Object> map = new HashMap<>();
 		String callbackUrl = behave.getCallbackUrl().toString();
-		map.put( "callbackUrl", callbackUrl);
+		map.put("callbackUrl", callbackUrl);
 
 		PackageTextTemplate ptt = new PackageTextTemplate( PageResourceVisualizationCytoscape.class, "get-and-process-cytoscape-data.js" );
 		String javaScript = ptt.asString(map);
@@ -94,17 +91,19 @@ public class PageResourceVisualizationCytoscape extends PageAdmin {
 				RequestCycle requestCycle = getRequestCycle();
 				requestCycle.scheduleRequestHandlerAfterCurrent(null);
 
-				Task task = createAnonymousTask(PageResourceVisualizationCytoscape.class + ".onRequest");
+				MidPointApplication app = (MidPointApplication) MidPointApplication.get();
+				TaskManager taskManager = app.getTaskManager();
+				Task task = taskManager.createTaskInstance(PageResourceVisualizationCytoscape.class + ".onRequest");
 
 				String jsonData;
 				try {
-					jsonData = getModelDiagnosticService()
+					jsonData = app.getModelDiagnosticService()
 							.exportDataModel(resourceObject.asObjectable(), DataModelVisualizer.Target.CYTOSCAPE, task,
 									task.getResult());
 					System.out.println("JSON Cytoscape Data:\n" + jsonData);
 				} catch (CommonException|RuntimeException e) {
 					LoggingUtils.logUnexpectedException(LOGGER, "Couldn't visualize resource {}", e, resourceObject);
-					jsonData = "{\"nodes\":[], \"edges\":[]}";		// TODO some better error handling
+					jsonData = "{\"nodes\":[], \"edges\":[]}";		// TODO better error handling
 				}
 
 				IResource jsonResource = new ByteArrayResource("text/plain", jsonData.getBytes());

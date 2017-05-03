@@ -24,6 +24,7 @@
     <script>
         function process_cytoscape_data(text) {
                     var data = JSON.parse(text);
+                    document.getElementById('test').textContent = 'hello';
                     var cy = window.cy = cytoscape({
                         container: document.getElementById('cy'),
                         elements: data,
@@ -215,12 +216,12 @@
 </style>
 
 <body>
-    <wicket:extend>
+    <!--<wicket:extend>-->
+        <div id="test"></div>
         <div id="cy"></div>
         <script>getAndProcessCytoscapeData();</script>
-        <p>test test test 123</p>
         <button onclick="hideMenu()">Hide information</button>
         <div id="menu"></div>
-    </wicket:extend>
+    <!--</wicket:extend>-->
 </body>
 </html>

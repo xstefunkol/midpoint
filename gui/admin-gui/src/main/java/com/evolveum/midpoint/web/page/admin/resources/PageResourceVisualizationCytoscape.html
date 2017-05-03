@@ -18,13 +18,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org">
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
-    <script src='cytoscape.js'></script>
-    <script src="cola.js"></script>
-    <script src="cytoscape-cola.js"></script>
+    <script src='js/cytoscape/cytoscape.js'></script>
+    <script src="js/cytoscape/cola.js"></script>
+    <script src="js/cytoscape/cytoscape-cola.js"></script>
     <script>
         function process_cytoscape_data(text) {
                     var data = JSON.parse(text);
-                    document.getElementById('test').textContent = 'hello';
                     var cy = window.cy = cytoscape({
                         container: document.getElementById('cy'),
                         elements: data,
@@ -217,7 +216,6 @@
 
 <body>
     <!--<wicket:extend>-->
-        <div id="test"></div>
         <div id="cy"></div>
         <script>getAndProcessCytoscapeData();</script>
         <button onclick="hideMenu()">Hide information</button>

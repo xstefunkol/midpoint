@@ -217,7 +217,10 @@
 <body>
     <!--<wicket:extend>-->
         <div id="cy"></div>
-        <script>getAndProcessCytoscapeData();</script>
+        <script>
+            getAndProcessCytoscapeData();
+            //deleteAttribute("oid1", "kind1", "intent1", "objectClass1", "attributeName1");
+        </script>
         <button onclick="hideMenu()">Hide information</button>
         <div id="menu"></div>
     <!--</wicket:extend>-->

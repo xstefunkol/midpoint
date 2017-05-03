@@ -27,7 +27,6 @@ import com.evolveum.midpoint.util.logging.Trace;
 import com.evolveum.midpoint.util.logging.TraceManager;
 import com.evolveum.midpoint.web.application.AuthorizationAction;
 import com.evolveum.midpoint.web.application.PageDescriptor;
-import com.evolveum.midpoint.web.page.admin.PageAdmin;
 import com.evolveum.midpoint.web.security.MidPointApplication;
 import com.evolveum.midpoint.xml.ns._public.common.common_3.ResourceType;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
@@ -35,6 +34,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestHandler;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceRequestHandler;
 import org.apache.wicket.request.resource.ByteArrayResource;
@@ -67,15 +67,16 @@ public class PageResourceVisualizationCytoscape extends WebPage {
 		initLayout(resourceObject);
 	}
 
-	private AbstractAjaxBehavior behave;
+	private AbstractAjaxBehavior retrievalBehavior;
+	private AbstractAjaxBehavior deletionBehavior;
 
 	@Override
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
 
 		Map<String, Object> map = new HashMap<>();
-		String callbackUrl = behave.getCallbackUrl().toString();
-		map.put("callbackUrl", callbackUrl);
+		map.put("callbackUrlRetrieve", retrievalBehavior.getCallbackUrl().toString());
+		map.put("callbackUrlDelete", deletionBehavior.getCallbackUrl().toString());
 
 		PackageTextTemplate ptt = new PackageTextTemplate( PageResourceVisualizationCytoscape.class, "get-and-process-cytoscape-data.js" );
 		String javaScript = ptt.asString(map);
@@ -84,10 +85,10 @@ public class PageResourceVisualizationCytoscape extends WebPage {
 	}
 
 	private void initLayout(PrismObject<ResourceType> resourceObject) {
-		behave = new AbstractAjaxBehavior() {
+		retrievalBehavior = new AbstractAjaxBehavior() {
 			@Override
 			public void onRequest() {
-				System.out.println("onRequest starting");
+				System.out.println("retrieve CS data: starting");
 				RequestCycle requestCycle = getRequestCycle();
 				requestCycle.scheduleRequestHandlerAfterCurrent(null);
 
@@ -106,12 +107,43 @@ public class PageResourceVisualizationCytoscape extends WebPage {
 					jsonData = "{\"nodes\":[], \"edges\":[]}";		// TODO better error handling
 				}
 
-				IResource jsonResource = new ByteArrayResource("text/plain", jsonData.getBytes());
+				IResource jsonResource = new ByteArrayResource("application/json", jsonData.getBytes());
 				IRequestHandler requestHandler = new ResourceRequestHandler(jsonResource, null);
 				requestHandler.respond(requestCycle);
-				System.out.println("Response written.");
+				System.out.println("retrieve CS data: response written");
 			}
 		};
-		add(behave);
+		add(retrievalBehavior);
+
+		deletionBehavior = new AbstractAjaxBehavior() {
+			@Override
+			public void onRequest() {
+				System.out.println("deleteAttribute: starting");
+				RequestCycle requestCycle = getRequestCycle();
+				requestCycle.scheduleRequestHandlerAfterCurrent(null);
+
+				MidPointApplication app = (MidPointApplication) MidPointApplication.get();
+				TaskManager taskManager = app.getTaskManager();
+				Task task = taskManager.createTaskInstance(PageResourceVisualizationCytoscape.class + ".onRequest");
+
+				try {
+					IRequestParameters parameters = requestCycle.getRequest().getQueryParameters();
+					String resourceOid = parameters.getParameterValue("resourceOid").toString();
+					String kind = parameters.getParameterValue("kind").toString();
+					String intent = parameters.getParameterValue("intent").toString();
+					String objectClass = parameters.getParameterValue("objectClass").toString();
+					String attributeName = parameters.getParameterValue("attributeName").toString();
+					System.out.println("ResourceOid: " + resourceOid + ", kind: " + kind + ", intent: " + intent + ", objectClass: " + objectClass + ", attributeName: " + attributeName);
+				} catch (RuntimeException e) {
+					LoggingUtils.logUnexpectedException(LOGGER, "Couldn't delete attribute", e);
+				}
+
+				IResource resource = new ByteArrayResource("text/plain", "OK".getBytes());
+				IRequestHandler requestHandler = new ResourceRequestHandler(resource, null);
+				requestHandler.respond(requestCycle);
+				System.out.println("deleteAttribute: finished");
+			}
+		};
+		add(deletionBehavior);
 	}
 }

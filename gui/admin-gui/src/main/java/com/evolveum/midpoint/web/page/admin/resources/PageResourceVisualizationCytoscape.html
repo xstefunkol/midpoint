@@ -204,41 +204,42 @@
 						lastClickedNode = null;
 						lastClickedEdge = this.id();
 					});
-
-                    document.getElementById("DelB").onclick = function() {
-						if (lastClickedNode != null) {
-							var element = cy.getElementById(lastClickedNode);
-							console.log("Deleting node with attributes: " + cy.getElementById(element.data('parent')).data('resourceOid') + ", " + element.data('kind') + ", " + element.data('intent') + ", " + element.data('typeName') + ", " + element.data('name'));
-							deleteAttribute(cy.getElementById(element.data('parent')).data('resourceOid'), element.data('kind'), element.data('intent'), element.data('typeName'), element.data('name'));
-							cy.remove(element);
-							lastClickedNode = null;
-						}
-						else {
-						    var e = document.getElementById("menu");
-                            e.style.display = 'block';
-                            document.getElementById("menu").innerHTML = "You have to tap on Attribute!"
-						}
-					}
-
-					document.getElementById("DelM").onclick = function() {
-						if (lastClickedEdge != null) {
-							var edge = cy.getElementById(lastClickedEdge);
-							console.log("Deleting edge with attributes: " + edge.id() + ", " + edge.data('label') + ", " + edge.data('mapping') + ", " + edge.data('strength') + ", "+ edge.data('source') + ", " + edge.data('target'));
-							// deleteMapping();
-							cy.remove(edge);
-							lastClickedEdge = null;
-						}
-						else {
-						    var e = document.getElementById("menu");
-                            e.style.display = 'block';
-                            document.getElementById("menu").innerHTML = "You have to tap on Edge!"
-						}
-					}
         }
 
         function hideMenu(){
             document.getElementById("menu").style.display = 'none';
         }
+
+        function deleteAttribute() {
+            if (lastClickedNode != null) {
+                var element = cy.getElementById(lastClickedNode);
+                console.log("Deleting node with attributes: " + cy.getElementById(element.data('parent')).data('resourceOid') + ", " + element.data('kind') + ", " + element.data('intent') + ", " + element.data('typeName') + ", " + element.data('name'));
+                deleteAttribute(cy.getElementById(element.data('parent')).data('resourceOid'), element.data('kind'), element.data('intent'), element.data('typeName'), element.data('name'));
+                cy.remove(element);
+                lastClickedNode = null;
+            }
+            else {
+                var e = document.getElementById("menu");
+                e.style.display = 'block';
+                document.getElementById("menu").innerHTML = "You have to tap on Attribute!"
+            }
+        }
+
+        function deleteMapping() {
+            if (lastClickedEdge != null) {
+                var edge = cy.getElementById(lastClickedEdge);
+                console.log("Deleting edge with attributes: " + edge.id() + ", " + edge.data('label') + ", " + edge.data('mapping') + ", " + edge.data('strength') + ", "+ edge.data('source') + ", " + edge.data('target'));
+                // deleteMapping();
+                cy.remove(edge);
+                lastClickedEdge = null;
+            }
+            else {
+                var e = document.getElementById("menu");
+                e.style.display = 'block';
+                document.getElementById("menu").innerHTML = "You have to tap on Edge!"
+            }
+        }
+
     </script>
 </head>
 <style>
@@ -261,8 +262,8 @@
     <div id="cy"></div>
     <script>getAndProcessCytoscapeData();</script>
     <button onclick="hideMenu()">Hide information</button>
-    <button id="DelB">Delete attribute</button>
-    <button id="DelM">Delete mapping</button>
+    <button onclick="deleteAttribute()">Delete attribute</button>
+    <button onclick="deleteMapping()">Delete mapping</button>
     <div id="menu"></div>
 </body>
 </html>
